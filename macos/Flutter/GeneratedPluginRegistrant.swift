@@ -12,6 +12,7 @@ import firebase_core
 import flutter_image_compress_macos
 import geolocator_apple
 import google_sign_in_ios
+import sign_in_with_apple
 import video_compress
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
@@ -22,5 +23,6 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FlutterImageCompressMacosPlugin.register(with: registry.registrar(forPlugin: "FlutterImageCompressMacosPlugin"))
   GeolocatorPlugin.register(with: registry.registrar(forPlugin: "GeolocatorPlugin"))
   FLTGoogleSignInPlugin.register(with: registry.registrar(forPlugin: "FLTGoogleSignInPlugin"))
+  SignInWithApplePlugin.register(with: registry.registrar(forPlugin: "SignInWithApplePlugin"))
   VideoCompressPlugin.register(with: registry.registrar(forPlugin: "VideoCompressPlugin"))
 }
