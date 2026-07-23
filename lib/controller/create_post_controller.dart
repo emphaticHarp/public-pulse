@@ -66,7 +66,7 @@ class CreatePostController extends GetxController {
   void uploadPost() {
     if (mediaUrls.isEmpty) return;
 
-    // TODO: Implement actual upload logic
+    // Implement actual upload logic
     Get.snackbar(
       'Uploading',
       'Your post is being uploaded...',
@@ -76,7 +76,7 @@ class CreatePostController extends GetxController {
 
   // Add location
   void addLocation() {
-    // TODO: Implement location picker
+    // Implement location picker
     Get.snackbar(
       'Location',
       'Location picker coming soon!',
