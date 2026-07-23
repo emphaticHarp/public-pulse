@@ -45,24 +45,20 @@ static const TextStyle splashLogo = TextStyle(
 
   // ── Button text Styles ─────────────────────────────────────────────────────
   /// Primary button text (Login, Next, Get Started)
-  static const TextStyle buttonText = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-  );
-
+static const TextStyle buttonText = TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.bold,
+);
   /// Next button text on onboarding
-  static const TextStyle nextButtonText = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 16,
-    fontWeight: FontWeight.w700,
-  );
+static const TextStyle nextButtonText = TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.w700,
+);
 
   // ── Body Styles ───────────────────────────────────────────────────────
   /// Onboarding slide description
   static const TextStyle onboardDescription = TextStyle(
-    fontFamily: _fontFamily,
-    fontSize: 16,
+      fontSize: 16,
     fontWeight: FontWeight.w600,
     height: 1.6,
   );
@@ -75,61 +71,61 @@ static const TextStyle splashLogo = TextStyle(
 
   /// Button-style text (forgot password, sign up)
   static const TextStyle linkText = TextStyle(
-    fontFamily: _fontFamily,
+   
     fontSize: 14,
     fontWeight: FontWeight.w600,
   );
 
   /// Subtitle text (login subtitle)
   static const TextStyle subtitle = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 14,
   );
 
   /// Skip text on onboarding
   static const TextStyle skipText = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 14,
     fontWeight: FontWeight.w600,
   );
 
   /// Don't have account text
   static const TextStyle footerText = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 14,
     fontWeight: FontWeight.w500,
   );
 
   /// Sign up link
   static const TextStyle signUpLink = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 14,
     fontWeight: FontWeight.bold,
   );
 
   /// Text field input text
   static const TextStyle inputText = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 14,
   );
 
   /// Tab bar item label (e.g. All / Likes / Comments / Follows)
   static const TextStyle tabLabel = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 14,
     fontWeight: FontWeight.w600,
   );
 
   /// Tab bar item label when active/selected
   static const TextStyle tabLabelActive = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 14,
     fontWeight: FontWeight.w700,
   );
 
   /// Notification list item primary text (name + action)
   static const TextStyle notificationText = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 15,
     fontWeight: FontWeight.w400,
     height: 1.2,
@@ -137,7 +133,7 @@ static const TextStyle splashLogo = TextStyle(
 
   /// Notification list item timestamp
   static const TextStyle notificationTime = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 14,
     fontWeight: FontWeight.w400,
   );
@@ -145,7 +141,7 @@ static const TextStyle splashLogo = TextStyle(
   // ── Small / Label Styles ──────────────────────────────────────────────
   /// Divider label text (OR CONTINUE WITH)
   static const TextStyle dividerLabel = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 10,
     fontWeight: FontWeight.w500,
     letterSpacing: 1.2,
@@ -153,7 +149,7 @@ static const TextStyle splashLogo = TextStyle(
 
   /// Splash tagline
   static const TextStyle tagline = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 11,
     fontWeight: FontWeight.w600,
     letterSpacing: 2.4,
@@ -161,7 +157,7 @@ static const TextStyle splashLogo = TextStyle(
 
   /// Splash syncing text
   static const TextStyle syncingText = TextStyle(
-    fontFamily: _fontFamily,
+    
     fontSize: 9,
     fontWeight: FontWeight.w600,
     letterSpacing: 2.2,

@@ -2,17 +2,14 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/core/theme/app_font.dart';
-import 'package:public_pulse/widget/local/app_input_box.dart';
 import 'package:public_pulse/controller/login_controller.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
- final controller = Get.find<LoginController>();
+  final controller = Get.find<LoginController>();
 
   static const String kBackgroundImagePath = 'assets/images/login_bg.jpg';
-
- 
 
   @override
   Widget build(BuildContext context) {
@@ -83,112 +80,99 @@ class LoginPage extends StatelessWidget {
             style: AppTextStyles.subtitle.copyWith(color: AppColors.slate400),
           ),
           const SizedBox(height: 32),
-          AppInputBox(
-            controller: controller.identifierController,
-            hintText: 'Email or Phone Number',
-            prefixIcon: Icons.person_outline,
-          ),
-          const SizedBox(height: 20),
+
+          // Google Sign-In Button
           Obx(
-            () => AppInputBox(
-              controller: controller.passwordController,
-              hintText: 'Password',
-              prefixIcon: Icons.lock_outline,
-              obscureText: controller.obscurePassword.value,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  controller.obscurePassword.value
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  color: AppColors.slate400,
-                  size: 20,
+            () => SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: controller.isGoogleLoading.value
+                    ? null
+                    : controller.signInWithGoogle,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  side: const BorderSide(color: AppColors.gray200),
                 ),
-                onPressed: controller.togglePassword,
+                child: controller.isGoogleLoading.value
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            "assets/icons/google.webp",
+                            width: 22,
+                            height: 22,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            "Continue with Google",
+                            style: AppTextStyles.buttonText,
+                          ),
+                        ],
+                      ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(0, 0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                'Forgot Password?',
-                style: AppTextStyles.linkText.copyWith(
-                  color: AppColors.loginAccentRed,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: controller.login,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.loginAccentRed,
-                foregroundColor: AppColors.primaryWhite,
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 4,
-                shadowColor: AppColors.loginAccentRed.withValues(alpha: 0.3),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Login', style: AppTextStyles.buttonText),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 20),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              const Expanded(
-                child: Divider(color: AppColors.slate200, height: 1),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'OR CONTINUE WITH',
-                  style: AppTextStyles.dividerLabel.copyWith(
-                    color: AppColors.slate400,
+
+          const SizedBox(height: 16),
+
+          // Apple Sign-In Button
+          Obx(
+            () => SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: controller.isLoading.value
+                    ? null
+                    : controller.signInWithApple,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
+                child: controller.isLoading.value
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.apple, size: 24),
+                          SizedBox(width: 12),
+                          Text(
+                            "Continue with Apple",
+                            style: AppTextStyles.buttonText,
+                          ),
+                        ],
+                      ),
               ),
-              const Expanded(
-                child: Divider(color: AppColors.slate200, height: 1),
-              ),
-            ],
+            ),
           ),
+
           const SizedBox(height: 32),
+
           Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Don't have an account? ",
-                  style: AppTextStyles.footerText,
-                ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Text(
-                    'Sign Up',
-                    style: AppTextStyles.signUpLink.copyWith(
-                      color: AppColors.loginAccentRed,
-                    ),
-                  ),
-                ),
-              ],
+            child: Text(
+              "By continuing, you agree to our\nTerms & Privacy Policy",
+              textAlign: TextAlign.center,
+              style: AppTextStyles.footerText.copyWith(
+                color: AppColors.slate400,
+                fontSize: 12,
+              ),
             ),
           ),
         ],
