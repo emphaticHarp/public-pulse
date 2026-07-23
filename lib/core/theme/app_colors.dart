@@ -42,6 +42,9 @@ class AppColors {
   /// Slate 200 - border and divider color for login page
   static const Color slate200 = Color(0xFFE2E8F0);
 
+  /// Gray 200 - Google sign-in button border color for login page
+  static const Color gray200 = Color(0xFFE5E7EB);
+
   /// Inactive dot color - used for unselected pagination dots
   static const Color inactiveDot = Color(0xFFE1E4E8);
 
@@ -92,4 +95,11 @@ class AppColors {
 
   /// Create Post Gray 800 - dark gray for text
   static const Color createPostGray800 = Color(0xFF1F2937);
+
+  // ── Login Page Specific Colors ───────────────────────────────────────
+  /// Pure black - used for Apple sign-in button and dark UI elements
+  static const Color pureBlack = Color(0xFF000000);
+
+  /// Login box shadow color (black at ~8% opacity)
+  static const Color loginBoxShadow = Color(0x14000000);
 }

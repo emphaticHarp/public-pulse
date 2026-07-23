@@ -58,7 +58,7 @@ class LoginPage extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: AppColors.loginBoxShadow,
             blurRadius: 24,
             offset: const Offset(0, -8),
           ),
@@ -106,7 +106,7 @@ class LoginPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Image.asset(
-                            "assets/icons/google.webp",
+                            "assets/images/google.webp",
                             width: 22,
                             height: 22,
                           ),
@@ -132,8 +132,8 @@ class LoginPage extends StatelessWidget {
                     ? null
                     : controller.signInWithApple,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.pureBlack,
+                  foregroundColor: AppColors.primaryWhite,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -145,7 +145,7 @@ class LoginPage extends StatelessWidget {
                         width: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppColors.primaryWhite,
                         ),
                       )
                     : const Row(
