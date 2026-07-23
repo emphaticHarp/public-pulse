@@ -7,11 +7,10 @@ import 'package:public_pulse/controller/login_controller.dart';
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
- final controller = Get.find<LoginController>();
+  final controller = Get.find<LoginController>();
+
 
   static const String kBackgroundImagePath = 'assets/images/login_bg.jpg';
-
- 
 
   @override
   Widget build(BuildContext context) {
@@ -82,41 +81,90 @@ class LoginPage extends StatelessWidget {
             style: AppTextStyles.subtitle.copyWith(color: AppColors.slate400),
           ),
           const SizedBox(height: 32),
-        
-         
-         
-         
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(0, 0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+
+          // Google Sign-In Button
+          Obx(() => SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: controller.isLoading.value ? null : controller.signInWithGoogle,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                side: const BorderSide(color: AppColors.slate200),
               ),
-             
+              child: controller.isLoading.value
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          "assets/icons/google.webp",
+                          width: 22,
+                          height: 22,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          "Continue with Google",
+                          style: AppTextStyles.buttonText,
+                        ),
+                      ],
+                    ),
             ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
+          )),
+
+          const SizedBox(height: 16),
+
+          // Apple Sign-In Button
+          Obx(() => SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: controller.login,
+              onPressed: controller.isLoading.value ? null : controller.signInWithApple,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.loginAccentRed,
-                foregroundColor: AppColors.primaryWhite,
-                padding: const EdgeInsets.symmetric(vertical: 18),
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                elevation: 4,
-                shadowColor: AppColors.loginAccentRed.withValues(alpha: 0.3),
               ),
-              
+              child: controller.isLoading.value
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.apple, size: 24),
+                        SizedBox(width: 12),
+                        Text("Continue with Apple", style: AppTextStyles.buttonText),
+                      ],
+                    ),
+            ),
+          )),
+
+          const SizedBox(height: 32),
+
+          Center(
+            child: Text(
+              "By continuing, you agree to our\nTerms & Privacy Policy",
+              textAlign: TextAlign.center,
+              style: AppTextStyles.footerText.copyWith(
+                color: AppColors.slate400,
+                fontSize: 12,
+              ),
+            ),
           ),
-          )
-         
         ],
       ),
     );

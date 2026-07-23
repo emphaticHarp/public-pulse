@@ -1,30 +1,51 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 
 class LoginController extends GetxController {
 
-  final TextEditingController identifierController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final RxBool isLoading = false.obs;
 
-  final RxBool obscurePassword = true.obs;
+  Future<void> signInWithGoogle() async {
+    try {
+      isLoading.value = true;
 
-  void togglePassword() {
-    obscurePassword.toggle();
+      // TODO:
+      // Google Sign-In
+      // Firebase Authentication
+      // Save user
+      // Navigate
+
+      Get.off(() => MainPage());
+
+    } catch (e) {
+      Get.snackbar(
+        "Login Failed",
+        e.toString(),
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void login() {
-    // Validation
-    // API Call
-    // Save Token
+  Future<void> signInWithApple() async {
+    try {
+      isLoading.value = true;
 
-    Get.off(() => MainPage());
-  }
+      // TODO:
+      // Apple Sign-In
+      // Firebase Authentication
+      // Save user
+      // Navigate
 
-  @override
-  void onClose() {
-    identifierController.dispose();
-    passwordController.dispose();
-    super.onClose();
+      Get.off(() => MainPage());
+
+    } catch (e) {
+      Get.snackbar(
+        "Login Failed",
+        e.toString(),
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }
