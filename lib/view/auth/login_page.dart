@@ -2,7 +2,6 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/core/theme/app_font.dart';
-import 'package:public_pulse/widget/local/app_input_box.dart';
 import 'package:public_pulse/controller/login_controller.dart';
 
 class LoginPage extends StatelessWidget {
@@ -83,31 +82,10 @@ class LoginPage extends StatelessWidget {
             style: AppTextStyles.subtitle.copyWith(color: AppColors.slate400),
           ),
           const SizedBox(height: 32),
-          AppInputBox(
-            controller: controller.identifierController,
-            hintText: 'Email or Phone Number',
-            prefixIcon: Icons.person_outline,
-          ),
-          const SizedBox(height: 20),
-          Obx(
-            () => AppInputBox(
-              controller: controller.passwordController,
-              hintText: 'Password',
-              prefixIcon: Icons.lock_outline,
-              obscureText: controller.obscurePassword.value,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  controller.obscurePassword.value
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  color: AppColors.slate400,
-                  size: 20,
-                ),
-                onPressed: controller.togglePassword,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
+        
+         
+         
+         
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
@@ -117,12 +95,7 @@ class LoginPage extends StatelessWidget {
                 minimumSize: const Size(0, 0),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Text(
-                'Forgot Password?',
-                style: AppTextStyles.linkText.copyWith(
-                  color: AppColors.loginAccentRed,
-                ),
-              ),
+             
             ),
           ),
           const SizedBox(height: 10),
@@ -140,57 +113,10 @@ class LoginPage extends StatelessWidget {
                 elevation: 4,
                 shadowColor: AppColors.loginAccentRed.withValues(alpha: 0.3),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Login', style: AppTextStyles.buttonText),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 20),
-                ],
-              ),
-            ),
+              
           ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              const Expanded(
-                child: Divider(color: AppColors.slate200, height: 1),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'OR CONTINUE WITH',
-                  style: AppTextStyles.dividerLabel.copyWith(
-                    color: AppColors.slate400,
-                  ),
-                ),
-              ),
-              const Expanded(
-                child: Divider(color: AppColors.slate200, height: 1),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Don't have an account? ",
-                  style: AppTextStyles.footerText,
-                ),
-                GestureDetector(
-                  onTap: () {},
-                  child: Text(
-                    'Sign Up',
-                    style: AppTextStyles.signUpLink.copyWith(
-                      color: AppColors.loginAccentRed,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          )
+         
         ],
       ),
     );
