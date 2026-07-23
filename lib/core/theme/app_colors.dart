@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Centralized color constants for the Public Pulse app.
-/// Import this file to access all app colors consistently.
 class AppColors {
   AppColors._();
 
