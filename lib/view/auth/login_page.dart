@@ -9,7 +9,6 @@ class LoginPage extends StatelessWidget {
 
   final controller = Get.find<LoginController>();
 
-
   static const String kBackgroundImagePath = 'assets/images/login_bg.jpg';
 
   @override
@@ -83,75 +82,86 @@ class LoginPage extends StatelessWidget {
           const SizedBox(height: 32),
 
           // Google Sign-In Button
-          Obx(() => SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: controller.isLoading.value ? null : controller.signInWithGoogle,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+          Obx(
+            () => SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: controller.isGoogleLoading.value
+                    ? null
+                    : controller.signInWithGoogle,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  side: const BorderSide(color: AppColors.gray200),
                 ),
-                side: const BorderSide(color: AppColors.slate200),
+                child: controller.isGoogleLoading.value
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            "assets/icons/google.webp",
+                            width: 22,
+                            height: 22,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            "Continue with Google",
+                            style: AppTextStyles.buttonText,
+                          ),
+                        ],
+                      ),
               ),
-              child: controller.isLoading.value
-                  ? const SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          "assets/icons/google.webp",
-                          width: 22,
-                          height: 22,
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          "Continue with Google",
-                          style: AppTextStyles.buttonText,
-                        ),
-                      ],
-                    ),
             ),
-          )),
+          ),
 
           const SizedBox(height: 16),
 
           // Apple Sign-In Button
-          Obx(() => SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: controller.isLoading.value ? null : controller.signInWithApple,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+          Obx(
+            () => SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: controller.isLoading.value
+                    ? null
+                    : controller.signInWithApple,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-              ),
-              child: controller.isLoading.value
-                  ? const SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+                child: controller.isLoading.value
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.apple, size: 24),
+                          SizedBox(width: 12),
+                          Text(
+                            "Continue with Apple",
+                            style: AppTextStyles.buttonText,
+                          ),
+                        ],
                       ),
-                    )
-                  : const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.apple, size: 24),
-                        SizedBox(width: 12),
-                        Text("Continue with Apple", style: AppTextStyles.buttonText),
-                      ],
-                    ),
+              ),
             ),
-          )),
+          ),
 
           const SizedBox(height: 32),
 
