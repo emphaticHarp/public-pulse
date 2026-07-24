@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:550846873923:android:b86bef4ba0f7e41928eff6",
         "android_client_info": {
-          "package_name": "com.example.public_pulse"
+          "package_name": "com.insysky.publicpulse"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "550846873923-gces4kpqiq4resbun469q7i21f012qfu.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.public_pulse",
+            "package_name": "com.insysky.publicpulse",
             "certificate_hash": "a832dd56831d5227a9b4469ef7ab59f6480470b6"
           }
         },
