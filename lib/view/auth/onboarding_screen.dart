@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/core/theme/app_font.dart';
-import 'login_page.dart';
+import 'package:get/get.dart';
+import 'package:public_pulse/controller/onboarding_controller.dart';
+
 
 const String kLogoAssetPath = 'assets/images/logo.webp';
 
@@ -40,51 +42,17 @@ const List<_OnboardSlide> _slides = [
   ),
 ];
 
-class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
-  @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
-}
+class OnboardingScreen extends StatelessWidget {
+  OnboardingScreen({super.key});
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
-  late final PageController _pageController;
-  int _currentIndex = 0;
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: 0);
-  }
+  final OnboardingController controller = Get.put(OnboardingController());
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _onSkip() {
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
-  }
-
-  void _onBack() {
-    if (_currentIndex == 0) return;
-    _pageController.previousPage(
-      duration: const Duration(milliseconds: 450),
-      curve: Curves.easeInOutCubic,
-    );
-  }
-
-  void _onNext() {
-    if (_currentIndex == _slides.length - 1) {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
-      return;
-    }
-    _pageController.nextPage(
-      duration: const Duration(milliseconds: 450),
-      curve: Curves.easeInOutCubic,
+  Widget _buildLogo() {
+    return Image.asset(
+      kLogoAssetPath,
+      height: 56,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => const SizedBox(height: 56),
     );
   }
 
@@ -110,15 +78,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         maxLines: 1,
         softWrap: false,
       ),
-    );
-  }
-
-  Widget _buildLogo() {
-    return Image.asset(
-      kLogoAssetPath,
-      height: 56,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => const SizedBox(height: 56),
     );
   }
 
@@ -177,128 +136,66 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   const SizedBox(width: 40),
                   Flexible(child: _buildLogo()),
-                  GestureDetector(
-                    onTap: _onSkip,
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 4,
-                      ),
-                      child: Text(
-                        'Skip',
-                        style: AppTextStyles.skipText.copyWith(
-                          color: AppColors.grayText,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
             Expanded(
               child: PageView.builder(
-                controller: _pageController,
+                controller: controller.pageController,
                 itemCount: _slides.length,
-                onPageChanged: (index) => setState(() => _currentIndex = index),
-                itemBuilder: (context, index) => _buildSlide(_slides[index]),
+                onPageChanged: controller.onPageChanged,
+                itemBuilder: (context, index) {
+                  return _buildSlide(_slides[index]);
+                },
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_slides.length, (i) {
-                  final active = i == _currentIndex;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: active ? 20 : 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      color: active
-                          ? AppColors.accentRed
-                          : AppColors.inactiveDot,
-                    ),
-                  );
-                }),
+              child: Obx(
+                () => Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(_slides.length, (i) {
+                    final active = i == controller.currentIndex.value;
+
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: active ? 20 : 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: active
+                            ? AppColors.accentRed
+                            : AppColors.inactiveDot,
+                      ),
+                    );
+                  }),
+                ),
               ),
             ),
+
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 250),
-                    opacity: _currentIndex == 0 ? 0.0 : 1.0,
-                    child: IgnorePointer(
-                      ignoring: _currentIndex == 0,
-                      child: GestureDetector(
-                        onTap: _onBack,
-                        child: Container(
-                          width: 52,
-                          height: 52,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.buttonBackground,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_rounded,
-                            color: AppColors.darkText,
-                            size: 22,
-                          ),
-                        ),
-                      ),
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: controller.getStarted,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentRed,
+                    foregroundColor: AppColors.primaryWhite,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(40),
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 16),
-                      child: GestureDetector(
-                        onTap: _onNext,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentRed,
-                            borderRadius: BorderRadius.circular(36),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.accentRed.withValues(
-                                  alpha: 0.35,
-                                ),
-                                blurRadius: 16,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                _currentIndex == _slides.length - 1
-                                    ? 'Get Started'
-                                    : 'Next',
-                                style: AppTextStyles.nextButtonText.copyWith(
-                                  color: AppColors.primaryWhite,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.arrow_forward_rounded,
-                                color: AppColors.primaryWhite,
-                                size: 22,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                  child: Text(
+                    "Get Started",
+                    style: AppTextStyles.nextButtonText.copyWith(
+                      color: AppColors.primaryWhite,
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ],

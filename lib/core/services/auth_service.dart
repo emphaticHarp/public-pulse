@@ -1,39 +1,58 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
+  StreamSubscription<AuthState>? _authSubscription;
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  Future<bool> signInWithGoogle() async {
+    return await _supabase.auth.signInWithOAuth(OAuthProvider.google);
+  }
 
-  Future<UserCredential?> signInWithGoogle() async {
-    // User selects account
-    final GoogleSignInAccount? googleUser =
-        await _googleSignIn.signIn();
+  void listenToAuthChanges({
+    required Future<void> Function(User user) onSignedIn,
+  }) {
+    _authSubscription = _supabase.auth.onAuthStateChange.listen((data) async {
+      final event = data.event;
+      final session = data.session;
 
-    // User cancelled
-    if (googleUser == null) {
-      return null;
+      if (event == AuthChangeEvent.signedIn && session?.user != null) {
+        await onSignedIn(session!.user);
+      }
+    });
+  }
+
+  void dispose() {
+    _authSubscription?.cancel();
+  }
+
+  Future<bool> userExists() async {
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      return false;
     }
 
-    // Get auth details
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
+    final email = user.email;
 
-    // Firebase credential
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+    if (email == null) {
+      return false;
+    }
 
-    // Sign in to Firebase
-    return await _auth.signInWithCredential(credential);
+    final response = await _supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
+
+    return response != null;
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    await _supabase.auth.signOut();
   }
 
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser {
+    return _supabase.auth.currentUser;
+  }
 }
