@@ -100,4 +100,7 @@ class AppColors {
 
   /// Login box shadow color (black at ~8% opacity)
   static const Color loginBoxShadow = Color(0x14000000);
+
+  static const Color slate500 =  Color(0xFF64748B);
+
 }

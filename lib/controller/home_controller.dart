@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/model/post_model.dart';
+import 'package:public_pulse/core/repository/post_repository.dart';
+import 'package:flutter/foundation.dart';
+ import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class HomeController extends GetxController {
   final RxInt currentIndex = 0.obs;
@@ -14,13 +18,24 @@ class HomeController extends GetxController {
   /// Per-post PageControllers for carousel posts
   final Map<String, PageController> _carouselPageControllers = {};
 
+  final PostRepository _repository = PostRepository();
+
   final RxList<PostModel> posts = <PostModel>[].obs;
 
-  @override
-  void onInit() {
-    super.onInit();
-    loadDummyPosts();
+
+@override
+void onInit() {
+  super.onInit();
+
+  final user = Supabase.instance.client.auth.currentUser;
+
+  if (user != null) {
+    debugPrint('[DEBUG-CONTROLLER] User logged in, loading posts');
+    loadPosts();
+  } else {
+    debugPrint('[DEBUG-CONTROLLER] User not logged in, skipping loadPosts()');
   }
+}
 
   /// Get or create a PageController for a carousel post
   PageController getCarouselPageController(String postId, int initialPage) {
@@ -51,72 +66,17 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
-  void loadDummyPosts() {
-    posts.value = [
-      PostModel(
-        id: '1',
-
-        profileImage:
-            'https://png.pngtree.com/png-clipart/20230927/original/pngtree-man-avatar-image-for-profile-png-image_13001882.png',
-
-        username: 'Arjun Verma',
-        location: 'Kolkata, West Bengal',
-        isCarousel: false,
-        imageUrl:
-            'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800',
-
-        isLiked: false,
-        likeCount: '1.2K',
-
-        commentCount: '67',
-
-        shareCount: '143',
-
-        caption: 'Beautiful sunset at the park! 🌅',
-
-        captionCommentCount: '67',
-      ),
-
-      PostModel(
-        id: '2',
-
-        profileImage:
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuCRXrg8jv_gNbpxWTbHTcNYIqrKteX-noCsBjI941TQnrw4dosFG6tH3B9Qj6pEB2oZc0WAlKvLcZorPKwhV1RhCromszfTMiJJ1oYwRPicmvQaG0DVBAozvRFExhzwXOJM6g5gzejjYPXvBdAPwyUmS1CKC1bebShXLzbRdirWYQML71msgzeBNVp9uBR5c2PBDbpDqp7KgwkWxH2xlb4bxjF0ZVuMAVqIiNQ0wgVxW90kXYc8qjw9_sJKGhS79sNGMaMeLgY8o1jV',
-
-        username: 'Sneha Das',
-        location: 'Mumbai, Maharashtra',
-        isCarousel: true,
-
-        imageUrls: [
-          'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800',
-
-          'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800',
-
-          'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800',
-
-          'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800',
-
-          'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=800',
-        ],
-
-        isLiked: false,
-        likeCount: '856',
-
-        commentCount: '42',
-
-        shareCount: '98',
-
-        caption: 'Exploring the mountains today! 🏔️',
-
-        captionCommentCount: '42',
-      ),
-    ];
-
-    // Initialize per-post carousel indexes for carousel posts
-    for (final post in posts) {
-      if (post.isCarousel) {
-        carouselIndexes[post.id] = 0;
-      }
+ 
+  Future<void> loadPosts() async {
+    debugPrint('[DEBUG-CONTROLLER] loadPosts: starting...');
+    try {
+      final fetchedPosts = await _repository.getPosts();
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: received ${fetchedPosts.length} posts from repository');
+      posts.assignAll(fetchedPosts);
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: posts list updated, current length = ${posts.length}');
+    } catch (e, stackTrace) {
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: ERROR = $e');
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: stackTrace = $stackTrace');
     }
   }
 }
