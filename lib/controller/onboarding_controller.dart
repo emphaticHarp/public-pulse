@@ -53,7 +53,7 @@ class OnboardingController extends GetxController {
     await prefs.setBool('onboarding_completed', true);
 
     // Navigate to Login
-    Get.off(() => LoginPage());
+    Get.offAll(() => LoginPage());
   }
 
   @override

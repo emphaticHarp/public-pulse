@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:public_pulse/core/services/auth_service.dart';
 import 'view/auth/splash_screen_page.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/controller/network_controller.dart';
@@ -23,10 +23,12 @@ Future<void> main() async {
   }
 
   await Supabase.initialize(url: url, anonKey: key);
+
+  Get.put(AuthService(), permanent: true);
+
   Get.put(NetworkController()); //This creates the NetworkController.
   Get.put(HomeController()); //This creates the HomeController.
   Get.lazyPut<LoginController>(() => LoginController());
-
   Get.put(NotificationController());
   runApp(const PublicPulseApp());
 }

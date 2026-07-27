@@ -1,4 +1,4 @@
-package com.insysky.publicpulse
+package com.insyssky.publicpulse
 
 import io.flutter.embedding.android.FlutterActivity
 

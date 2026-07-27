@@ -7,6 +7,7 @@ import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/widget/local/app_search_bar.dart';
 import 'package:public_pulse/view/post/post_card.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
+import 'package:flutter/foundation.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -18,11 +19,14 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[DEBUG-UI] HomePage.build: called, posts.length=${controller.posts.length}');
     return Scaffold(
       backgroundColor: Colors.white,
       body: NetworkWrapper(
         child: Obx(
-          () => CustomScrollView(
+          () {
+            debugPrint('[DEBUG-UI] HomePage.build: Obx rebuild triggered, posts.length=${controller.posts.length}');
+            return CustomScrollView(
             slivers: [
               // Header
               SliverToBoxAdapter(child: _buildHeader(context)),
@@ -40,15 +44,22 @@ class HomePage extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 24),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
+                    debugPrint('[DEBUG-UI] HomePage.build: building PostCard at index=$index');
                     final post = controller.posts[index];
 
                     return PostCard(
-                      profileImage: post.profileImage,
+                     profileImage: post.profileImage ?? '',
                       username: post.username,
-                      location: post.location,
+                    location: post.location ?? '',
+                    
+                    // Pass whether this post contains a video.
                       isCarousel: post.isCarousel,
-                      imageUrl: post.imageUrl,
-                      imageUrls: post.imageUrls,
+                      isVideo: post.isVideo,
+                      imageUrl: post.mediaUrls.isNotEmpty
+                          ? post.mediaUrls.first
+                          : null,
+                      imageUrls: post.mediaUrls,
+
                       postId: post.isCarousel ? post.id : null,
                       likeIcon: post.isLiked
                           ? Icons.favorite
@@ -56,11 +67,14 @@ class HomePage extends StatelessWidget {
                       likeIconColor: post.isLiked
                           ? AppColors.loginAccentRed
                           : AppColors.gray900,
-                      likeCount: post.likeCount,
-                      commentCount: post.commentCount,
-                      shareCount: post.shareCount,
-                      caption: post.caption,
-                      captionCommentCount: post.captionCommentCount,
+
+                     likeCount: post.likeCount.toString(),
+
+                     commentCount: post.commentCount.toString(),
+
+                     shareCount: post.shareCount.toString(),
+                      caption: post.caption ?? '',
+                    captionCommentCount: post.commentCount.toString(),
                       onLikeTap: () {
                         post.isLiked = !post.isLiked;
                         controller.posts.refresh();
@@ -70,7 +84,8 @@ class HomePage extends StatelessWidget {
                 ),
               ),
             ],
-          ),
+          );
+          },
         ),
       ),
 

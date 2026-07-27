@@ -106,7 +106,7 @@ class LoginPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Image.asset(
-                            "assets/images/google.webp",
+                            "assets/images/Google.webp",
                             width: 22,
                             height: 22,
                           ),
