@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/view/auth/login_page.dart';
 import 'package:public_pulse/view/auth/onboarding_screen.dart';
 import 'package:public_pulse/view/main/main_page.dart';
+import 'package:public_pulse/core/services/auth_service.dart';
+import 'package:public_pulse/widget/login/login_code_page.dart';
 
 class VersionCheckController extends GetxController {
   @override
@@ -19,7 +21,40 @@ class VersionCheckController extends GetxController {
 
     // User already logged in
     if (session != null) {
-      Get.offAll(() => MainPage());
+      final AuthService authService = Get.find<AuthService>();
+
+      final profile = await authService.getCurrentProfile();
+
+      if (profile == null) {
+        await authService.signOut();
+        Get.offAll(() => LoginPage());
+        return;
+      }
+
+      final status = (profile['status'] ?? 'pending')
+          .toString()
+          .toLowerCase();
+
+      switch (status) {
+        case "active":
+          Get.offAll(() => MainPage());
+          break;
+
+        case "pending":
+          Get.offAll(() => LoginCodePage());
+          break;
+
+        case "blocked":
+          await authService.signOut();
+          Get.offAll(() => LoginPage());
+          break;
+
+        default:
+          await authService.signOut();
+          Get.offAll(() => LoginPage());
+          break;
+      }
+
       return;
     }
 
@@ -34,6 +69,4 @@ class VersionCheckController extends GetxController {
       Get.offAll(() => OnboardingScreen());
     }
   }
-
- 
 }

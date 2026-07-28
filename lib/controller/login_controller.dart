@@ -28,9 +28,43 @@ class LoginController extends GetxController {
         _isCheckingUser.value = true;
 
         try {
-          debugPrint("User signed in successfully.");
+          final profile = await _authService.getCurrentProfile();
 
-          Get.offAll(() => LoginCodePage());
+          if (profile == null) {
+            Get.snackbar("Error", "Unable to load your profile.");
+            return;
+          }
+
+          final status = (profile['status'] ?? 'pending')
+              .toString()
+              .toLowerCase();
+
+          debugPrint("User login status = $status");
+
+          switch (status) {
+            case "active":
+              Get.offAll(() => MainPage());
+              break;
+
+            case "pending":
+              Get.offAll(() => LoginCodePage());
+              break;
+
+            case "blocked":
+              Get.snackbar(
+                "Account Blocked",
+                "Please contact the administrator.",
+              );
+
+              await _authService.signOut();
+
+              Get.offAllNamed("/login"); // or Get.offAll(() => LoginPage());
+
+              break;
+
+            default:
+              Get.offAll(() => LoginCodePage());
+          }
         } finally {
           _isCheckingUser.value = false;
         }
@@ -41,27 +75,23 @@ class LoginController extends GetxController {
   }
 
   Future<void> signInWithGoogle() async {
-    debugPrint("signInWithGoogle: button pressed, starting flow");
+    debugPrint("signInWithGoogle: button pressed");
+
     try {
       isGoogleLoading.value = true;
-      debugPrint("signInWithGoogle: isGoogleLoading set to true");
 
       final success = await _authService.signInWithGoogle();
-      debugPrint("signInWithGoogle: result success = $success");
 
       if (!success) {
-        debugPrint(
-          "signInWithGoogle: sign-in cancelled or failed, showing snackbar",
-        );
         Get.snackbar("Login Failed", "Google Sign-In was cancelled or failed.");
       }
-    } catch (e, stackTrace) {
-      debugPrint("signInWithGoogle ERROR: $e");
-      debugPrint("signInWithGoogle: stackTrace = $stackTrace");
+
+      // Do NOT navigate here.
+      // onSignedIn() will handle navigation.
+    } catch (e) {
       Get.snackbar("Login Failed", e.toString());
     } finally {
       isGoogleLoading.value = false;
-      debugPrint("signInWithGoogle: isGoogleLoading set to false");
     }
   }
 
