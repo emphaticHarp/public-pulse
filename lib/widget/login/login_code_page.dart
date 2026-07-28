@@ -44,7 +44,7 @@ class LoginCodePage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(.05),
+                    color: Colors.black.withOpacity(0.05),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(

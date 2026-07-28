@@ -71,9 +71,10 @@ class AuthService {
       debugPrint("signInWithGoogle: Supabase sign-in successful");
       return true;
     } catch (e, stackTrace) {
-      debugPrint("Google Sign-In Error: $e");
+      final errorMessage = "Google Sign-In Error: $e";
+      debugPrint(errorMessage);
       debugPrint("signInWithGoogle: stackTrace = $stackTrace");
-      print("Google Sign-In Error: $e");
+      debugPrint(errorMessage);
       return false;
     }
   }
@@ -138,6 +139,4 @@ class AuthService {
     debugPrint("googleUserMetadata: accessed -> $metadata");
     return metadata;
   }
-
-
 }

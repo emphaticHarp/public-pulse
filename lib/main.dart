@@ -8,6 +8,7 @@ import 'view/auth/splash_screen_page.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/controller/network_controller.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
+import 'package:public_pulse/controller/profile_controller.dart';
 import 'package:public_pulse/controller/login_controller.dart';
 
 Future<void> main() async {
@@ -26,10 +27,11 @@ Future<void> main() async {
 
   Get.put(AuthService(), permanent: true);
 
-  Get.put(NetworkController()); //This creates the NetworkController.
-  Get.put(HomeController()); //This creates the HomeController.
+  Get.put(NetworkController()); 
+  Get.put(HomeController()); 
   Get.lazyPut<LoginController>(() => LoginController());
   Get.put(NotificationController());
+  Get.put(ProfileController());
   runApp(const PublicPulseApp());
 }
 

@@ -5,10 +5,10 @@ class AppColors {
 
   // ── Primary Brand Colors ──────────────────────────────────────────────
   /// Login accent red - used for buttons and links on login page
-  static const Color loginAccentRed = Color(0xFFE6192E);
+  static const Color loginAccentRed = Color.fromARGB(255, 226,29,72);
 
   /// Onboarding/Splash accent red - used for buttons and highlights
-  static const Color accentRed = Color(0xFFF13223);
+  static const Color accentRed = Color.fromARGB(255, 241, 50, 35);
 
   // ── Surface Colors ────────────────────────────────────────────────────
   /// Primary white - used for card backgrounds and light surfaces
@@ -75,7 +75,7 @@ class AppColors {
   static const Color textPrimary = Color(0xFF0F172A); // slate-900
 
   static const Color textSecondary = Color(0xFF64748B); // slate-500
-  
+
   static const Color divider = Color(0xFFF1F5F9); // slate-100
 
   // ── Create Post Page Colors ─────────────────────────────────────────────
@@ -101,6 +101,12 @@ class AppColors {
   /// Login box shadow color (black at ~8% opacity)
   static const Color loginBoxShadow = Color(0x14000000);
 
-  static const Color slate500 =  Color(0xFF64748B);
+  static const Color slate500 = Color(0xFF64748B);
 
+  // ── Profile Page Colors ───────────────────────────────────────────────
+  /// Success green - used for "username available" status on Edit Profile
+  static const Color profileSuccessGreen = Color(0xFF16A34A);
+
+  /// Fully transparent - used for inactive tab underline on Profile Screen
+  static const Color transparent = Color.fromARGB(0, 0, 0, 0);
 }
