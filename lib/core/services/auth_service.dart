@@ -7,7 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String? webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
-
+String? get currentUserId => _supabase.auth.currentUser?.id;
   final String? androidClientId = dotenv.env['GOOGLE_ANDROID_CLIENT_ID'];
 
   late final GoogleSignIn _googleSignIn;
@@ -139,5 +139,60 @@ class AuthService {
     return metadata;
   }
 
+  /// Get current logged-in user's profile
+  Future<Map<String, dynamic>?> getCurrentProfile() async {
+    try {
+      final user = _supabase.auth.currentUser;
 
+      debugPrint("Current User ID: ${user?.id}");
+      debugPrint("Current User Email: ${user?.email}");
+
+      final result = await _supabase.from('profiles').select('*');
+
+      debugPrint("Profiles returned: $result");
+
+      final profile = await _supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user!.id)
+          .maybeSingle();
+
+      debugPrint("Profile found: $profile");
+
+      return profile;
+    } catch (e) {
+      debugPrint("getCurrentProfile ERROR: $e");
+      return null;
+    }
+  }
+
+  Future<bool> verifyLoginCode(String code) async {
+    try {
+      final profile = await _supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('refer_code', code)
+          .maybeSingle();
+
+      return profile != null;
+    } catch (e) {
+      debugPrint("verifyLoginCode ERROR: $e");
+      return false;
+    }
+  }
+
+  Future<void> activateCurrentUser(String code) async {
+    try {
+      final user = _supabase.auth.currentUser;
+
+      if (user == null) return;
+
+      await _supabase
+          .from('profiles')
+          .update({'status': 'active', 'login_code': code})
+          .eq('user_id', user.id);
+    } catch (e) {
+      debugPrint("activateCurrentUser ERROR: $e");
+    }
+  }
 }
