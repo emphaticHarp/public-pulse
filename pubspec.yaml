@@ -2,7 +2,7 @@ name: public_pulse
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -39,9 +39,7 @@ dependencies:
   get: ^4.7.3
   image_picker: ^1.2.3
   permission_handler: ^12.0.3
-  
   sign_in_with_apple: ^6.1.0
-  
   shared_preferences: ^2.5.5
   supabase_flutter: ^2.16.0
   flutter_dotenv: ^6.0.1
@@ -49,21 +47,16 @@ dependencies:
   http: ^1.6.0
   video_player: ^2.13.0
   pinput: ^6.0.2
-  
-  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   path_provider: ^2.1.6
   flutter_image_compress: ^2.4.0
   provider: ^6.1.2
-
-  video_compress: ^3.1.4 
-  exif: ^3.3.0 
+  video_compress: ^3.1.4
+  exif: ^3.3.0
   geolocator: ^13.0.0
-  native_exif: ^0.8.0
-
-
 
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -73,6 +66,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+dependency_overrides:
+  jni: 1.0.2
+  jni_flutter: 1.0.2
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -80,7 +77,6 @@ dev_dependencies:
 # NOTE: there must be only ONE top-level `flutter:` key — a duplicate key
 # silently overwrites the first, which is why `assets:` was being ignored.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

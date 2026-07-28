@@ -7,7 +7,7 @@ import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/widget/local/app_search_bar.dart';
 import 'package:public_pulse/view/post/post_card.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
