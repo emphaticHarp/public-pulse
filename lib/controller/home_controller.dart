@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import 'package:public_pulse/model/post_model.dart';
 import 'package:public_pulse/core/repository/post_repository.dart';
 import 'package:flutter/foundation.dart';
- import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeController extends GetxController {
   final RxInt currentIndex = 0.obs;
@@ -22,20 +21,24 @@ class HomeController extends GetxController {
 
   final RxList<PostModel> posts = <PostModel>[].obs;
 
+  @override
+  void onInit() {
+    super.onInit();
 
-@override
-void onInit() {
-  super.onInit();
+    final user = Supabase.instance.client.auth.currentUser;
 
-  final user = Supabase.instance.client.auth.currentUser;
-
-  if (user != null) {
-    debugPrint('[DEBUG-CONTROLLER] User logged in, loading posts');
-    loadPosts();
-  } else {
-    debugPrint('[DEBUG-CONTROLLER] User not logged in, skipping loadPosts()');
+    if (user != null) {
+      debugPrint('[DEBUG-CONTROLLER] User logged in, loading posts');
+      loadPosts();
+    } else {
+      debugPrint('[DEBUG-CONTROLLER] User not logged in, skipping loadPosts()');
+    }
   }
-}
+
+  Future<void> loadMyPosts() async {
+    final fetchedPosts = await _repository.getMyPosts();
+    posts.assignAll(fetchedPosts);
+  }
 
   /// Get or create a PageController for a carousel post
   PageController getCarouselPageController(String postId, int initialPage) {
@@ -66,14 +69,17 @@ void onInit() {
     super.onClose();
   }
 
- 
   Future<void> loadPosts() async {
     debugPrint('[DEBUG-CONTROLLER] loadPosts: starting...');
     try {
       final fetchedPosts = await _repository.getPosts();
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: received ${fetchedPosts.length} posts from repository');
+      debugPrint(
+        '[DEBUG-CONTROLLER] loadPosts: received ${fetchedPosts.length} posts from repository',
+      );
       posts.assignAll(fetchedPosts);
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: posts list updated, current length = ${posts.length}');
+      debugPrint(
+        '[DEBUG-CONTROLLER] loadPosts: posts list updated, current length = ${posts.length}',
+      );
     } catch (e, stackTrace) {
       debugPrint('[DEBUG-CONTROLLER] loadPosts: ERROR = $e');
       debugPrint('[DEBUG-CONTROLLER] loadPosts: stackTrace = $stackTrace');

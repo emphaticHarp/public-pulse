@@ -6,6 +6,20 @@ import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/core/theme/app_font.dart';
 import 'package:flutter/services.dart';
 
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+    );
+  }
+}
+
+
 class LoginCodePage extends StatelessWidget {
   LoginCodePage({super.key});
 
@@ -88,9 +102,10 @@ class LoginCodePage extends StatelessWidget {
                   length: 6,
                   autofocus: true,
                   keyboardType: TextInputType.visiblePassword,
-                  textCapitalization: TextCapitalization.none,
+                  textCapitalization: TextCapitalization.characters,
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                    UpperCaseTextFormatter(),
                   ],
                   defaultPinTheme: defaultPinTheme,
                   focusedPinTheme: focusedPinTheme,
