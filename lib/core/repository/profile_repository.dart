@@ -20,7 +20,7 @@ class ProfileRepository {
   Future<void> saveProfile(ProfileModel profile) async {
     await _db.upsert({
       ...profile.toMap(),
-      'profile_completed': true,
+      'profile_completed': true,//-------------------------------------fix--------------------------------
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     });
   }
@@ -34,8 +34,8 @@ class ProfileRepository {
     await _db.update({
       'username': username,
       'bio': bio,
-      'profile_photo_url': profilePhotoUrl,
-      'cover_photo_url': coverPhotoUrl,
+      'profile_photo_url': profilePhotoUrl,//---------------------------------fix------------------------
+      'cover_photo_url': coverPhotoUrl,//-----------------------------fix---------------
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('user_id', _uid);
   }

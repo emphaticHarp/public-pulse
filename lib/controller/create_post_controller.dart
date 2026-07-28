@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:public_pulse/core/services/permission_service.dart';
+import 'package:public_pulse/controller/upload_progress_controller.dart';
+import 'package:public_pulse/view/upload/upload_progress_page.dart';
 
 class CreatePostController extends GetxController {
   final ImagePicker picker = ImagePicker();
@@ -22,6 +24,12 @@ class CreatePostController extends GetxController {
 
   // Location
   final RxString location = ''.obs;
+
+  // Upload state
+  final RxBool isUploading = false.obs;
+
+  // Visibility
+  final RxString visibility = "PUBLIC".obs;
 
   @override
   void onInit() {
@@ -65,13 +73,16 @@ class CreatePostController extends GetxController {
   // Upload post
   void uploadPost() {
     if (mediaUrls.isEmpty) return;
+    isUploading.value = true;
 
-    // Implement actual upload logic
-    Get.snackbar(
-      'Uploading',
-      'Your post is being uploaded...',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    // Determine if the post has videos
+    final hasVideos = mediaUrls.any((u) => u.toLowerCase().endsWith('.mp4'));
+
+    // Register the upload progress controller and navigate
+    final uploadCtrl = Get.put(UploadProgressController());
+    uploadCtrl.startSimulatedUpload(mediaUrls.length, fileType: hasVideos ? 'video' : 'image');
+
+    Get.to(() => const UploadProgressPage());
   }
 
   // Add location

@@ -34,10 +34,10 @@ class ProfileModel {
         username: map['username'] as String? ?? '',
         displayName: map['display_name'] as String?,
         bio: map['bio'] as String?,
-        profilePhotoUrl: map['profile_photo_url'] as String?,
-        coverPhotoUrl: map['cover_photo_url'] as String?,
-        profileCompleted: map['profile_completed'] as bool? ?? false,
-        isVerified: map['is_verified'] as bool? ?? false,
+        profilePhotoUrl: map['profile_photo_url'] as String?,//---------------avatar path-----------------
+        coverPhotoUrl: map['cover_photo_url'] as String?,//-------------cover path-------------------
+        // profileCompleted: map['profile_completed'] as bool? ?? false,
+        // isVerified: map['is_verified'] as bool? ?? false,
         postsCount: map['posts_count'] as int? ?? 0,
         followersCount: map['followers_count'] as int? ?? 0,
         followingCount: map['following_count'] as int? ?? 0,

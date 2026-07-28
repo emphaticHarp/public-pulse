@@ -67,6 +67,7 @@ child: Scaffold(
                             const _InfoBanner(),
                             _CaptionSection(controller: controller),
                             _LocationSection(controller: controller),
+                            _VisibilitySection(controller: controller),
                           ],
                         ),
                       ),
@@ -238,7 +239,7 @@ class _MediaCarousel extends StatelessWidget {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: urls.length + 1,
+              itemCount: urls.length < 10 ? urls.length + 1 : urls.length,
               itemBuilder: (context, index) {
                 if (index == urls.length) {
                   return GestureDetector(
@@ -420,13 +421,18 @@ class _MediaPreviewCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.image, color: Colors.white, size: 14),
-                    const SizedBox(width: 6),
+                    Icon(
+                      imageUrl.toLowerCase().endsWith('.mp4')
+                          ? Icons.videocam
+                          : Icons.image,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 5),
                     Text(
                       '$currentIndex/$totalCount',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -553,16 +559,24 @@ class _CaptionSection extends StatelessWidget {
                 Positioned(
                   bottom: 12,
                   right: 16,
-                  child: Obx(
-                    () => Text(
-                      '${controller.caption.value.length}/${controller.captionMaxLength}',
-                      style: const TextStyle(
+                  child: Obx(() {
+                    final length = controller.caption.value.length;
+                    Color color = AppColors.gray400;
+                    if (length > 450) {
+                      color = Colors.orange;
+                    }
+                    if (length >= controller.captionMaxLength) {
+                      color = Colors.red;
+                    }
+                    return Text(
+                      '$length/${controller.captionMaxLength}',
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w600,
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.gray400,
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 ),
               ],
             ),
@@ -648,6 +662,87 @@ class _LocationSection extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Visibility section
+// ---------------------------------------------------------------------------
+class _VisibilitySection extends StatelessWidget {
+  const _VisibilitySection({
+    required this.controller,
+  });
+
+  final CreatePostController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.public,
+                color: AppColors.createPostRed600,
+                size: 16,
+              ),
+              SizedBox(width: 8),
+              Text(
+                "Who can see this?",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.createPostRed600,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          Obx(
+            () => Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.gray100),
+              ),
+              child: Column(
+                children: [
+                  RadioListTile<String>(
+                    value: "PUBLIC",
+                    groupValue: controller.visibility.value,
+                    activeColor: AppColors.createPostRed600,
+                    title: const Text("Public"),
+                    subtitle: const Text(
+                      "Everyone can view this post",
+                    ),
+                    onChanged: (v) {
+                      controller.visibility.value = v!;
+                    },
+                  ),
+                  const Divider(height: 1),
+                  RadioListTile<String>(
+                    value: "PRIVATE",
+                    groupValue: controller.visibility.value,
+                    activeColor: AppColors.createPostRed600,
+                    title: const Text("Followers Only"),
+                    subtitle: const Text(
+                      "Only your followers can view this",
+                    ),
+                    onChanged: (v) {
+                      controller.visibility.value = v!;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Sticky footer with the "Upload Post" button
 // ---------------------------------------------------------------------------
 class _UploadFooter extends StatelessWidget {
@@ -667,7 +762,8 @@ class _UploadFooter extends StatelessWidget {
         () => SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: controller.mediaUrls.isEmpty
+            onPressed: controller.mediaUrls.isEmpty ||
+                    controller.isUploading.value
                 ? null
                 : controller.uploadPost,
             style:
@@ -684,17 +780,32 @@ class _UploadFooter extends StatelessWidget {
                     AppColors.createPostRed800,
                   ),
                 ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.cloud_upload, size: 22),
-                SizedBox(width: 8),
-                Text(
-                  'Upload Post',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
+            child: Obx(() {
+              if (controller.isUploading.value) {
+                return const SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                );
+              }
+              return const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.cloud_upload, size: 22),
+                  SizedBox(width: 8),
+                  Text(
+                    'Upload Post',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              );
+            }),
           ),
         ),
       ),
