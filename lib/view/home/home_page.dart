@@ -7,7 +7,6 @@ import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/widget/local/app_search_bar.dart';
 import 'package:public_pulse/view/post/post_card.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
-// import 'package:flutter/foundation.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -19,77 +18,119 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[DEBUG-UI] HomePage.build: called, posts.length=${controller.posts.length}');
+    debugPrint(
+      '[DEBUG-UI] HomePage.build: called, posts.length=${controller.posts.length}',
+    );
     return Scaffold(
       backgroundColor: Colors.white,
       body: NetworkWrapper(
-        child: Obx(
-          () {
-            debugPrint('[DEBUG-UI] HomePage.build: Obx rebuild triggered, posts.length=${controller.posts.length}');
-            return CustomScrollView(
-            slivers: [
-              // Header
-              SliverToBoxAdapter(child: _buildHeader(context)),
+        child: Obx(() {
+          return RefreshIndicator(
+            onRefresh: controller.loadPosts,
+            color: AppColors.loginAccentRed,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // Header
+                SliverToBoxAdapter(child: _buildHeader(context)),
 
-              // Search Bar
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 8),
-                  child: SearchBarWidget(),
+                // Search Bar (always visible)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: SearchBarWidget(),
+                  ),
                 ),
-              ),
 
-              // Posts
-              SliverPadding(
-                padding: const EdgeInsets.only(bottom: 24),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    debugPrint('[DEBUG-UI] HomePage.build: building PostCard at index=$index');
-                    final post = controller.posts[index];
+                // Loading state
+                if (controller.isLoading.value)
+                  const SliverFillRemaining(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.loginAccentRed,
+                      ),
+                    ),
+                  )
+                // Empty state
+                else if (controller.posts.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.photo_library_outlined,
+                            size: 80,
+                            color: Colors.grey.shade400,
+                          ),
+                          SizedBox(height: 18),
+                          Text(
+                            "No Posts Yet",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            "Posts from everyone will appear here.",
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                // Posts loaded
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final post = controller.posts[index];
 
-                    return PostCard(
-                     profileImage: post.profileImage ?? '',
-                      username: post.username,
-                    location: post.location ?? '',
-                    
-                    // Pass whether this post contains a video.
-                      isCarousel: post.isCarousel,
-                      isVideo: post.isVideo,
-                      imageUrl: post.mediaUrls.isNotEmpty
-                          ? post.mediaUrls.first
-                          : null,
-                      imageUrls: post.mediaUrls,
+                        return PostCard(
+                          key: ValueKey(post.id),
+                          profileImage: post.profileImage ?? '',
+                          username: post.username,
+                          location: post.location ?? '',
 
-                      postId: post.isCarousel ? post.id : null,
-                      likeIcon: post.isLiked
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      likeIconColor: post.isLiked
-                          ? AppColors.loginAccentRed
-                          : AppColors.gray900,
+                          isCarousel: post.isCarousel,
+                          isVideo: post.isVideo,
+                          imageUrl: post.mediaUrls.isNotEmpty
+                              ? post.mediaUrls.first
+                              : null,
+                          imageUrls: post.mediaUrls,
 
-                     likeCount: post.likeCount.toString(),
+                          postId: post.isCarousel ? post.id : null,
+                          likeIcon: post.isLiked
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          likeIconColor: post.isLiked
+                              ? AppColors.loginAccentRed
+                              : AppColors.gray900,
 
-                     commentCount: post.commentCount.toString(),
-
-                     shareCount: post.shareCount.toString(),
-                      caption: post.caption ?? '',
-                    captionCommentCount: post.commentCount.toString(),
-                      onLikeTap: () {
-                        post.isLiked = !post.isLiked;
-                        controller.posts.refresh();
-                      },
-                    );
-                  }, childCount: controller.posts.length),
-                ),
-              ),
-            ],
+                          likeCount: post.likeCount.toString(),
+                          commentCount: post.commentCount.toString(),
+                          shareCount: post.shareCount.toString(),
+                          caption: post.caption ?? '',
+                          captionCommentCount: post.commentCount.toString(),
+                          onLikeTap: () {
+                            post.isLiked = !post.isLiked;
+                            controller.posts.refresh();
+                          },
+                        );
+                      }, childCount: controller.posts.length),
+                    ),
+                  ),
+              ],
+            ),
           );
-          },
-        ),
+        }),
       ),
-
-      // in this area the bottom nav will import but it is controlling from main page so it is removed if not then 2 navigation bar are showing
     );
   }
 

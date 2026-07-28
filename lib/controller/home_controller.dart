@@ -19,7 +19,14 @@ class HomeController extends GetxController {
 
   final PostRepository _repository = PostRepository();
 
+  /// Home feed (everyone's posts)
   final RxList<PostModel> posts = <PostModel>[].obs;
+
+  /// Logged in user's posts
+  final RxList<PostModel> myPosts = <PostModel>[].obs;
+
+  /// Loading state for home feed
+  final isLoading = true.obs;
 
   @override
   void onInit() {
@@ -28,16 +35,26 @@ class HomeController extends GetxController {
     final user = Supabase.instance.client.auth.currentUser;
 
     if (user != null) {
-      debugPrint('[DEBUG-CONTROLLER] User logged in, loading posts');
+      debugPrint('[DEBUG-CONTROLLER] User logged in');
+
       loadPosts();
+      loadMyPosts();
     } else {
-      debugPrint('[DEBUG-CONTROLLER] User not logged in, skipping loadPosts()');
+      debugPrint('[DEBUG-CONTROLLER] User not logged in');
     }
   }
 
   Future<void> loadMyPosts() async {
-    final fetchedPosts = await _repository.getMyPosts();
-    posts.assignAll(fetchedPosts);
+    try {
+      final fetchedPosts = await _repository.getMyPosts();
+
+      myPosts.assignAll(fetchedPosts);
+
+      debugPrint('[DEBUG-CONTROLLER] My Posts loaded: ${myPosts.length}');
+    } catch (e, stackTrace) {
+      debugPrint('[DEBUG-CONTROLLER] loadMyPosts ERROR: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   /// Get or create a PageController for a carousel post
@@ -70,19 +87,18 @@ class HomeController extends GetxController {
   }
 
   Future<void> loadPosts() async {
-    debugPrint('[DEBUG-CONTROLLER] loadPosts: starting...');
     try {
+      isLoading.value = true;
+
       final fetchedPosts = await _repository.getPosts();
-      debugPrint(
-        '[DEBUG-CONTROLLER] loadPosts: received ${fetchedPosts.length} posts from repository',
-      );
       posts.assignAll(fetchedPosts);
-      debugPrint(
-        '[DEBUG-CONTROLLER] loadPosts: posts list updated, current length = ${posts.length}',
-      );
+
+      debugPrint('[DEBUG-CONTROLLER] Home Feed loaded: ${posts.length}');
     } catch (e, stackTrace) {
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: ERROR = $e');
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: stackTrace = $stackTrace');
+      debugPrint('[DEBUG-CONTROLLER] loadPosts ERROR: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      isLoading.value = false;
     }
   }
 }
