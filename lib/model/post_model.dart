@@ -93,7 +93,7 @@ class PostModel {
         final path = item['storage_path'] as String;
         final mediaType = item['media_type'] as String;
 
-        final bucket = mediaType == 'VIDEO' ? 'post-videos' : 'post-images';
+        final bucket = mediaType == 'VIDEO' ? 'posts-videos' : 'posts-images';
 
         return Supabase.instance.client.storage.from(bucket).getPublicUrl(path);
       }).toList(),

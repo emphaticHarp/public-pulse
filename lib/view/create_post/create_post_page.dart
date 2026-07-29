@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/controller/create_post_controller.dart';
@@ -38,7 +39,9 @@ class CreatePostPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('🖼️ [CreatePostPage] build() called');
     final CreatePostController controller = Get.find<CreatePostController>();
+    debugPrint('🟢 [CreatePostPage] CreatePostController found via Get.find');
 
     return PopScope(
   onPopInvokedWithResult: (didPop, result) {
@@ -111,10 +114,10 @@ class _Header extends StatelessWidget {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             onPressed: () {
-
+              debugPrint('🖼️ [CreatePostPage] Back button pressed');
               Get.delete<CreatePostController>();
+              debugPrint('🔴 [CreatePostPage] CreatePostController deleted');
               Get.back();
-
             },
             icon: const Icon(
               Icons.chevron_left,
@@ -765,7 +768,12 @@ class _UploadFooter extends StatelessWidget {
             onPressed: controller.mediaUrls.isEmpty ||
                     controller.isUploading.value
                 ? null
-                : controller.uploadPost,
+                : () {
+                    debugPrint('🖼️ [CreatePostPage] Upload Post button pressed');
+                    debugPrint('🖼️ [CreatePostPage] Media count: ${controller.mediaUrls.length}');
+                    debugPrint('🖼️ [CreatePostPage] Is uploading: ${controller.isUploading.value}');
+                    controller.uploadPost();
+                  },
             style:
                 ElevatedButton.styleFrom(
                   backgroundColor: AppColors.createPostRed700,

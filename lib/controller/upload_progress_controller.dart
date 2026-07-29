@@ -1,82 +1,109 @@
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 
 class UploadProgressController extends GetxController {
-  /// Overall upload progress from 0.0 to 1.0
+  /// Indicates whether an upload is currently running.
+  final RxBool isUploading = false.obs;
+
+  /// Overall upload progress (0.0 -> 1.0)
   final RxDouble uploadProgress = 0.0.obs;
 
-  /// Display string like "12.5 MB / 50 MB"
-  final RxString uploadedSize = '0 MB / 0 MB'.obs;
+  /// Current upload stage shown to the user.
+  final RxString uploadStage = "Preparing Upload".obs;
 
-  /// Display string like "2.3 MB/s"
-  final RxString uploadSpeed = '0 MB/s'.obs;
+  /// Current file being uploaded.
+  final RxString currentFile = "".obs;
 
-  /// Display string like "Est. 15s remaining"
-  final RxString remainingTime = 'Estimating...'.obs;
+  /// Uploaded data (e.g. 8.4 MB / 25 MB)
+  final RxString uploadedSize = "0 MB / 0 MB".obs;
 
-  /// Current file being uploaded, e.g. "Uploading image 1 of 5"
-  final RxString currentFile = ''.obs;
+  /// Current upload speed (e.g. 2.5 MB/s)
+  final RxString uploadSpeed = "0 MB/s".obs;
 
-  /// Total number of files to upload
-  int _totalFiles = 0;
+  /// Estimated remaining upload time
+  final RxString remainingTime = "--".obs;
 
-  /// Index of the current file (1-based)
-  int _currentFileIndex = 0;
+  /// Whether upload finished successfully.
+  final RxBool isCompleted = false.obs;
 
-  /// Type of the current file ("image" or "video")
-  String _currentFileType = 'image';
+  /// Whether upload failed.
+  final RxBool hasError = false.obs;
 
-  /// Simulate upload progress for demo / placeholder usage
-  void startSimulatedUpload(int totalFiles, {String fileType = 'image'}) {
-    _totalFiles = totalFiles;
-    _currentFileIndex = 1;
-    _currentFileType = fileType;
-    _updateCurrentFileLabel();
+  /// Error message if upload fails.
+  final RxString errorMessage = "".obs;
+
+  void startUpload() {
+    debugPrint('📦 [UploadProgressCtrl] startUpload() - Resetting all state');
+    isUploading.value = true;
+    isCompleted.value = false;
+    hasError.value = false;
+    errorMessage.value = "";
     uploadProgress.value = 0.0;
+    uploadStage.value = "Preparing Upload";
+    currentFile.value = "";
+    uploadedSize.value = "0 MB / 0 MB";
+    uploadSpeed.value = "0 MB/s";
+    remainingTime.value = "--";
+    debugPrint('🟢 [UploadProgressCtrl] Upload started - isUploading: true');
   }
 
-  /// Update progress for the current file chunk.
-  /// [fileIndex] is 1-based, [progress] is 0.0–1.0 for that single file.
-  void updateFileProgress(int fileIndex, double progress, {
-    String? fileType,
-    int? totalFiles,
+  void updateProgress(double value) {
+    final clamped = value.clamp(0.0, 1.0);
+    uploadProgress.value = clamped;
+  }
+
+  void updateStage(String stage) {
+    debugPrint('📦 [UploadProgressCtrl] Stage: $stage');
+    uploadStage.value = stage;
+  }
+
+  void updateCurrentFile(String fileName) {
+    debugPrint('📦 [UploadProgressCtrl] CurrentFile: $fileName');
+    currentFile.value = fileName;
+  }
+
+  void updateUploadStats({
+    required String uploaded,
+    required String speed,
+    required String timeLeft,
   }) {
-    if (totalFiles != null) _totalFiles = totalFiles;
-    if (fileType != null) _currentFileType = fileType;
-    _currentFileIndex = fileIndex;
-    _updateCurrentFileLabel();
-
-    // Overall progress: each file contributes 1/totalFiles of the bar
-    final overall =
-        ((fileIndex - 1) / _totalFiles) + (progress / _totalFiles);
-    uploadProgress.value = overall.clamp(0.0, 1.0);
-  }
-
-  /// Set uploaded size display
-  void updateUploadedSize(String uploaded, String total) {
-    uploadedSize.value = '$uploaded / $total';
-  }
-
-  /// Set upload speed display
-  void updateUploadSpeed(String speed) {
+    uploadedSize.value = uploaded;
     uploadSpeed.value = speed;
+    remainingTime.value = timeLeft;
   }
 
-  /// Set remaining time display
-  void updateRemainingTime(String time) {
-    remainingTime.value = time;
-  }
-
-  void _updateCurrentFileLabel() {
-    final type = _currentFileType[0].toUpperCase() + _currentFileType.substring(1);
-    currentFile.value = 'Uploading $type $_currentFileIndex of $_totalFiles';
-  }
-
-  /// Mark the upload as fully complete
-  void markComplete() {
+  void completeUpload() {
+    debugPrint('🟢 [UploadProgressCtrl] completeUpload() called');
+    isUploading.value = false;
+    isCompleted.value = true;
     uploadProgress.value = 1.0;
-    currentFile.value = 'Upload complete!';
-    uploadedSize.value = 'Done';
-    uploadSpeed.value = '—';
-    remainingTime.value = '—';
+    uploadStage.value = "Upload Completed";
+    remainingTime.value = "Done";
+    debugPrint('🟢 [UploadProgressCtrl] Upload marked as COMPLETED');
+  }
+
+  void failUpload(String message) {
+    debugPrint('🔴 [UploadProgressCtrl] failUpload() called');
+    debugPrint('🔴 [UploadProgressCtrl] Error: $message');
+    isUploading.value = false;
+    hasError.value = true;
+    errorMessage.value = message;
+    uploadStage.value = "Upload Failed";
+    debugPrint('🔴 [UploadProgressCtrl] Upload marked as FAILED');
+  }
+
+  void reset() {
+    debugPrint('🔄 [UploadProgressCtrl] reset() called');
+    isUploading.value = false;
+    isCompleted.value = false;
+    hasError.value = false;
+    errorMessage.value = "";
+    uploadProgress.value = 0.0;
+    uploadStage.value = "Preparing Upload";
+    currentFile.value = "";
+    uploadedSize.value = "0 MB / 0 MB";
+    uploadSpeed.value = "0 MB/s";
+    remainingTime.value = "--";
+    debugPrint('🟢 [UploadProgressCtrl] State reset complete');
   }
 }
