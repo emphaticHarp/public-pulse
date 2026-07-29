@@ -161,8 +161,24 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.14"
+  dio:
+    dependency: "direct main"
+    description:
+      name: dio
+      sha256: "0df44ebba85e503958eb75d07eedd3c86275a58c1d3eda2f2ce8f0a2c3abbb3c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.11.0"
+  dio_web_adapter:
+    dependency: transitive
+    description:
+      name: dio_web_adapter
+      sha256: "0786d0b7295a373de356fc0af4f6f1d0ab2844ed31b19dfc5e7556b70e24212c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.1"
   exif:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: exif
       sha256: a7980fdb3b7ffcd0b035e5b8a5e1eef7cadfe90ea6a4e85ebb62f87b96c7a172
@@ -247,7 +263,7 @@ packages:
     source: hosted
     version: "6.0.1"
   flutter_image_compress:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: flutter_image_compress
       sha256: "98a48c05a7add6869c6838270e862124a4d571f9dd5d0cf209ed03a71b20ea84"
@@ -329,7 +345,7 @@ packages:
     source: hosted
     version: "2.6.4"
   geolocator:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: geolocator
       sha256: f62bcd90459e63210bbf9c35deb6a51c521f992a78de19a1fe5c11704f9530e2
@@ -553,7 +569,7 @@ packages:
     source: hosted
     version: "3.1.1"
   jni:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: jni
       sha256: "5bc9a9daac5ccfbd6a758377600b9f7fdce13d93f26e8012a8941014a5d978d1"
@@ -561,7 +577,7 @@ packages:
     source: hosted
     version: "1.0.2"
   jni_flutter:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: jni_flutter
       sha256: "7b717011ea40d04fd47c2731d3d1d36eb99eba3435c2753d62489e8c3c9991d5"
@@ -713,7 +729,7 @@ packages:
     source: hosted
     version: "1.9.1"
   path_provider:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: path_provider
       sha256: a7f4874f987173da295a61c181b8ee71dab59b332a486b391babf26a1b884825
@@ -857,7 +873,7 @@ packages:
     source: hosted
     version: "2.8.0"
   provider:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: provider
       sha256: "4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272"
@@ -1158,7 +1174,7 @@ packages:
     source: hosted
     version: "2.2.0"
   video_compress:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: video_compress
       sha256: "31bc5cdb9a02ba666456e5e1907393c28e6e0e972980d7d8d619a7beda0d4f20"

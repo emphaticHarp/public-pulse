@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/controller/upload_progress_controller.dart';
@@ -8,8 +9,13 @@ class UploadProgressPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('📤 [UploadProgressPage] build() called');
     final UploadProgressController controller =
         Get.find<UploadProgressController>();
+    debugPrint('🟢 [UploadProgressPage] UploadProgressController found');
+    debugPrint('📤 [UploadProgressPage] Progress: ${controller.uploadProgress.value}');
+    debugPrint('📤 [UploadProgressPage] Stage: ${controller.uploadStage.value}');
+    debugPrint('📤 [UploadProgressPage] Error: ${controller.hasError.value} - ${controller.errorMessage.value}');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -133,6 +139,33 @@ class UploadProgressPage extends StatelessWidget {
                   ],
                 ),
               ),
+
+              Obx(() {
+                if (!controller.hasError.value) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Column(
+                    children: [
+                      Text(
+                        controller.errorMessage.value,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          debugPrint('📤 [UploadProgressPage] Go Back button pressed');
+                          Get.back();
+                        },
+                        child: const Text("Go Back"),
+                      ),
+                    ],
+                  ),
+                );
+              }),
 
               // Current file label at the bottom
               Obx(

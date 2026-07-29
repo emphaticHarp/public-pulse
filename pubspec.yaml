@@ -53,6 +53,7 @@ dependencies:
   video_compress: ^3.1.4
   exif: ^3.3.0
   geolocator: ^13.0.0
+  dio: ^5.11.0
 
 dev_dependencies:
   flutter_test:
