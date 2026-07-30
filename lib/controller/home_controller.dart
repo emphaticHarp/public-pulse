@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/model/post_model.dart';
 import 'package:public_pulse/core/repository/post_repository.dart';
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:public_pulse/core/cache/cache_manager.dart';
 
 class HomeController extends GetxController {
   final RxInt currentIndex = 0.obs;
@@ -28,6 +29,13 @@ class HomeController extends GetxController {
   /// Loading state for home feed
   final isLoading = true.obs;
 
+  /// Cursor Pagination
+  String? nextCursor;
+
+  final hasMore = true.obs;
+
+  final isLoadingMore = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -37,10 +45,23 @@ class HomeController extends GetxController {
     if (user != null) {
       debugPrint('[DEBUG-CONTROLLER] User logged in');
 
+      loadCachedPosts();
       loadPosts();
       loadMyPosts();
+
+      scrollController.addListener(_onScroll);
     } else {
       debugPrint('[DEBUG-CONTROLLER] User not logged in');
+    }
+  }
+
+  void _onScroll() {
+    if (!scrollController.hasClients) return;
+
+    // Start loading more when 300px from the bottom
+    if (scrollController.position.pixels >=
+        scrollController.position.maxScrollExtent - 300) {
+      loadMorePosts();
     }
   }
 
@@ -81,8 +102,12 @@ class HomeController extends GetxController {
     return _carouselPageControllers[postId]!;
   }
 
+  final ScrollController scrollController = ScrollController();
+
   @override
   void onClose() {
+    scrollController.dispose();
+
     for (final pc in _carouselPageControllers.values) {
       pc.dispose();
     }
@@ -90,27 +115,111 @@ class HomeController extends GetxController {
     super.onClose();
   }
 
+  void loadCachedPosts() {
+    debugPrint('[DEBUG-CONTROLLER] Loading cached posts...');
+
+    final cachedPosts = CacheManager.getCachedPosts();
+
+    if (cachedPosts.isEmpty) {
+      debugPrint('[DEBUG-CONTROLLER] No cached posts found');
+      return;
+    }
+
+    posts.assignAll(cachedPosts);
+
+    nextCursor = CacheManager.getNextCursor();
+    hasMore.value = CacheManager.getHasMore();
+
+    debugPrint('[DEBUG-CONTROLLER] Loaded ${cachedPosts.length} cached posts');
+  }
+
+  void _updateFeed(List<PostModel> freshPosts) {
+    int newPosts = 0;
+    int updatedPosts = 0;
+
+    for (final freshPost in freshPosts) {
+      final index = posts.indexWhere((p) => p.id == freshPost.id);
+
+      if (index == -1) {
+        // New post
+        posts.insert(0, freshPost);
+        newPosts++;
+      } else {
+        // Existing post → replace with latest version
+        posts[index] = freshPost;
+        updatedPosts++;
+      }
+    }
+
+    debugPrint(
+      '[DEBUG-CONTROLLER] Feed Sync → New: $newPosts | Updated: $updatedPosts',
+    );
+    posts.refresh();
+  }
+
   Future<void> loadPosts() async {
-    debugPrint('[DEBUG-CONTROLLER] loadPosts: Starting...');
     try {
-      isLoading.value = true;
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: isLoading set to true');
+      if (posts.isEmpty) {
+        isLoading.value = true;
+      }
 
-      final fetchedPosts = await _repository.getPosts();
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: Fetched ${fetchedPosts.length} posts from repository');
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: Fetched post IDs: ${fetchedPosts.map((e) => e.id).toList()}');
+      final page = await _repository.getPosts(cursor: null, limit: 10);
 
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: Before assignAll, posts.length = ${posts.length}');
-      posts.assignAll(fetchedPosts);
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: After assignAll, posts.length = ${posts.length}');
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: Current posts list IDs: ${posts.map((e) => e.id).toList()}');
+      nextCursor = page.nextCursor;
+      hasMore.value = page.hasMore;
 
+      if (posts.isEmpty) {
+        posts.assignAll(page.posts);
+      } else {
+        // Append only posts that are not already in the feed
+        final existingIds = posts.map((e) => e.id).toSet();
+
+        final newPosts = page.posts
+            .where((post) => !existingIds.contains(post.id))
+            .toList();
+
+        posts.addAll(newPosts);
+      }
+
+      await CacheManager.cachePosts(
+        posts,
+        nextCursor: nextCursor,
+        hasMore: hasMore.value,
+      );
     } catch (e, stackTrace) {
       debugPrint('[DEBUG-CONTROLLER] loadPosts ERROR: $e');
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
-      debugPrint('[DEBUG-CONTROLLER] loadPosts: isLoading set to false');
+    }
+  }
+
+  Future<void> loadMorePosts() async {
+    if (isLoadingMore.value) return;
+
+    if (!hasMore.value) return;
+
+    isLoadingMore.value = true;
+
+    try {
+      final page = await _repository.getPosts(cursor: nextCursor, limit: 10);
+
+      nextCursor = page.nextCursor;
+      hasMore.value = page.hasMore;
+
+      _updateFeed(page.posts);
+
+      await CacheManager.cachePosts(
+        posts,
+        nextCursor: nextCursor,
+        hasMore: hasMore.value,
+      );
+
+      debugPrint('[DEBUG-CONTROLLER] Loaded ${page.posts.length} more posts');
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      isLoadingMore.value = false;
     }
   }
 }
