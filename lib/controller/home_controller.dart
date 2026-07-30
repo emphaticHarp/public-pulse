@@ -91,18 +91,26 @@ class HomeController extends GetxController {
   }
 
   Future<void> loadPosts() async {
+    debugPrint('[DEBUG-CONTROLLER] loadPosts: Starting...');
     try {
       isLoading.value = true;
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: isLoading set to true');
 
       final fetchedPosts = await _repository.getPosts();
-      posts.assignAll(fetchedPosts);
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: Fetched ${fetchedPosts.length} posts from repository');
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: Fetched post IDs: ${fetchedPosts.map((e) => e.id).toList()}');
 
-      debugPrint('[DEBUG-CONTROLLER] Home Feed loaded: ${posts.length}');
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: Before assignAll, posts.length = ${posts.length}');
+      posts.assignAll(fetchedPosts);
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: After assignAll, posts.length = ${posts.length}');
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: Current posts list IDs: ${posts.map((e) => e.id).toList()}');
+
     } catch (e, stackTrace) {
       debugPrint('[DEBUG-CONTROLLER] loadPosts ERROR: $e');
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
+      debugPrint('[DEBUG-CONTROLLER] loadPosts: isLoading set to false');
     }
   }
 }

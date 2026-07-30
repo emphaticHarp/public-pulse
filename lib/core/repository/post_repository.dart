@@ -38,18 +38,25 @@ class PostRepository {
   }
 
   Future<List<PostModel>> getPosts() async {
+    debugPrint('[DEBUG-REPO] getPosts: Starting...');
     try {
       // 1️⃣ Return cached posts immediately if cache is still valid
-      if (!CacheManager.isPostCacheExpired()) {
+      final cacheExpired = CacheManager.isPostCacheExpired();
+      debugPrint('[DEBUG-REPO] getPosts: Cache expired = $cacheExpired');
+      
+      if (!cacheExpired) {
         final cachedPosts = CacheManager.getCachedPosts();
+        debugPrint('[DEBUG-REPO] getPosts: Cached posts count = ${cachedPosts.length}');
+        debugPrint('[DEBUG-REPO] getPosts: Cached post IDs: ${cachedPosts.map((e) => e.id).toList()}');
 
         if (cachedPosts.isNotEmpty) {
-          debugPrint('[CACHE] Loaded ${cachedPosts.length} posts from Hive');
+          debugPrint('[DEBUG-REPO] getPosts: Returning ${cachedPosts.length} posts from cache');
           return cachedPosts;
         }
+        debugPrint('[DEBUG-REPO] getPosts: Cache is empty, will fetch from Supabase');
       }
 
-      debugPrint('[CACHE] Cache expired or empty. Fetching from Supabase...');
+      debugPrint('[DEBUG-REPO] getPosts: Fetching from Supabase...');
 
       // 2️⃣ Fetch latest posts from Supabase
       final response = await _supabase
@@ -85,14 +92,20 @@ class PostRepository {
           .filter('deleted_at', 'is', null)
           .order('created_at', ascending: false);
 
+      debugPrint('[DEBUG-REPO] getPosts: Supabase response length = ${response.length}');
+      debugPrint('[DEBUG-REPO] getPosts: Raw Supabase data: $response');
+
       final posts = response
           .map<PostModel>((e) => PostModel.fromJson(e))
           .toList();
 
+      debugPrint('[DEBUG-REPO] getPosts: Parsed ${posts.length} posts');
+      debugPrint('[DEBUG-REPO] getPosts: Parsed post IDs: ${posts.map((e) => e.id).toList()}');
+
       // 3️⃣ Save fresh posts into Hive
       await CacheManager.cachePosts(posts);
 
-      debugPrint('[CACHE] Saved ${posts.length} posts into Hive');
+      debugPrint('[DEBUG-REPO] getPosts: Returning ${posts.length} posts from Supabase');
 
       return posts;
     } catch (e, stackTrace) {
@@ -100,13 +113,15 @@ class PostRepository {
       debugPrintStack(stackTrace: stackTrace);
 
       // 4️⃣ If Supabase fails, try loading cached posts
+      debugPrint('[DEBUG-REPO] getPosts: Falling back to cached posts due to error');
       final cachedPosts = CacheManager.getCachedPosts();
 
       if (cachedPosts.isNotEmpty) {
-        debugPrint('[CACHE] Using offline cached posts');
+        debugPrint('[DEBUG-REPO] getPosts: Using ${cachedPosts.length} offline cached posts');
         return cachedPosts;
       }
 
+      debugPrint('[DEBUG-REPO] getPosts: No cached posts available, returning empty list');
       return [];
     }
   }
