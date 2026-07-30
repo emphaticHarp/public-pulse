@@ -11,7 +11,6 @@ class HomePage extends StatelessWidget {
 
   final HomeController controller = Get.find<HomeController>();
 
- 
   @override
   Widget build(BuildContext context) {
     debugPrint(
@@ -24,7 +23,9 @@ class HomePage extends StatelessWidget {
           return RefreshIndicator(
             onRefresh: controller.loadPosts,
             color: AppColors.loginAccentRed,
+
             child: CustomScrollView(
+              controller: controller.scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 // Header
@@ -71,10 +72,7 @@ class HomePage extends StatelessWidget {
                           SizedBox(height: 8),
                           Text(
                             "Posts from everyone will appear here.",
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 15, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -85,41 +83,57 @@ class HomePage extends StatelessWidget {
                   SliverPadding(
                     padding: const EdgeInsets.only(bottom: 24),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final post = controller.posts[index];
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          if (index >= controller.posts.length) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.loginAccentRed,
+                                ),
+                              ),
+                            );
+                          }
 
-                        return PostCard(
-                          key: ValueKey(post.id),
-                          profileImage: post.profileImage ?? '',
-                          username: post.username,
-                          location: post.location ?? '',
+                          final post = controller.posts[index];
 
-                          isCarousel: post.isCarousel,
-                          isVideo: post.isVideo,
-                          imageUrl: post.mediaUrls.isNotEmpty
-                              ? post.mediaUrls.first
-                              : null,
-                          imageUrls: post.mediaUrls,
+                          return PostCard(
+                            key: ValueKey(post.id),
+                            profileImage: post.profileImage ?? '',
+                            username: post.username,
+                            location: post.location ?? '',
 
-                          postId: post.isCarousel ? post.id : null,
-                          likeIcon: post.isLiked
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          likeIconColor: post.isLiked
-                              ? AppColors.loginAccentRed
-                              : AppColors.gray900,
+                            isCarousel: post.isCarousel,
+                            isVideo: post.isVideo,
+                            imageUrl: post.mediaUrls.isNotEmpty
+                                ? post.mediaUrls.first
+                                : null,
+                            imageUrls: post.mediaUrls,
 
-                          likeCount: post.likeCount.toString(),
-                          commentCount: post.commentCount.toString(),
-                          shareCount: post.shareCount.toString(),
-                          caption: post.caption ?? '',
-                          captionCommentCount: post.commentCount.toString(),
-                          onLikeTap: () {
-                            post.isLiked = !post.isLiked;
-                            controller.posts.refresh();
-                          },
-                        );
-                      }, childCount: controller.posts.length),
+                            postId: post.isCarousel ? post.id : null,
+                            likeIcon: post.isLiked
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            likeIconColor: post.isLiked
+                                ? AppColors.loginAccentRed
+                                : AppColors.gray900,
+
+                            likeCount: post.likeCount.toString(),
+                            commentCount: post.commentCount.toString(),
+                            shareCount: post.shareCount.toString(),
+                            caption: post.caption ?? '',
+                            captionCommentCount: post.commentCount.toString(),
+                            onLikeTap: () {
+                              post.isLiked = !post.isLiked;
+                              controller.posts.refresh();
+                            },
+                          );
+                        },
+                        childCount:
+                            controller.posts.length +
+                            (controller.isLoadingMore.value ? 1 : 0),
+                      ),
                     ),
                   ),
               ],
