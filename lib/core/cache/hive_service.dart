@@ -1,0 +1,11 @@
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'hive_boxes.dart';
+
+class HiveService {
+  static Future<void> init() async {
+    await Hive.initFlutter();
+
+    await Hive.openBox(HiveBoxes.cachedPosts);
+    await Hive.openBox(HiveBoxes.cachedProfiles);
+  }
+}

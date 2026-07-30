@@ -156,14 +156,14 @@ class _MediaCarousel extends StatelessWidget {
         SizedBox(
           height: 380,
           child: Obx(() {
-            final urls = controller.mediaUrls;
-            if (urls.isEmpty) {
+            final media = controller.pendingMedia;
+            if (media.isEmpty) {
               return _EmptyState(onTap: controller.showMediaPicker);
             }
             return PageView.builder(
               controller: controller.pageController,
               onPageChanged: controller.onPageChanged,
-              itemCount: urls.length,
+              itemCount: media.length,
               itemBuilder: (context, index) {
                 return Dismissible(
                   key: Key('media_$index'),
@@ -197,9 +197,9 @@ class _MediaCarousel extends StatelessWidget {
                     ),
                   ),
                   child: _MediaPreviewCard(
-                    imageUrl: urls[index],
+                    imageUrl: media[index].originalPath,
                     currentIndex: index + 1,
-                    totalCount: urls.length,
+                    totalCount: media.length,
                     onRemove: () {
                       controller.removeImageAt(index);
                     },
@@ -212,8 +212,8 @@ class _MediaCarousel extends StatelessWidget {
         const SizedBox(height: 12),
         // Swipe counter
         Obx(() {
-          final urls = controller.mediaUrls;
-          if (urls.isEmpty) return const SizedBox.shrink();
+          final media = controller.pendingMedia;
+          if (media.isEmpty) return const SizedBox.shrink();
           final current = controller.currentIndex.value;
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -222,7 +222,7 @@ class _MediaCarousel extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '${current + 1} of ${urls.length}',
+              '${current + 1} of ${media.length}',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -234,17 +234,17 @@ class _MediaCarousel extends StatelessWidget {
         const SizedBox(height: 12),
         // Thumbnail strip
         Obx(() {
-          final urls = controller.mediaUrls;
-          if (urls.isEmpty) return const SizedBox.shrink();
+          final media = controller.pendingMedia;
+          if (media.isEmpty) return const SizedBox.shrink();
           final current = controller.currentIndex.value;
           return SizedBox(
             height: 76,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: urls.length < 10 ? urls.length + 1 : urls.length,
+              itemCount: media.length < 10 ? media.length + 1 : media.length,
               itemBuilder: (context, index) {
-                if (index == urls.length) {
+                if (index == media.length) {
                   return GestureDetector(
                     onTap: controller.showMediaPicker,
                     child: Container(
@@ -295,7 +295,7 @@ class _MediaCarousel extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: _buildMediaImage(urls[index], BoxFit.cover),
+                      child: _buildMediaImage(media[index].originalPath, BoxFit.cover),
                     ),
                   ),
                 );
@@ -765,12 +765,12 @@ class _UploadFooter extends StatelessWidget {
         () => SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: controller.mediaUrls.isEmpty ||
+            onPressed: controller.pendingMedia.isEmpty ||
                     controller.isUploading.value
                 ? null
                 : () {
                     debugPrint('🖼️ [CreatePostPage] Upload Post button pressed');
-                    debugPrint('🖼️ [CreatePostPage] Media count: ${controller.mediaUrls.length}');
+                    debugPrint('🖼️ [CreatePostPage] Media count: ${controller.pendingMedia.length}');
                     debugPrint('🖼️ [CreatePostPage] Is uploading: ${controller.isUploading.value}');
                     controller.uploadPost();
                   },

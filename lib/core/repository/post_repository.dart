@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/model/post_model.dart';
+import 'package:public_pulse/core/cache/cache_manager.dart';
 
 class PostRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -36,9 +37,21 @@ class PostRepository {
     }
   }
 
-
   Future<List<PostModel>> getPosts() async {
     try {
+      // 1️⃣ Return cached posts immediately if cache is still valid
+      if (!CacheManager.isPostCacheExpired()) {
+        final cachedPosts = CacheManager.getCachedPosts();
+
+        if (cachedPosts.isNotEmpty) {
+          debugPrint('[CACHE] Loaded ${cachedPosts.length} posts from Hive');
+          return cachedPosts;
+        }
+      }
+
+      debugPrint('[CACHE] Cache expired or empty. Fetching from Supabase...');
+
+      // 2️⃣ Fetch latest posts from Supabase
       final response = await _supabase
           .from('posts')
           .select('''
@@ -72,30 +85,48 @@ class PostRepository {
           .filter('deleted_at', 'is', null)
           .order('created_at', ascending: false);
 
-      return response.map((e) => PostModel.fromJson(e)).toList();
+      final posts = response
+          .map<PostModel>((e) => PostModel.fromJson(e))
+          .toList();
+
+      // 3️⃣ Save fresh posts into Hive
+      await CacheManager.cachePosts(posts);
+
+      debugPrint('[CACHE] Saved ${posts.length} posts into Hive');
+
+      return posts;
     } catch (e, stackTrace) {
       debugPrint('[DEBUG-REPO] getPosts ERROR: $e');
       debugPrintStack(stackTrace: stackTrace);
+
+      // 4️⃣ If Supabase fails, try loading cached posts
+      final cachedPosts = CacheManager.getCachedPosts();
+
+      if (cachedPosts.isNotEmpty) {
+        debugPrint('[CACHE] Using offline cached posts');
+        return cachedPosts;
+      }
+
       return [];
     }
   }
 
- Future<List<PostModel>> getMyPosts() async {
-  debugPrint('[DEBUG-REPO] getMyPosts: starting');
+  Future<List<PostModel>> getMyPosts() async {
+    debugPrint('[DEBUG-REPO] getMyPosts: starting');
 
-  try {
-    final currentProfileId = await getCurrentProfileId();
+    try {
+      final currentProfileId = await getCurrentProfileId();
 
-    if (currentProfileId == null) {
-      debugPrint('[DEBUG-REPO] getMyPosts: profile id is null');
-      return [];
-    }
+      if (currentProfileId == null) {
+        debugPrint('[DEBUG-REPO] getMyPosts: profile id is null');
+        return [];
+      }
 
-    debugPrint('[DEBUG-REPO] getMyPosts: profileId = $currentProfileId');
+      debugPrint('[DEBUG-REPO] getMyPosts: profileId = $currentProfileId');
 
-    final response = await _supabase
-        .from('posts')
-        .select('''
+      final response = await _supabase
+          .from('posts')
+          .select('''
           id,
           profile_id,
           caption,
@@ -122,18 +153,18 @@ class PostRepository {
             media_order
           )
         ''')
-        .eq('profile_id', currentProfileId)
-        .eq('status', 'ACTIVE')
-        .filter('deleted_at', 'is', null)
-        .order('created_at', ascending: false);
+          .eq('profile_id', currentProfileId)
+          .eq('status', 'ACTIVE')
+          .filter('deleted_at', 'is', null)
+          .order('created_at', ascending: false);
 
-    debugPrint('[DEBUG-REPO] getMyPosts: fetched ${response.length} posts');
+      debugPrint('[DEBUG-REPO] getMyPosts: fetched ${response.length} posts');
 
-    return response.map((e) => PostModel.fromJson(e)).toList();
-  } catch (e, stackTrace) {
-    debugPrint('[DEBUG-REPO] getMyPosts ERROR: $e');
-    debugPrintStack(stackTrace: stackTrace);
-    return [];
+      return response.map((e) => PostModel.fromJson(e)).toList();
+    } catch (e, stackTrace) {
+      debugPrint('[DEBUG-REPO] getMyPosts ERROR: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      return [];
+    }
   }
-}
 }

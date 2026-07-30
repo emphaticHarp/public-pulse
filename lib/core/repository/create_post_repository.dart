@@ -18,8 +18,12 @@ class CreatePostRepository {
   void _logEnvCheck() {
     final url = dotenv.env['SUPABASE_URL'];
     final key = dotenv.env['SUPABASE_PUBLISHABLE_KEY'];
-    debugPrint('🔍 [CreatePostRepo] SUPABASE_URL loaded: ${url != null && url.isNotEmpty ? "YES (${url.substring(0, url.indexOf('.', url.indexOf('//') + 2) + 4)}...)" : "NO / EMPTY"}');
-    debugPrint('🔍 [CreatePostRepo] SUPABASE_PUBLISHABLE_KEY loaded: ${key != null && key.isNotEmpty ? "YES (length: ${key.length})" : "NO / EMPTY"}');
+    debugPrint(
+      '🔍 [CreatePostRepo] SUPABASE_URL loaded: ${url != null && url.isNotEmpty ? "YES (${url.substring(0, url.indexOf('.', url.indexOf('//') + 2) + 4)}...)" : "NO / EMPTY"}',
+    );
+    debugPrint(
+      '🔍 [CreatePostRepo] SUPABASE_PUBLISHABLE_KEY loaded: ${key != null && key.isNotEmpty ? "YES (length: ${key.length})" : "NO / EMPTY"}',
+    );
   }
 
   Future<String> uploadImage({
@@ -42,8 +46,12 @@ class CreatePostRepository {
       throw Exception("User is not logged in.");
     }
 
-    debugPrint('🟢 [CreatePostRepo] Session active. User ID: ${session.user.id}');
-    debugPrint('🟢 [CreatePostRepo] Access token length: ${session.accessToken.length}');
+    debugPrint(
+      '🟢 [CreatePostRepo] Session active. User ID: ${session.user.id}',
+    );
+    debugPrint(
+      '🟢 [CreatePostRepo] Access token length: ${session.accessToken.length}',
+    );
 
     final headers = {
       'Authorization': 'Bearer ${session.accessToken}',
@@ -58,7 +66,9 @@ class CreatePostRepository {
       debugPrint('☁️ [CreatePostRepo] Storage path: $storagePath');
 
       final bytes = await imageFile.readAsBytes();
-      debugPrint('☁️ [CreatePostRepo] File read as bytes: ${bytes.length} bytes (${(bytes.length / 1024 / 1024).toStringAsFixed(2)} MB)');
+      debugPrint(
+        '☁️ [CreatePostRepo] File read as bytes: ${bytes.length} bytes (${(bytes.length / 1024 / 1024).toStringAsFixed(2)} MB)',
+      );
 
       final uploadUrl = '${_storageUrl(bucket)}/$storagePath';
       debugPrint('☁️ [CreatePostRepo] Upload URL: $uploadUrl');
@@ -71,25 +81,39 @@ class CreatePostRepository {
         onSendProgress: onProgress,
       );
 
-      debugPrint('☁️ [CreatePostRepo] Upload response status: ${response.statusCode}');
+      debugPrint(
+        '☁️ [CreatePostRepo] Upload response status: ${response.statusCode}',
+      );
       debugPrint('☁️ [CreatePostRepo] Upload response data: ${response.data}');
 
       if (response.statusCode == 200) {
-        debugPrint('🟢 [CreatePostRepo] uploadImage() SUCCESS - path: $storagePath');
+        debugPrint(
+          '🟢 [CreatePostRepo] uploadImage() SUCCESS - path: $storagePath',
+        );
         return storagePath;
       }
 
-      debugPrint('🔴 [CreatePostRepo] Upload failed with status: ${response.statusCode}');
+      debugPrint(
+        '🔴 [CreatePostRepo] Upload failed with status: ${response.statusCode}',
+      );
       throw Exception("Failed to upload image. Status: ${response.statusCode}");
     } on DioException catch (e) {
       debugPrint('🔴 [CreatePostRepo] DioException during upload!');
       debugPrint('🔴 [CreatePostRepo] Dio error type: ${e.type}');
       debugPrint('🔴 [CreatePostRepo] Dio error message: ${e.message}');
-      debugPrint('🔴 [CreatePostRepo] Dio response status: ${e.response?.statusCode}');
+      debugPrint(
+        '🔴 [CreatePostRepo] Dio response status: ${e.response?.statusCode}',
+      );
       debugPrint('🔴 [CreatePostRepo] Dio response data: ${e.response?.data}');
-      debugPrint('🔴 [CreatePostRepo] Dio response headers: ${e.response?.headers}');
-      debugPrint('🔴 [CreatePostRepo] Dio request URL: ${e.requestOptions.uri}');
-      debugPrint('🔴 [CreatePostRepo] Dio request method: ${e.requestOptions.method}');
+      debugPrint(
+        '🔴 [CreatePostRepo] Dio response headers: ${e.response?.headers}',
+      );
+      debugPrint(
+        '🔴 [CreatePostRepo] Dio request URL: ${e.requestOptions.uri}',
+      );
+      debugPrint(
+        '🔴 [CreatePostRepo] Dio request method: ${e.requestOptions.method}',
+      );
       rethrow;
     } catch (e, stackTrace) {
       debugPrint('🔴 [CreatePostRepo] Unexpected error during upload: $e');
@@ -111,7 +135,9 @@ class CreatePostRepository {
       return null;
     }
 
-    debugPrint('👤 [CreatePostRepo] Querying profiles table for user_id: ${user.id}');
+    debugPrint(
+      '👤 [CreatePostRepo] Querying profiles table for user_id: ${user.id}',
+    );
 
     try {
       final profile = await _supabase
@@ -138,76 +164,62 @@ class CreatePostRepository {
     }
   }
 
-  Future<String> createPost({
+  Future<Map<String, dynamic>> createPost({
     required String profileId,
     String? caption,
     String? location,
     required String visibility,
     required List<Map<String, String>> mediaItems,
   }) async {
-    debugPrint('💾 [CreatePostRepo] createPost() STARTED');
-    debugPrint('💾 [CreatePostRepo] profileId: $profileId');
-    debugPrint('💾 [CreatePostRepo] caption: $caption');
-    debugPrint('💾 [CreatePostRepo] location: $location');
-    debugPrint('💾 [CreatePostRepo] visibility: $visibility');
-    debugPrint('💾 [CreatePostRepo] mediaItems count: ${mediaItems.length}');
-    for (int i = 0; i < mediaItems.length; i++) {
-      debugPrint('💾 [CreatePostRepo]   Media[$i]: ${mediaItems[i]}');
-    }
+    final postResponse = await _supabase
+        .from('posts')
+        .insert({
+          'profile_id': profileId,
+          'caption': caption,
+          'location_name': location,
+          'visibility': visibility,
+        })
+        .select('id')
+        .single();
 
-    debugPrint('💾 [CreatePostRepo] Inserting into posts table...');
+    final postId = postResponse['id'] as String;
+
     try {
-      final postResponse = await _supabase
-          .from('posts')
-          .insert({
-            'profile_id': profileId,
-            'caption': caption,
-            'location_name': location,
-            'visibility': visibility,
-          })
-          .select('id')
-          .single();
+      final mediaRows = mediaItems.asMap().entries.map((entry) {
+        final index = entry.key;
+        final item = entry.value;
+        return {
+          'post_id': postId,
+          'storage_path': item['storage_path'],
+          'media_type': item['media_type'],
+          'media_order': index + 1,
+          'thumbnail_path': null,
+        };
+      }).toList();
 
-      final postId = postResponse['id'] as String;
-      debugPrint('🟢 [CreatePostRepo] Post inserted. Post ID: $postId');
+      // select('id') so we get back the generated post_media ids, in the same order inserted
+      final insertedMedia = await _supabase
+          .from('post_media')
+          .insert(mediaRows)
+          .select('id');
 
-      try {
-        debugPrint('💾 [CreatePostRepo] Inserting ${mediaItems.length} media items into post_media...');
-        final mediaRows = mediaItems.asMap().entries.map((entry) {
-          final index = entry.key;
-          final item = entry.value;
-          final row = {
-            'post_id': postId,
-            'storage_path': item['storage_path'],
-            'media_type': item['media_type'],
-            'media_order': index+1,
-            'thumbnail_path': null,
-          };
-          debugPrint('💾 [CreatePostRepo]   Media row[$index]: $row');
-          return row;
-        }).toList();
+      final mediaIds = (insertedMedia as List)
+          .map((row) => row['id'] as String)
+          .toList();
 
-        await _supabase.from('post_media').insert(mediaRows);
-        debugPrint('🟢 [CreatePostRepo] All media items inserted successfully!');
-        debugPrint('🟢 [CreatePostRepo] createPost() COMPLETE - Post ID: $postId');
-        return postId;
-      } catch (e, stackTrace) {
-        debugPrint('🔴 [CreatePostRepo] Media insert FAILED! Rolling back post $postId');
-        debugPrint('🔴 [CreatePostRepo] Error: $e');
-        debugPrint('🔴 [CreatePostRepo] Stack trace:');
-        debugPrint('$stackTrace');
-        debugPrint('🔴 [CreatePostRepo] Deleting post $postId (rollback)...');
-        await _supabase.from('posts').delete().eq('id', postId);
-        debugPrint('🔴 [CreatePostRepo] Rollback complete. Re-throwing error.');
-        rethrow;
-      }
-    } catch (e, stackTrace) {
-      debugPrint('🔴 [CreatePostRepo] Posts table insert FAILED!');
-      debugPrint('🔴 [CreatePostRepo] Error: $e');
-      debugPrint('🔴 [CreatePostRepo] Error type: ${e.runtimeType}');
-      debugPrint('🔴 [CreatePostRepo] Stack trace:');
-      debugPrint('$stackTrace');
+      return {'post_id': postId, 'media_ids': mediaIds};
+    } catch (e) {
+      debugPrint("Media insert failed, rolling back post $postId: $e");
+      await _supabase.from('posts').delete().eq('id', postId);
       rethrow;
     }
   }
+
+  Future<void> insertMediaMetadata(
+    List<Map<String, dynamic>> metadataRows,
+  ) async {
+    if (metadataRows.isEmpty) return;
+    await _supabase.from('media_metadata').insert(metadataRows);
+  }
+  
 }

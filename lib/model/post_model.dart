@@ -19,6 +19,7 @@ class PostModel {
   final bool isPrivateAccount;
 
   // Media
+  final List<String> storagePaths;
   final List<String> mediaUrls;
   final List<String> thumbnailUrls;
   final bool isCarousel;
@@ -55,6 +56,7 @@ class PostModel {
     required this.isPrivateAccount,
 
     // Required media fields
+    required this.storagePaths,
     required this.mediaUrls,
     required this.thumbnailUrls,
     required this.isCarousel,
@@ -88,6 +90,11 @@ class PostModel {
       displayName: profile['display_name'] ?? '',
       profileImage: profile['avatar_path'],
 
+      // Store the original Supabase storage paths for each media file.
+      storagePaths: media
+          .map((item) => item['storage_path'] as String)
+          .toList(),
+
       // Convert storage paths into public image and video URLs.
       mediaUrls: media.map((item) {
         final path = item['storage_path'] as String;
@@ -116,6 +123,62 @@ class PostModel {
       saveCount: json['save_count'],
       viewCount: json['view_count'],
 
+      createdAt: DateTime.parse(json['created_at']),
+    );
+  }
+
+  //Convert PostModel to and from JSON so it can be stored and retrieved from Hive cache.
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'profile_id': profileId,
+      'username': username,
+      'display_name': displayName,
+      'profile_image': profileImage,
+      'caption': caption,
+      'location': location,
+      'visibility': visibility,
+      'is_private_account': isPrivateAccount,
+      'storage_paths': storagePaths,
+      'media_urls': mediaUrls,
+      'thumbnail_urls': thumbnailUrls,
+      'is_carousel': isCarousel,
+      'is_video': isVideo,
+      'like_count': likeCount,
+      'comment_count': commentCount,
+      'share_count': shareCount,
+      'save_count': saveCount,
+      'view_count': viewCount,
+      'is_liked': isLiked,
+      'is_saved': isSaved,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+
+  factory PostModel.fromCache(Map<String, dynamic> json) {
+    return PostModel(
+      id: json['id'],
+      profileId: json['profile_id'],
+      username: json['username'],
+      displayName: json['display_name'],
+      profileImage: json['profile_image'],
+      caption: json['caption'],
+      location: json['location'],
+      visibility: json['visibility'],
+      isPrivateAccount: json['is_private_account'],
+      storagePaths: List<String>.from(json['storage_paths'] ?? []),
+      mediaUrls: List<String>.from(json['media_urls'] ?? []),
+      thumbnailUrls: List<String>.from(json['thumbnail_urls'] ?? []),
+      isCarousel: json['is_carousel'],
+      isVideo: json['is_video'],
+      likeCount: json['like_count'],
+      commentCount: json['comment_count'],
+      shareCount: json['share_count'],
+      saveCount: json['save_count'],
+      viewCount: json['view_count'],
+      isLiked: json['is_liked'] ?? false,
+      isSaved: json['is_saved'] ?? false,
       createdAt: DateTime.parse(json['created_at']),
     );
   }

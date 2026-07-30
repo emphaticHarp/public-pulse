@@ -8,11 +8,15 @@ import 'package:public_pulse/controller/upload_progress_controller.dart';
 import 'package:public_pulse/view/upload/upload_progress_page.dart';
 import 'package:public_pulse/core/repository/create_post_repository.dart';
 import 'package:public_pulse/controller/home_controller.dart';
+import 'package:public_pulse/core/compression/image_compressor.dart';
+import 'package:public_pulse/core/compression/metadata/media_metadata.dart';
+import 'package:public_pulse/model/pending_media.dart';
 
 class CreatePostController extends GetxController {
   final ImagePicker picker = ImagePicker();
 
   final CreatePostRepository repository = CreatePostRepository();
+  final ImageCompressor imageCompressor = ImageCompressor();
 
   // Page controller for media carousel
   final PageController pageController = PageController();
@@ -25,8 +29,8 @@ class CreatePostController extends GetxController {
   final RxString caption = ''.obs;
   final int captionMaxLength = 500;
 
-  // Media URLs (images/videos)
-  final RxList<String> mediaUrls = <String>[].obs;
+  // Media items pending upload (images/videos)
+  final RxList<PendingMedia> pendingMedia = <PendingMedia>[].obs;
 
   // Location
   final RxString location = ''.obs;
@@ -72,17 +76,23 @@ class CreatePostController extends GetxController {
 
   // Remove image at index
   void removeImageAt(int index) {
-    debugPrint('🟡 [CreatePostController] removeImageAt($index) - total: ${mediaUrls.length}');
-    if (index >= 0 && index < mediaUrls.length) {
-      final removed = mediaUrls[index];
+    debugPrint(
+      '🟡 [CreatePostController] removeImageAt($index) - total: ${pendingMedia.length}',
+    );
+    if (index >= 0 && index < pendingMedia.length) {
+      final removed = pendingMedia[index].originalPath;
       debugPrint('🟡 [CreatePostController] Removed: $removed');
-      mediaUrls.removeAt(index);
-      if (currentIndex.value >= mediaUrls.length && mediaUrls.isNotEmpty) {
-        currentIndex.value = mediaUrls.length - 1;
+      pendingMedia.removeAt(index);
+      if (currentIndex.value >= pendingMedia.length && pendingMedia.isNotEmpty) {
+        currentIndex.value = pendingMedia.length - 1;
       }
-      debugPrint('🟡 [CreatePostController] Remaining media: ${mediaUrls.length}');
+      debugPrint(
+        '🟡 [CreatePostController] Remaining media: ${pendingMedia.length}',
+      );
     } else {
-      debugPrint('🔴 [CreatePostController] removeImageAt($index) - INDEX OUT OF RANGE');
+      debugPrint(
+        '🔴 [CreatePostController] removeImageAt($index) - INDEX OUT OF RANGE',
+      );
     }
   }
 
@@ -91,20 +101,24 @@ class CreatePostController extends GetxController {
     debugPrint('🚀 [CreatePostController] ==============================');
     debugPrint('🚀 [CreatePostController] uploadPost() STARTED');
     debugPrint('🚀 [CreatePostController] ==============================');
-    debugPrint('📎 Media count: ${mediaUrls.length}');
+    debugPrint('📎 Media count: ${pendingMedia.length}');
     debugPrint('📝 Caption: "${caption.value}"');
     debugPrint('📍 Location: "${location.value}"');
     debugPrint('👁️ Visibility: "${visibility.value}"');
     debugPrint('📎 Media URLs:');
-    for (int i = 0; i < mediaUrls.length; i++) {
-      final file = File(mediaUrls[i]);
+    for (int i = 0; i < pendingMedia.length; i++) {
+      final file = File(pendingMedia[i].originalPath);
       final exists = file.existsSync();
       final size = exists ? file.lengthSync() : -1;
-      debugPrint('   [$i] ${mediaUrls[i]} (exists: $exists, size: $size bytes)');
+      debugPrint(
+        '   [$i] ${pendingMedia[i].originalPath} (exists: $exists, size: $size bytes)',
+      );
     }
 
-    if (mediaUrls.isEmpty) {
-      debugPrint('🔴 [CreatePostController] uploadPost() ABORTED - No media selected');
+    if (pendingMedia.isEmpty) {
+      debugPrint(
+        '🔴 [CreatePostController] uploadPost() ABORTED - No media selected',
+      );
       return;
     }
 
@@ -112,7 +126,9 @@ class CreatePostController extends GetxController {
     debugPrint('🟢 [CreatePostController] isUploading set to true');
 
     // Register the upload progress controller and navigate
-    debugPrint('📦 [CreatePostController] Registering UploadProgressController...');
+    debugPrint(
+      '📦 [CreatePostController] Registering UploadProgressController...',
+    );
     final uploadCtrl = Get.put(UploadProgressController());
     debugPrint('🟢 [CreatePostController] UploadProgressController registered');
 
@@ -132,14 +148,18 @@ class CreatePostController extends GetxController {
 
     try {
       final List<Map<String, String>> mediaItems = [];
+      final List<Map<String, dynamic>> mediaFileRefs =
+          []; // tracks original path + compressed File per item, in order
       final uploadStartTime = DateTime.now();
-      final totalFiles = mediaUrls.length;
+      final totalFiles = pendingMedia.length;
       debugPrint('📤 [_uploadMedia] Total files to upload: $totalFiles');
 
-// accept any video format for any device
+      // accept any video format for any device
       for (int i = 0; i < totalFiles; i++) {
-        debugPrint('📤 [_uploadMedia] --- Processing file ${i + 1} of $totalFiles ---');
-        final filePath = mediaUrls[i];
+        debugPrint(
+          '📤 [_uploadMedia] --- Processing file ${i + 1} of $totalFiles ---',
+        );
+        final filePath = pendingMedia[i].originalPath;
         final file = File(filePath);
         debugPrint('📤 [_uploadMedia] File path: $filePath');
 
@@ -149,7 +169,9 @@ class CreatePostController extends GetxController {
           throw Exception("File does not exist: $filePath");
         }
         final fileSize = file.lengthSync();
-        debugPrint('📤 [_uploadMedia] File size: $fileSize bytes (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)');
+        debugPrint(
+          '📤 [_uploadMedia] File size: $fileSize bytes (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)',
+        );
 
         const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
         final isVideo = videoExtensions.any(
@@ -162,10 +184,33 @@ class CreatePostController extends GetxController {
             : CreatePostRepository.imageBucket;
         debugPrint('📤 [_uploadMedia] Target bucket: $bucket');
 
-        uploadCtrl.updateCurrentFile("Uploading ${i + 1} of $totalFiles");
-        debugPrint('📤 [_uploadMedia] Updated UI: "Uploading ${i + 1} of $totalFiles"');
+        // Compress images only — videos pass through untouched for now
+        File uploadFile = file;
+        if (!isVideo) {
+          uploadCtrl.updateStep(UploadStep.compressing);
+          uploadCtrl.updateCurrentFile("Compressing ${i + 1} of $totalFiles");
+          debugPrint('🗜️ [_uploadMedia] Compressing image: $filePath');
+          final compressedFile = await imageCompressor.compressImage(filePath);
+          if (compressedFile != null) {
+            uploadFile = compressedFile;
+            final compressedSize = compressedFile.lengthSync();
+            debugPrint(
+              '🗜️ [_uploadMedia] Compressed size: $compressedSize bytes (was $fileSize bytes)',
+            );
+          } else {
+            debugPrint(
+              '🟡 [_uploadMedia] Compression returned null, using original file',
+            );
+          }
+        }
 
-        final originalName = file.path.split(RegExp(r'[/\\]')).last;
+        uploadCtrl.updateStep(UploadStep.uploading);
+        uploadCtrl.updateCurrentFile("Uploading ${i + 1} of $totalFiles");
+        debugPrint(
+          '📤 [_uploadMedia] Updated UI: "Uploading ${i + 1} of $totalFiles"',
+        );
+
+        final originalName = uploadFile.path.split(RegExp(r'[/\\]')).last;
         final fileName =
             "${DateTime.now().millisecondsSinceEpoch}_$originalName";
         debugPrint('📤 [_uploadMedia] Original name: $originalName');
@@ -173,7 +218,7 @@ class CreatePostController extends GetxController {
 
         debugPrint('📤 [_uploadMedia] Calling repository.uploadImage()...');
         final storagePath = await repository.uploadImage(
-          imageFile: file,
+          imageFile: uploadFile,
           fileName: fileName,
           bucket: bucket,
           onProgress: (sent, total) {
@@ -204,7 +249,9 @@ class CreatePostController extends GetxController {
             // Log progress periodically (every 5%)
             final percent = (overallProgress * 100).toInt();
             if (percent % 5 == 0) {
-              debugPrint('📊 [Upload Progress] File ${i + 1}/$totalFiles: $percent% - $speedText - $uploadedMB/$totalMB MB');
+              debugPrint(
+                '📊 [Upload Progress] File ${i + 1}/$totalFiles: $percent% - $speedText - $uploadedMB/$totalMB MB',
+              );
             }
           },
         );
@@ -216,17 +263,28 @@ class CreatePostController extends GetxController {
           'storage_path': storagePath,
           'media_type': isVideo ? 'VIDEO' : 'IMAGE',
         });
-        debugPrint('🟢 [_uploadMedia] Media item added: {storage_path: $storagePath, media_type: ${isVideo ? "VIDEO" : "IMAGE"}}');
+        debugPrint(
+          '🟢 [_uploadMedia] Media item added: {storage_path: $storagePath, media_type: ${isVideo ? "VIDEO" : "IMAGE"}}',
+        );
+
+        mediaFileRefs.add({
+          'originalPath': filePath,
+          'compressedFile': uploadFile,
+          'isVideo': isVideo,
+        });
       }
 
       // Save the post to the database now that all media is uploaded
       debugPrint('💾 [_uploadMedia] ==============================');
-      debugPrint('💾 [_uploadMedia] All media uploaded! Now saving post to database...');
+      debugPrint(
+        '💾 [_uploadMedia] All media uploaded! Now saving post to database...',
+      );
       debugPrint('💾 [_uploadMedia] Total media items: ${mediaItems.length}');
       for (int i = 0; i < mediaItems.length; i++) {
         debugPrint('💾 [_uploadMedia] Media [$i]: ${mediaItems[i]}');
       }
 
+      uploadCtrl.updateStep(UploadStep.saving);
       uploadCtrl.updateCurrentFile("Saving post...");
 
       debugPrint('🔍 [_uploadMedia] Fetching current profile ID...');
@@ -239,12 +297,16 @@ class CreatePostController extends GetxController {
 
       debugPrint('💾 [_uploadMedia] Calling repository.createPost()...');
       debugPrint('💾 [_uploadMedia]   profileId: $profileId');
-      debugPrint('💾 [_uploadMedia]   caption: ${caption.value.isEmpty ? "null" : caption.value}');
-      debugPrint('💾 [_uploadMedia]   location: ${location.value.isEmpty ? "null" : location.value}');
+      debugPrint(
+        '💾 [_uploadMedia]   caption: ${caption.value.isEmpty ? "null" : caption.value}',
+      );
+      debugPrint(
+        '💾 [_uploadMedia]   location: ${location.value.isEmpty ? "null" : location.value}',
+      );
       debugPrint('💾 [_uploadMedia]   visibility: ${visibility.value}');
       debugPrint('💾 [_uploadMedia]   mediaItems count: ${mediaItems.length}');
 
-      final postId = await repository.createPost(
+      final postResult = await repository.createPost(
         profileId: profileId,
         caption: caption.value.isEmpty ? null : caption.value,
         location: location.value.isEmpty ? null : location.value,
@@ -252,18 +314,72 @@ class CreatePostController extends GetxController {
         mediaItems: mediaItems,
       );
 
+      final postId = postResult['post_id'] as String;
+      final mediaIds = postResult['media_ids'] as List<String>;
+
       debugPrint('🟢 [_uploadMedia] ==============================');
       debugPrint('🟢 [_uploadMedia] POST CREATED SUCCESSFULLY!');
       debugPrint('🟢 [_uploadMedia] Post ID: $postId');
+      debugPrint('🟢 [_uploadMedia] Media IDs: $mediaIds');
       debugPrint('🟢 [_uploadMedia] ==============================');
 
+      // Extract & save metadata for each image — best-effort, never blocks post creation
+      try {
+        uploadCtrl.updateStep(UploadStep.metadata);
+        uploadCtrl.updateCurrentFile("Saving metadata...");
+        final List<Map<String, dynamic>> metadataRows = [];
+
+        for (int i = 0; i < mediaFileRefs.length; i++) {
+          final ref = mediaFileRefs[i];
+          final isVideoFile = ref['isVideo'] as bool;
+
+          if (isVideoFile) {
+            
+            debugPrint(
+              '🟡 [_uploadMedia] Skipping metadata extraction for video (not in scope)',
+            );
+            continue;
+          }
+
+          final mediaId = mediaIds[i];
+          final originalPath = ref['originalPath'] as String;
+          final compressedFile = ref['compressedFile'] as File;
+
+          debugPrint(
+            '📊 [_uploadMedia] Extracting metadata for mediaId=$mediaId',
+          );
+          final metadata = await MediaMetadataExtractor.extractImageMetadata(
+            originalPath: originalPath,
+            compressedFile: compressedFile,
+            mediaId: mediaId,  //--------------- review needed ------------------------
+          );
+          metadataRows.add(metadata);
+          debugPrint('📊 [_uploadMedia] Metadata extracted: $metadata');
+        }
+
+        if (metadataRows.isNotEmpty) {
+          await repository.insertMediaMetadata(metadataRows);
+          debugPrint(
+            '🟢 [_uploadMedia] Metadata saved for ${metadataRows.length} item(s)',
+          );
+        }
+      } catch (e) {
+        // Metadata is supplementary — never fail the whole post over this
+        debugPrint(
+          '🟡 [_uploadMedia] Metadata extraction/save failed (non-fatal): $e',
+        );
+      }
+
+      uploadCtrl.updateStep(UploadStep.completed);
       uploadCtrl.completeUpload();
       debugPrint('🟢 [_uploadMedia] uploadCtrl.completeUpload() called');
 
       debugPrint('⏳ [_uploadMedia] Waiting 1 second before navigation...');
       await Future.delayed(const Duration(seconds: 1));
 
-      debugPrint('🧭 [_uploadMedia] Finding HomeController and refreshing posts...');
+      debugPrint(
+        '🧭 [_uploadMedia] Finding HomeController and refreshing posts...',
+      );
       final homeController = Get.find<HomeController>();
       homeController.currentIndex.value = 0;
       await homeController.loadPosts();
@@ -271,8 +387,9 @@ class CreatePostController extends GetxController {
 
       debugPrint('🧭 [_uploadMedia] Navigating to MainPage...');
       Get.offAll(() => MainPage());
-      debugPrint('🟢 [_uploadMedia] Navigation complete. Post creation flow finished!');
-
+      debugPrint(
+        '🟢 [_uploadMedia] Navigation complete. Post creation flow finished!',
+      );
     } catch (e, stackTrace) {
       debugPrint('🔴 [_uploadMedia] ==============================');
       debugPrint('🔴 [_uploadMedia] ERROR in _uploadMedia!');
@@ -309,10 +426,10 @@ class CreatePostController extends GetxController {
 
   void showMediaPicker() {
     debugPrint('📸 [CreatePostController] showMediaPicker() called');
-    debugPrint('📸 [CreatePostController] Current media count: ${mediaUrls.length}');
-
-    if (mediaUrls.length >= 10) {
-      debugPrint('🟡 [CreatePostController] Media limit reached (10)');
+    debugPrint(
+      '📸 [CreatePostController] Current media count: ${pendingMedia.length}',
+    );      if (pendingMedia.length >= 10) {
+        debugPrint('🟡 [CreatePostController] Media limit reached (10)');
       Get.snackbar(
         'Limit reached',
         'You can add up to 10 media items',
@@ -350,9 +467,13 @@ class CreatePostController extends GetxController {
                   );
 
                   if (image != null) {
-                    debugPrint('📸 [MediaPicker] Photo captured: ${image.path}');
-                    mediaUrls.add(image.path);
-                    debugPrint('📸 [MediaPicker] Media count now: ${mediaUrls.length}');
+                    debugPrint(
+                      '📸 [MediaPicker] Photo captured: ${image.path}',
+                    );
+                    pendingMedia.add(PendingMedia(originalPath: image.path));
+                    debugPrint(
+                      '📸 [MediaPicker] Media count now: ${pendingMedia.length}',
+                    );
                   } else {
                     debugPrint('🟡 [MediaPicker] Photo capture cancelled');
                   }
@@ -381,9 +502,13 @@ class CreatePostController extends GetxController {
 
                   if (video != null) {
                     if (isClosed) return;
-                    debugPrint('🎥 [MediaPicker] Video captured: ${video.path}');
-                    mediaUrls.add(video.path);
-                    debugPrint('🎥 [MediaPicker] Media count now: ${mediaUrls.length}');
+                    debugPrint(
+                      '🎥 [MediaPicker] Video captured: ${video.path}',
+                    );
+                    pendingMedia.add(PendingMedia(originalPath: video.path));
+                    debugPrint(
+                      '🎥 [MediaPicker] Media count now: ${pendingMedia.length}',
+                    );
                   } else {
                     debugPrint('🟡 [MediaPicker] Video capture cancelled');
                   }
@@ -394,9 +519,12 @@ class CreatePostController extends GetxController {
                 leading: const Icon(Icons.photo_library),
                 title: const Text("Choose Image from Gallery"),
                 onTap: () async {
-                  debugPrint('🖼️ [MediaPicker] Choose Image from Gallery selected');
+                  debugPrint(
+                    '🖼️ [MediaPicker] Choose Image from Gallery selected',
+                  );
                   Get.back();
 
+                  // Choose Image from Gallery
                   final granted =
                       await PermissionService.requestGalleryPermission();
                   debugPrint('🖼️ [MediaPicker] Gallery permission: $granted');
@@ -411,9 +539,13 @@ class CreatePostController extends GetxController {
                   );
 
                   if (image != null) {
-                    debugPrint('🖼️ [MediaPicker] Image selected: ${image.path}');
-                    mediaUrls.add(image.path);
-                    debugPrint('🖼️ [MediaPicker] Media count now: ${mediaUrls.length}');
+                    debugPrint(
+                      '🖼️ [MediaPicker] Image selected: ${image.path}',
+                    );
+                    pendingMedia.add(PendingMedia(originalPath: image.path));
+                    debugPrint(
+                      '🖼️ [MediaPicker] Media count now: ${pendingMedia.length}',
+                    );
                   } else {
                     debugPrint('🟡 [MediaPicker] Image selection cancelled');
                   }
@@ -424,11 +556,13 @@ class CreatePostController extends GetxController {
                 leading: const Icon(Icons.video_library),
                 title: const Text("Choose Video from Gallery"),
                 onTap: () async {
-                  debugPrint('🎬 [MediaPicker] Choose Video from Gallery selected');
+                  debugPrint(
+                    '🎬 [MediaPicker] Choose Video from Gallery selected',
+                  );
                   Get.back();
-
+                  // Choose Video from Gallery
                   final granted =
-                      await PermissionService.requestGalleryPermission();
+                      await PermissionService.requestVideoGalleryPermission();
                   debugPrint('🎬 [MediaPicker] Gallery permission: $granted');
 
                   if (!granted) {
@@ -441,9 +575,13 @@ class CreatePostController extends GetxController {
                   );
 
                   if (video != null) {
-                    debugPrint('🎬 [MediaPicker] Video selected: ${video.path}');
-                    mediaUrls.add(video.path);
-                    debugPrint('🎬 [MediaPicker] Media count now: ${mediaUrls.length}');
+                    debugPrint(
+                      '🎬 [MediaPicker] Video selected: ${video.path}',
+                    );
+                    pendingMedia.add(PendingMedia(originalPath: video.path));
+                    debugPrint(
+                      '🎬 [MediaPicker] Media count now: ${pendingMedia.length}',
+                    );
                   } else {
                     debugPrint('🟡 [MediaPicker] Video selection cancelled');
                   }

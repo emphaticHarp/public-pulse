@@ -108,36 +108,48 @@ class UploadProgressPage extends StatelessWidget {
               const SizedBox(height: 35),
 
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _StepTile(
-                      icon: Icons.compress,
-                      title: "Compressing Media",
-                      completed: true,
-                    ),
+                child: Obx(() {
+                  final step = controller.currentStep.value;
 
-                    const SizedBox(height: 18),
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _StepTile(
+                        icon: Icons.compress,
+                        title: "Compressing Media",
+                        completed: step.index > UploadStep.compressing.index,
+                        loading: step == UploadStep.compressing,
+                      ),
 
-                    _StepTile(
-                      icon: Icons.location_on,
-                      title: "Extracting Metadata",
-                      completed: true,
-                    ),
+                      const SizedBox(height: 18),
 
-                    const SizedBox(height: 18),
+                      _StepTile(
+                        icon: Icons.location_on,
+                        title: "Extracting Metadata",
+                        completed: step.index > UploadStep.metadata.index,
+                        loading: step == UploadStep.metadata,
+                      ),
 
-                    _StepTile(
-                      icon: Icons.cloud_upload,
-                      title: "Uploading Files",
-                      loading: true,
-                    ),
+                      const SizedBox(height: 18),
 
-                    const SizedBox(height: 18),
+                      _StepTile(
+                        icon: Icons.cloud_upload,
+                        title: "Uploading Files",
+                        completed: step.index > UploadStep.uploading.index,
+                        loading: step == UploadStep.uploading,
+                      ),
 
-                    _StepTile(icon: Icons.storage, title: "Saving Post"),
-                  ],
-                ),
+                      const SizedBox(height: 18),
+
+                      _StepTile(
+                        icon: Icons.storage,
+                        title: "Saving Post",
+                        completed: step.index > UploadStep.saving.index,
+                        loading: step == UploadStep.saving,
+                      ),
+                    ],
+                  );
+                }),
               ),
 
               Obx(() {
