@@ -26,8 +26,8 @@ class AppBottomNavBar extends StatelessWidget {
     _NavItemData(index: 1, icon: Icons.groups_rounded, label: 'Community'),
     _NavItemData(
       index: 2,
-      icon: Icons.slow_motion_video_rounded,
-      label: 'Reels',
+      icon: Icons.notifications_none_rounded,
+      label: 'Notifications',
     ),
     _NavItemData(index: 3, icon: Icons.person_rounded, label: 'Profile'),
   ];

@@ -1,7 +1,12 @@
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 
+enum UploadStep { compressing, metadata, uploading, saving, completed }
+
 class UploadProgressController extends GetxController {
+  /// Current upload step
+  final Rx<UploadStep> currentStep = UploadStep.compressing.obs;
+
   /// Indicates whether an upload is currently running.
   final RxBool isUploading = false.obs;
 
@@ -40,6 +45,7 @@ class UploadProgressController extends GetxController {
     errorMessage.value = "";
     uploadProgress.value = 0.0;
     uploadStage.value = "Preparing Upload";
+    currentStep.value = UploadStep.compressing;
     currentFile.value = "";
     uploadedSize.value = "0 MB / 0 MB";
     uploadSpeed.value = "0 MB/s";
@@ -62,6 +68,11 @@ class UploadProgressController extends GetxController {
     currentFile.value = fileName;
   }
 
+  void updateStep(UploadStep step) {
+    debugPrint('📦 [UploadProgressCtrl] Step: $step');
+    currentStep.value = step;
+  }
+
   void updateUploadStats({
     required String uploaded,
     required String speed,
@@ -74,6 +85,7 @@ class UploadProgressController extends GetxController {
 
   void completeUpload() {
     debugPrint('🟢 [UploadProgressCtrl] completeUpload() called');
+      currentStep.value = UploadStep.completed;
     isUploading.value = false;
     isCompleted.value = true;
     uploadProgress.value = 1.0;
@@ -94,6 +106,7 @@ class UploadProgressController extends GetxController {
 
   void reset() {
     debugPrint('🔄 [UploadProgressCtrl] reset() called');
+    currentStep.value = UploadStep.compressing;
     isUploading.value = false;
     isCompleted.value = false;
     hasError.value = false;

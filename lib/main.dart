@@ -3,13 +3,17 @@ import 'package:get/get.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:public_pulse/core/services/auth_service.dart';
+
 import 'view/auth/splash_screen_page.dart';
+
+import 'package:public_pulse/core/services/auth_service.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/controller/network_controller.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
 import 'package:public_pulse/controller/profile_controller.dart';
 import 'package:public_pulse/controller/login_controller.dart';
+
+import 'package:public_pulse/core/cache/hive_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,14 +28,16 @@ Future<void> main() async {
   }
 
   await Supabase.initialize(url: url, anonKey: key);
+  // Initialize Hive and open cache boxes for offline storage.
+  await HiveService.init();
 
   Get.put(AuthService(), permanent: true);
 
-  Get.put(NetworkController()); 
-  Get.put(HomeController()); 
+  Get.put(NetworkController());
+  Get.lazyPut<HomeController>(() => HomeController());
   Get.lazyPut<LoginController>(() => LoginController());
-  Get.put(NotificationController());
-  Get.put(ProfileController());
+  Get.lazyPut<NotificationController>(() => NotificationController());
+  Get.lazyPut<ProfileController>(() => ProfileController());
   runApp(const PublicPulseApp());
 }
 

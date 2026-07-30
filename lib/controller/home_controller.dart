@@ -46,6 +46,10 @@ class HomeController extends GetxController {
 
   Future<void> loadMyPosts() async {
     try {
+      // Load posts through the repository.
+      // The repository automatically returns Hive cached posts first
+      // (if cache is still valid), otherwise it fetches fresh data
+      // from Supabase and updates the cache.
       final fetchedPosts = await _repository.getMyPosts();
 
       myPosts.assignAll(fetchedPosts);

@@ -1,21 +1,17 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
-import 'package:public_pulse/view/notification/notification_page.dart';
 import 'package:public_pulse/core/wrappers/network_wrapper.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/widget/local/app_search_bar.dart';
 import 'package:public_pulse/view/post/post_card.dart';
-import 'package:public_pulse/controller/notification_controller.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
 
   final HomeController controller = Get.find<HomeController>();
 
-  final NotificationController notificationController =
-      Get.find<NotificationController>();
-
+ 
   @override
   Widget build(BuildContext context) {
     debugPrint(
@@ -139,81 +135,30 @@ class HomePage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 40),
-                child: SizedBox(
+          Padding(
+            padding: const EdgeInsets.only(left: 40),
+            child: SizedBox(
+              width: 42,
+              height: 42,
+              child: Transform.scale(
+                scale: 3.5,
+                child: Image.asset(
+                  'assets/images/logo.webp',
                   width: 42,
                   height: 42,
-                  child: Transform.scale(
-                    scale: 3.5,
-                    child: Image.asset(
-                      'assets/images/logo.webp',
-                      width: 42,
-                      height: 42,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(
-                          color: AppColors.loginAccentRed,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 32,
+                    height: 32,
+                    decoration: const BoxDecoration(
+                      color: AppColors.loginAccentRed,
+                      shape: BoxShape.circle,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
-
-          GestureDetector(
-            onTap: () {
-              Get.to(() => NotificationPage());
-            },
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(
-                  Icons.notifications_none_rounded,
-                  size: 28,
-                  color: AppColors.gray900,
-                ),
-                Obx(() {
-                  final count = notificationController.newNotifications.length;
-
-                  if (count == 0) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: AppColors.loginAccentRed,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: Center(
-                        child: Text(
-                          count.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ],
             ),
           ),
         ],

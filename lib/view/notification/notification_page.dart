@@ -9,7 +9,6 @@ class NotificationPage extends StatelessWidget {
   NotificationPage({super.key});
 
   final NotificationController controller = Get.find<NotificationController>();
-  
 
   static const List<String> _tabs = ['All', 'Likes', 'Comments', 'Follows'];
 
@@ -28,32 +27,58 @@ class NotificationPage extends StatelessWidget {
             Obx(() => _buildTabs()),
             const SizedBox(height: 16),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Obx(
-                        () => _buildSection('New', controller.newNotifications),
-                      ),
-                      const SizedBox(height: 32),
-                      Obx(
-                        () => _buildSection(
-                          'Earlier',
-                          controller.earlierNotifications,
-                        ),
-                      ),
-                    ],
+              child: Obx(() {
+                // Loading
+                if (controller.isLoading.value) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppColors.brand),
+                  );
+                }
+
+                // Error
+                if (controller.errorMessage.isNotEmpty) {
+                  return _buildStateMessage(
+                    icon: Icons.error_outline_rounded,
+                    title: "Something went wrong",
+                    subtitle: controller.errorMessage.value,
+                  );
+                }
+
+                // Empty
+                if (controller.hasNoNotifications) {
+                  return _buildStateMessage(
+                    icon: Icons.notifications_none_rounded,
+                    title: "No notifications yet",
+                    subtitle: "You'll see likes, comments and follows here.",
+                  );
+                }
+
+                // Normal notification list
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (controller.newNotifications.isNotEmpty) ...[
+                          _buildSection("New", controller.newNotifications),
+                          const SizedBox(height: 32),
+                        ],
+                        if (controller.earlierNotifications.isNotEmpty)
+                          _buildSection(
+                            "Earlier",
+                            controller.earlierNotifications,
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              }),
             ),
           ],
         ),
       ),
-     
     );
   }
 
@@ -157,6 +182,39 @@ class NotificationPage extends StatelessWidget {
     );
   }
 
+  // ---------------- State message (loading / error / empty) ----------------
+  Widget _buildStateMessage({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 72, color: AppColors.gray400),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              style: AppTextStyles.sectionHeading,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: AppTextStyles.notificationTime.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ---------------- Section (New / Earlier) ----------------
   Widget _buildSection(String title, List<NotificationModel> items) {
     return Column(
@@ -216,25 +274,35 @@ class NotificationPage extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(28), // rounded-full (56/2)
-            child: Image.network(
-              item.avatarUrl,
-              width: 56,
-              height: 56,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: 56,
-                height: 56,
-                decoration: const BoxDecoration(
-                  color: AppColors.gray100,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person,
-                  color: AppColors.gray400,
-                  size: 28,
-                ),
-              ),
-            ),
+            child: item.avatarUrl.isEmpty
+                ? Container(
+                    width: 56,
+                    height: 56,
+                    decoration: const BoxDecoration(
+                      color: AppColors.gray100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.person, color: AppColors.gray400),
+                  )
+                : Image.network(
+                    item.avatarUrl,
+                    width: 56,
+                    height: 56,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 56,
+                      height: 56,
+                      decoration: const BoxDecoration(
+                        color: AppColors.gray100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        color: AppColors.gray400,
+                        size: 28,
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(width: 12), // gap-3
           Expanded(
@@ -270,7 +338,7 @@ class NotificationPage extends StatelessWidget {
               ),
             ),
           ),
-          if (item.postImageUrl != null)
+          if (item.postImageUrl != null && item.postImageUrl!.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(8), // rounded-custom
               child: Image.network(
