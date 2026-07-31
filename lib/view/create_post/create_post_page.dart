@@ -347,7 +347,7 @@ class _EmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Tap to Add Photos & Videos',
+                'Tap to Add Photos',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -420,17 +420,14 @@ class _MediaPreviewCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      imageUrl.toLowerCase().endsWith('.mp4')
-                          ? Icons.videocam
-                          : Icons.image,
-                      color: Colors.white,
-                      size: 14,
-                    ),
+                ),                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.image,
+                        color: Colors.white,
+                        size: 14,
+                      ),
                     const SizedBox(width: 5),
                     Text(
                       '$currentIndex/$totalCount',
@@ -482,7 +479,7 @@ class _InfoBanner extends StatelessWidget {
           Icon(Icons.info_outline, color: AppColors.createPostRed600, size: 16),
           SizedBox(width: 8),
           Text(
-            'You can add up to 10 photos or videos',
+            'You can add up to 10 photos',
             style: TextStyle(fontSize: 14, color: AppColors.gray500),
           ),
         ],

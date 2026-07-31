@@ -15,7 +15,6 @@ class ProfileController extends GetxController {
   // wire to PostRepository once the Posts feature exists.
   // UI only ever reads these — no filtering logic lives in the widget.
   final photoPosts = <String>[].obs;
-  final videoPosts = <String>[].obs;
   final savedPosts = <String>[].obs;
 
   @override

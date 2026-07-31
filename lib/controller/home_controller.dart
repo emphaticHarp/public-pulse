@@ -133,30 +133,6 @@ class HomeController extends GetxController {
     debugPrint('[DEBUG-CONTROLLER] Loaded ${cachedPosts.length} cached posts');
   }
 
-  void _updateFeed(List<PostModel> freshPosts) {
-    int newPosts = 0;
-    int updatedPosts = 0;
-
-    for (final freshPost in freshPosts) {
-      final index = posts.indexWhere((p) => p.id == freshPost.id);
-
-      if (index == -1) {
-        // New post
-        posts.insert(0, freshPost);
-        newPosts++;
-      } else {
-        // Existing post → replace with latest version
-        posts[index] = freshPost;
-        updatedPosts++;
-      }
-    }
-
-    debugPrint(
-      '[DEBUG-CONTROLLER] Feed Sync → New: $newPosts | Updated: $updatedPosts',
-    );
-    posts.refresh();
-  }
-
   Future<void> loadPosts() async {
     try {
       if (posts.isEmpty) {
@@ -168,24 +144,16 @@ class HomeController extends GetxController {
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
 
-      if (posts.isEmpty) {
-        posts.assignAll(page.posts);
-      } else {
-        // Append only posts that are not already in the feed
-        final existingIds = posts.map((e) => e.id).toSet();
-
-        final newPosts = page.posts
-            .where((post) => !existingIds.contains(post.id))
-            .toList();
-
-        posts.addAll(newPosts);
-      }
+      // Repository already returns merged + sorted posts.
+      posts.assignAll(page.posts);
 
       await CacheManager.cachePosts(
         posts,
         nextCursor: nextCursor,
         hasMore: hasMore.value,
       );
+
+      debugPrint('[DEBUG-CONTROLLER] Feed refreshed: ${posts.length} posts');
     } catch (e, stackTrace) {
       debugPrint('[DEBUG-CONTROLLER] loadPosts ERROR: $e');
       debugPrintStack(stackTrace: stackTrace);
@@ -207,7 +175,7 @@ class HomeController extends GetxController {
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
 
-      _updateFeed(page.posts);
+      posts.assignAll(page.posts);
 
       await CacheManager.cachePosts(
         posts,

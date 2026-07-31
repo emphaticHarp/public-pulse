@@ -105,7 +105,7 @@ class HomePage extends StatelessWidget {
                             location: post.location ?? '',
 
                             isCarousel: post.isCarousel,
-                            isVideo: post.isVideo,
+
                             imageUrl: post.mediaUrls.isNotEmpty
                                 ? post.mediaUrls.first
                                 : null,

@@ -3,7 +3,6 @@ import 'package:public_pulse/widget/post/post_header.dart';
 import 'package:public_pulse/widget/post/post_media.dart';
 import 'package:public_pulse/widget/post/interaction_bar.dart';
 import 'package:public_pulse/widget/post/post_caption.dart';
-import 'package:public_pulse/widget/post/post_video_media.dart';
 
 class PostCard extends StatelessWidget {
   final String profileImage; //post header import
@@ -14,8 +13,6 @@ class PostCard extends StatelessWidget {
   final String? imageUrl; //post media import
   final List<String>? imageUrls; //post media import
   final String? postId; //post media import
-  final bool isVideo; //post media import
-
   final IconData likeIcon; //interaction bar import
   final Color likeIconColor; //interaction bar import
 
@@ -37,8 +34,6 @@ class PostCard extends StatelessWidget {
     this.imageUrl,
     this.imageUrls,
     this.postId,
-    required this.isVideo,
-
     required this.likeIcon,
     required this.likeIconColor,
     required this.likeCount,
@@ -63,11 +58,8 @@ class PostCard extends StatelessWidget {
             location: location,
           ),
 
-// Display carousel, video, or image based on the post type.
           if (isCarousel)
             PostCarouselMedia(imageUrls: imageUrls!, postId: postId!)
-          else if (isVideo)
-            PostVideoMedia(videoUrl: imageUrl!)
           else
             PostMedia(imageUrl: imageUrl!),
 

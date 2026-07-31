@@ -158,8 +158,6 @@ class PostRepository {
         nextCursor: nextCursor,
         hasMore: hasMore,
       );
-
-      
     } catch (e, stackTrace) {
       debugPrint('[DEBUG-REPO] getPosts ERROR: $e');
       debugPrintStack(stackTrace: stackTrace);

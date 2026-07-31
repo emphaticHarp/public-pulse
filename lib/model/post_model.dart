@@ -23,8 +23,6 @@ class PostModel {
   final List<String> mediaUrls;
   final List<String> thumbnailUrls;
   final bool isCarousel;
-  final bool isVideo;
-
   // Counts
   final int likeCount;
   final int commentCount;
@@ -60,7 +58,7 @@ class PostModel {
     required this.mediaUrls,
     required this.thumbnailUrls,
     required this.isCarousel,
-    required this.isVideo,
+
 
     // Required count fields
     required this.likeCount,
@@ -95,21 +93,14 @@ class PostModel {
           .map((item) => item['storage_path'] as String)
           .toList(),
 
-      // Convert storage paths into public image and video URLs.
       mediaUrls: media.map((item) {
         final path = item['storage_path'] as String;
-        final mediaType = item['media_type'] as String;
-
-        final bucket = mediaType == 'VIDEO' ? 'posts-videos' : 'posts-images';
-
-        return Supabase.instance.client.storage.from(bucket).getPublicUrl(path);
+        return Supabase.instance.client.storage.from('posts-images').getPublicUrl(path);
       }).toList(),
 
       thumbnailUrls: const [],
 
       isCarousel: media.length > 1,
-
-      isVideo: media.any((item) => item['media_type'] == 'VIDEO'),
 
       caption: json['caption'],
       location: json['location_name'],
@@ -144,7 +135,7 @@ class PostModel {
       'media_urls': mediaUrls,
       'thumbnail_urls': thumbnailUrls,
       'is_carousel': isCarousel,
-      'is_video': isVideo,
+
       'like_count': likeCount,
       'comment_count': commentCount,
       'share_count': shareCount,
@@ -171,7 +162,7 @@ class PostModel {
       mediaUrls: List<String>.from(json['media_urls'] ?? []),
       thumbnailUrls: List<String>.from(json['thumbnail_urls'] ?? []),
       isCarousel: json['is_carousel'],
-      isVideo: json['is_video'],
+
       likeCount: json['like_count'],
       commentCount: json['comment_count'],
       shareCount: json['share_count'],

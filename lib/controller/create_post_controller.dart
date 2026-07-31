@@ -29,7 +29,7 @@ class CreatePostController extends GetxController {
   final RxString caption = ''.obs;
   final int captionMaxLength = 500;
 
-  // Media items pending upload (images/videos)
+  // Media items pending upload (images only)
   final RxList<PendingMedia> pendingMedia = <PendingMedia>[].obs;
 
   // Location
@@ -83,7 +83,8 @@ class CreatePostController extends GetxController {
       final removed = pendingMedia[index].originalPath;
       debugPrint('🟡 [CreatePostController] Removed: $removed');
       pendingMedia.removeAt(index);
-      if (currentIndex.value >= pendingMedia.length && pendingMedia.isNotEmpty) {
+      if (currentIndex.value >= pendingMedia.length &&
+          pendingMedia.isNotEmpty) {
         currentIndex.value = pendingMedia.length - 1;
       }
       debugPrint(
@@ -154,7 +155,6 @@ class CreatePostController extends GetxController {
       final totalFiles = pendingMedia.length;
       debugPrint('📤 [_uploadMedia] Total files to upload: $totalFiles');
 
-      // accept any video format for any device
       for (int i = 0; i < totalFiles; i++) {
         debugPrint(
           '📤 [_uploadMedia] --- Processing file ${i + 1} of $totalFiles ---',
@@ -173,35 +173,24 @@ class CreatePostController extends GetxController {
           '📤 [_uploadMedia] File size: $fileSize bytes (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)',
         );
 
-        const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
-        final isVideo = videoExtensions.any(
-          (ext) => file.path.toLowerCase().endsWith(ext),
-        );
-        debugPrint('📤 [_uploadMedia] Is video: $isVideo (extension check)');
-
-        final bucket = isVideo
-            ? CreatePostRepository.videoBucket
-            : CreatePostRepository.imageBucket;
+        final bucket = CreatePostRepository.imageBucket;
         debugPrint('📤 [_uploadMedia] Target bucket: $bucket');
 
-        // Compress images only — videos pass through untouched for now
         File uploadFile = file;
-        if (!isVideo) {
-          uploadCtrl.updateStep(UploadStep.compressing);
-          uploadCtrl.updateCurrentFile("Compressing ${i + 1} of $totalFiles");
-          debugPrint('🗜️ [_uploadMedia] Compressing image: $filePath');
-          final compressedFile = await imageCompressor.compressImage(filePath);
-          if (compressedFile != null) {
-            uploadFile = compressedFile;
-            final compressedSize = compressedFile.lengthSync();
-            debugPrint(
-              '🗜️ [_uploadMedia] Compressed size: $compressedSize bytes (was $fileSize bytes)',
-            );
-          } else {
-            debugPrint(
-              '🟡 [_uploadMedia] Compression returned null, using original file',
-            );
-          }
+        uploadCtrl.updateStep(UploadStep.compressing);
+        uploadCtrl.updateCurrentFile("Compressing ${i + 1} of $totalFiles");
+        debugPrint('🗜️ [_uploadMedia] Compressing image: $filePath');
+        final compressedFile = await imageCompressor.compressImage(filePath);
+        if (compressedFile != null) {
+          uploadFile = compressedFile;
+          final compressedSize = compressedFile.lengthSync();
+          debugPrint(
+            '🗜️ [_uploadMedia] Compressed size: $compressedSize bytes (was $fileSize bytes)',
+          );
+        } else {
+          debugPrint(
+            '🟡 [_uploadMedia] Compression returned null, using original file',
+          );
         }
 
         uploadCtrl.updateStep(UploadStep.uploading);
@@ -259,18 +248,14 @@ class CreatePostController extends GetxController {
         debugPrint('🟢 [_uploadMedia] File ${i + 1} uploaded successfully!');
         debugPrint('🟢 [_uploadMedia] Storage path: $storagePath');
 
-        mediaItems.add({
-          'storage_path': storagePath,
-          'media_type': isVideo ? 'VIDEO' : 'IMAGE',
-        });
+        mediaItems.add({'storage_path': storagePath, 'media_type': 'IMAGE'});
         debugPrint(
-          '🟢 [_uploadMedia] Media item added: {storage_path: $storagePath, media_type: ${isVideo ? "VIDEO" : "IMAGE"}}',
+          '🟢 [_uploadMedia] Media item added: {storage_path: $storagePath, media_type: IMAGE}',
         );
 
         mediaFileRefs.add({
           'originalPath': filePath,
           'compressedFile': uploadFile,
-          'isVideo': isVideo,
         });
       }
 
@@ -331,16 +316,6 @@ class CreatePostController extends GetxController {
 
         for (int i = 0; i < mediaFileRefs.length; i++) {
           final ref = mediaFileRefs[i];
-          final isVideoFile = ref['isVideo'] as bool;
-
-          if (isVideoFile) {
-            
-            debugPrint(
-              '🟡 [_uploadMedia] Skipping metadata extraction for video (not in scope)',
-            );
-            continue;
-          }
-
           final mediaId = mediaIds[i];
           final originalPath = ref['originalPath'] as String;
           final compressedFile = ref['compressedFile'] as File;
@@ -351,7 +326,8 @@ class CreatePostController extends GetxController {
           final metadata = await MediaMetadataExtractor.extractImageMetadata(
             originalPath: originalPath,
             compressedFile: compressedFile,
-            mediaId: mediaId,  //--------------- review needed ------------------------
+            mediaId:
+                mediaId, //--------------- review needed ------------------------
           );
           metadataRows.add(metadata);
           debugPrint('📊 [_uploadMedia] Metadata extracted: $metadata');
@@ -428,8 +404,9 @@ class CreatePostController extends GetxController {
     debugPrint('📸 [CreatePostController] showMediaPicker() called');
     debugPrint(
       '📸 [CreatePostController] Current media count: ${pendingMedia.length}',
-    );      if (pendingMedia.length >= 10) {
-        debugPrint('🟡 [CreatePostController] Media limit reached (10)');
+    );
+    if (pendingMedia.length >= 10) {
+      debugPrint('🟡 [CreatePostController] Media limit reached (10)');
       Get.snackbar(
         'Limit reached',
         'You can add up to 10 media items',
@@ -481,41 +458,6 @@ class CreatePostController extends GetxController {
               ),
 
               ListTile(
-                leading: const Icon(Icons.videocam),
-                title: const Text("Take Video"),
-                onTap: () async {
-                  debugPrint('🎥 [MediaPicker] Take Video selected');
-                  Get.back();
-
-                  final granted =
-                      await PermissionService.requestCameraPermission();
-                  debugPrint('🎥 [MediaPicker] Camera permission: $granted');
-
-                  if (!granted) {
-                    _showPermissionError("Camera");
-                    return;
-                  }
-
-                  final XFile? video = await picker.pickVideo(
-                    source: ImageSource.camera,
-                  );
-
-                  if (video != null) {
-                    if (isClosed) return;
-                    debugPrint(
-                      '🎥 [MediaPicker] Video captured: ${video.path}',
-                    );
-                    pendingMedia.add(PendingMedia(originalPath: video.path));
-                    debugPrint(
-                      '🎥 [MediaPicker] Media count now: ${pendingMedia.length}',
-                    );
-                  } else {
-                    debugPrint('🟡 [MediaPicker] Video capture cancelled');
-                  }
-                },
-              ),
-
-              ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text("Choose Image from Gallery"),
                 onTap: () async {
@@ -524,16 +466,8 @@ class CreatePostController extends GetxController {
                   );
                   Get.back();
 
-                  // Choose Image from Gallery
-                  final granted =
-                      await PermissionService.requestGalleryPermission();
-                  debugPrint('🖼️ [MediaPicker] Gallery permission: $granted');
-
-                  if (!granted) {
-                    _showPermissionError("Gallery");
-                    return;
-                  }
-
+                  // image_picker handles gallery permissions internally
+                  // on both Android and iOS — no manual permission check needed.
                   final XFile? image = await picker.pickImage(
                     source: ImageSource.gallery,
                   );
@@ -548,42 +482,6 @@ class CreatePostController extends GetxController {
                     );
                   } else {
                     debugPrint('🟡 [MediaPicker] Image selection cancelled');
-                  }
-                },
-              ),
-
-              ListTile(
-                leading: const Icon(Icons.video_library),
-                title: const Text("Choose Video from Gallery"),
-                onTap: () async {
-                  debugPrint(
-                    '🎬 [MediaPicker] Choose Video from Gallery selected',
-                  );
-                  Get.back();
-                  // Choose Video from Gallery
-                  final granted =
-                      await PermissionService.requestVideoGalleryPermission();
-                  debugPrint('🎬 [MediaPicker] Gallery permission: $granted');
-
-                  if (!granted) {
-                    _showPermissionError("Gallery");
-                    return;
-                  }
-
-                  final XFile? video = await picker.pickVideo(
-                    source: ImageSource.gallery,
-                  );
-
-                  if (video != null) {
-                    debugPrint(
-                      '🎬 [MediaPicker] Video selected: ${video.path}',
-                    );
-                    pendingMedia.add(PendingMedia(originalPath: video.path));
-                    debugPrint(
-                      '🎬 [MediaPicker] Media count now: ${pendingMedia.length}',
-                    );
-                  } else {
-                    debugPrint('🟡 [MediaPicker] Video selection cancelled');
                   }
                 },
               ),

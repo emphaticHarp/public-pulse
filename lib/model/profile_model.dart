@@ -1,6 +1,6 @@
 /// Tabs shown on the Profile Screen. Kept alongside the model
 /// controller and UI can depend on it without an extra file.
-enum ProfileTab { photos, videos, saved }
+enum ProfileTab { photos, saved }
 
 class ProfileModel {
   final String userId;
