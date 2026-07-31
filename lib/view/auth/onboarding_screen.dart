@@ -24,7 +24,7 @@ const List<_OnboardSlide> _slides = [
   _OnboardSlide(
     title: 'Share. Connect. Make an Impact.',
     description:
-        'Share photos and videos of issues around you. Together, we can create a better community.',
+        'Share photos of issues around you. Together, we can create a better community.',
     imageAsset: 'assets/images/slide_1.webp',
   ),
   _OnboardSlide(
@@ -37,7 +37,7 @@ const List<_OnboardSlide> _slides = [
   _OnboardSlide(
     title: 'Explore What\'s Trending with Pulse',
     description:
-        'Follow trending stories, watch short videos, and stay informed in real time.',
+        'Follow trending stories, see updates, and stay informed in real time.',
     imageAsset: 'assets/images/slide_2.webp',
   ),
 ];

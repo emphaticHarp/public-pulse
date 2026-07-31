@@ -66,10 +66,8 @@ class NotificationModel {
       final String storagePath = firstMedia['storage_path'];
       final String mediaType = firstMedia['media_type'];
 
-      final bucket = mediaType == 'VIDEO' ? 'posts-videos' : 'posts-images';
-
       postImageUrl = Supabase.instance.client.storage
-          .from(bucket)
+          .from('posts-images')
           .getPublicUrl(storagePath);
     }
 

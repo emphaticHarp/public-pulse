@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
+
 class PostMedia extends StatelessWidget {
   final String imageUrl;
   const PostMedia({super.key, required this.imageUrl});
@@ -14,10 +16,16 @@ class PostMedia extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(
-            imageUrl,
+          CachedNetworkImage(
+            imageUrl: imageUrl,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
+
+            fadeInDuration: Duration.zero,
+            fadeOutDuration: Duration.zero,
+
+            placeholder: (context, url) => Container(color: AppColors.gray100),
+
+            errorWidget: (context, url, error) => Container(
               color: AppColors.gray100,
               child: const Icon(
                 Icons.broken_image,
@@ -62,12 +70,22 @@ class PostCarouselMedia extends StatelessWidget {
                 controller.carouselIndexes[postId] = value;
                 controller.carouselScrollFractions[postId] = 0.0;
               },
-              controller: controller.getCarouselPageController(postId, currentIndex),
+              controller: controller.getCarouselPageController(
+                postId,
+                currentIndex,
+              ),
               itemBuilder: (context, index) {
-                return Image.network(
-                  imageUrls[index],
+                return CachedNetworkImage(
+                  imageUrl: imageUrls[index],
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+
+                  fadeInDuration: Duration.zero,
+                  fadeOutDuration: Duration.zero,
+
+                  placeholder: (context, url) =>
+                      Container(color: AppColors.gray100),
+
+                  errorWidget: (context, url, error) => Container(
                     color: AppColors.gray100,
                     child: const Icon(
                       Icons.broken_image,

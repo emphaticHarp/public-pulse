@@ -9,7 +9,6 @@ class CreatePostRepository {
   final Dio _dio = Dio();
 
   static const String imageBucket = 'posts-images';
-  static const String videoBucket = 'posts-videos';
 
   String _storageUrl(String bucket) =>
       '${dotenv.env['SUPABASE_URL']}/storage/v1/object/$bucket';
