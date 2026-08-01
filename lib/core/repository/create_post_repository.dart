@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mime/mime.dart';
 
 class CreatePostRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -52,11 +53,18 @@ class CreatePostRepository {
       '🟢 [CreatePostRepo] Access token length: ${session.accessToken.length}',
     );
 
+    final mimeType =
+        lookupMimeType(imageFile.path) ?? 'application/octet-stream';
+  
+
+    debugPrint("🟢 MIME TYPE = $mimeType");
+    debugPrint("🟢 Upload file path = ${imageFile.path}");
+
     final headers = {
       'Authorization': 'Bearer ${session.accessToken}',
       'apikey': dotenv.env['SUPABASE_PUBLISHABLE_KEY']!,
       'x-upsert': 'false',
-      'Content-Type': 'application/octet-stream',
+      'Content-Type': mimeType,
     };
 
     try {
@@ -220,5 +228,4 @@ class CreatePostRepository {
     if (metadataRows.isEmpty) return;
     await _supabase.from('media_metadata').insert(metadataRows);
   }
-  
 }
