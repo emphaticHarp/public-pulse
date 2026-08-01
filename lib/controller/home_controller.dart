@@ -46,6 +46,8 @@ class HomeController extends GetxController {
   /// Timer for background checking
   Timer? _newPostTimer;
 
+  
+
   @override
   void onInit() {
     super.onInit();
@@ -161,9 +163,9 @@ class HomeController extends GetxController {
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
 
-      if (posts.isEmpty) {
-        posts.assignAll(page.posts);
-      }
+    posts.assignAll(page.posts);//--------changed------
+
+
 
       await CacheManager.cachePosts(
         posts,

@@ -358,7 +358,7 @@ class CreatePostController extends GetxController {
       );
       final homeController = Get.find<HomeController>();
       homeController.currentIndex.value = 0;
-      await homeController.loadPosts();
+      await homeController.refreshFeed();
       debugPrint('🟢 [_uploadMedia] Posts reloaded');
 
       debugPrint('🧭 [_uploadMedia] Navigating to MainPage...');

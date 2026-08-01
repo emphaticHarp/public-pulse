@@ -26,11 +26,13 @@ class ImageCompressor {
     final dir = await getTemporaryDirectory();
     final sessionId = DateTime.now().millisecondsSinceEpoch;
 
+    // Small files: still convert to webp (metadata strip), regardless of
+    // whether the resulting file is smaller than the original.
     if (originalSize <= _smallFileThreshold) {
-      return _stripMetadataOnly(originalBytes, dir.path, sessionId, originalSize, originalFile);
+      return _stripMetadataOnly(originalBytes, dir.path, sessionId);
     }
 
-    //compression  70-80 KB target
+    // Tier 2 — compress toward the 70-80 KB target
     int quality = 70;
     int dimension = _maxDimension;
 
@@ -91,33 +93,34 @@ class ImageCompressor {
       }
     }
 
-    // Nothing usable came out of Tier 2 — try a plain metadata-only strip
+    // Nothing usable came out of Tier 2 (decoder failed on every attempt)
+    // — still try to produce a webp via the metadata-strip path.
     if (bestBytes == null) {
-      return _stripMetadataOnly(originalBytes, dir.path, sessionId, originalSize, originalFile);
+      return _stripMetadataOnly(originalBytes, dir.path, sessionId);
     }
 
-    if (bestBytes.length >= originalSize) {
-      return _stripMetadataOnly(originalBytes, dir.path, sessionId, originalSize, originalFile);
-    }
-
+    // Always save as webp now, even if it's not smaller than the original.
     final finalPath = '${dir.path}/${sessionId}_compressed.webp';
     final finalFile = File(finalPath);
     await finalFile.writeAsBytes(bestBytes, flush: true);
     return finalFile;
   }
 
-  /// Re-encodes at near-lossless quality purely to remove EXIF metadata.
+  /// Re-encodes to webp at quality 100 (i.e. no real compression, just a
+  /// straight format conversion) with EXIF stripped. Used for small files
+  /// and as a last-resort fallback. Always writes a webp file if the
+  /// encoder succeeds — no longer compares against the original size.
   Future<File?> _stripMetadataOnly(
     Uint8List originalBytes,
     String dirPath,
     int sessionId,
-    int originalSize,
-    File originalFile,
   ) async {
-    final resultBytes = await _safeCompress(originalBytes, quality: 95);
+    final resultBytes = await _safeCompress(originalBytes, quality: 100);
 
-    if (resultBytes == null || resultBytes.length > originalSize) {
-      return originalFile;
+    // Only give up and return null if the encoder genuinely can't process
+    // this format at all — there's no way to force a webp conversion then.
+    if (resultBytes == null) {
+      return null;
     }
 
     final strippedPath = '$dirPath/${sessionId}_stripped.webp';
