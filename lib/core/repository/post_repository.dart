@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/model/post_model.dart';
-import 'package:public_pulse/core/cache/cache_manager.dart';
 
 class PostPage {
   final List<PostModel> posts;
@@ -49,33 +48,9 @@ class PostRepository {
     }
   }
 
-  List<PostModel> _mergePosts(List<PostModel> cached, List<PostModel> fresh) {
-    final Map<String, PostModel> map = {};
-
-    // Old cache
-    for (final post in cached) {
-      map[post.id] = post;
-    }
-
-    // Fresh posts overwrite cached version
-    for (final post in fresh) {
-      map[post.id] = post;
-    }
-
-    final merged = map.values.toList();
-
-    merged.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-    return merged;
-  }
-
-  Future<PostPage> getPosts({String? cursor, int limit = 10}) async {
-    debugPrint('[DEBUG-REPO] getPosts: Starting...');
+  Future<PostPage> getInitialPosts({int limit = 10}) async {
+    debugPrint('[DEBUG-REPO] getInitialPosts: Starting...');
     try {
-      final cachedPosts = CacheManager.getCachedPosts();
-
-      debugPrint('[DEBUG-REPO] Cached posts = ${cachedPosts.length}');
-
       debugPrint('[DEBUG-REPO] getPosts: Fetching from Supabase...');
 
       // 2️⃣ Fetch latest posts from Supabase
@@ -111,10 +86,6 @@ class PostRepository {
           .eq('status', 'ACTIVE')
           .filter('deleted_at', 'is', null);
 
-      if (cursor != null) {
-        query = query.lt('created_at', cursor);
-      }
-
       final response = await query
           .order('created_at', ascending: false)
           .limit(limit);
@@ -134,9 +105,6 @@ class PostRepository {
       );
 
       // Merge cached + fresh posts
-      final mergedPosts = _mergePosts(cachedPosts, posts);
-
-      debugPrint('[DEBUG-REPO] Merged posts count = ${mergedPosts.length}');
 
       final String? nextCursor = posts.isNotEmpty
           ? posts.last.createdAt.toIso8601String()
@@ -144,42 +112,73 @@ class PostRepository {
 
       final bool hasMore = posts.length == limit;
 
-      // Save merged posts into Hive
-      await CacheManager.cachePosts(
-        mergedPosts,
-        nextCursor: nextCursor,
-        hasMore: hasMore,
-      );
+      debugPrint('[DEBUG-REPO] Returning ${posts.length} posts');
 
-      debugPrint('[DEBUG-REPO] Returning ${mergedPosts.length} merged posts');
-
-      return PostPage(
-        posts: mergedPosts,
-        nextCursor: nextCursor,
-        hasMore: hasMore,
-      );
+      return PostPage(posts: posts, nextCursor: nextCursor, hasMore: hasMore);
     } catch (e, stackTrace) {
-      debugPrint('[DEBUG-REPO] getPosts ERROR: $e');
+      debugPrint('[DEBUG-REPO] getInitialPosts ERROR: $e');
       debugPrintStack(stackTrace: stackTrace);
 
-      // 4️⃣ If Supabase fails, try loading cached posts
-      debugPrint(
-        '[DEBUG-REPO] getPosts: Falling back to cached posts due to error',
-      );
-      final cachedPosts = CacheManager.getCachedPosts();
-
-      if (cachedPosts.isNotEmpty) {
-        debugPrint(
-          '[DEBUG-REPO] getPosts: Using ${cachedPosts.length} offline cached posts',
-        );
-        return PostPage(posts: cachedPosts, nextCursor: null, hasMore: false);
-      }
-
-      debugPrint(
-        '[DEBUG-REPO] getPosts: No cached posts available, returning empty list',
-      );
       return PostPage(posts: [], nextCursor: null, hasMore: false);
     }
+  }
+
+  Future<PostPage> getMorePosts({
+    required String cursor,
+    int limit = 10,
+  }) async {
+    debugPrint('[DEBUG-REPO] getMorePosts');
+
+    var query = _supabase
+        .from('posts')
+        .select('''
+      id,
+      profile_id,
+      caption,
+      location_name,
+      visibility,
+      like_count,
+      comment_count,
+      share_count,
+      save_count,
+      view_count,
+      created_at,
+
+      profile:profiles(
+        username,
+        display_name,
+        avatar_path,
+        is_private
+      ),
+
+      media:post_media(
+        storage_path,
+        thumbnail_path,
+        media_type,
+        media_order
+      )
+    ''')
+        .eq('status', 'ACTIVE')
+        .filter('deleted_at', 'is', null)
+        .lt('created_at', cursor);
+
+    final response = await query
+        .order('created_at', ascending: false)
+        .limit(limit);
+
+    final posts = response
+        .map<PostModel>((e) => PostModel.fromJson(e))
+        .toList();
+
+    final nextCursor = posts.isNotEmpty
+        ? posts.last.createdAt.toIso8601String()
+        : null;
+
+    return PostPage(
+      posts: posts,
+      nextCursor: nextCursor,
+      hasMore: posts.length == limit,
+    );
   }
 
   Future<List<PostModel>> getMyPosts() async {
@@ -237,5 +236,51 @@ class PostRepository {
       debugPrintStack(stackTrace: stackTrace);
       return [];
     }
+  }
+
+  Future<List<PostModel>> getNewPosts({required String latestCreatedAt}) async {
+    debugPrint('[DEBUG-REPO] Checking posts newer than $latestCreatedAt');
+
+    final response = await _supabase
+        .from('posts')
+        .select('''
+        id,
+        profile_id,
+        caption,
+        location_name,
+        visibility,
+        like_count,
+        comment_count,
+        share_count,
+        save_count,
+        view_count,
+        created_at,
+
+        profile:profiles(
+          username,
+          display_name,
+          avatar_path,
+          is_private
+        ),
+
+        media:post_media(
+          storage_path,
+          thumbnail_path,
+          media_type,
+          media_order
+        )
+      ''')
+        .eq('status', 'ACTIVE')
+        .filter('deleted_at', 'is', null)
+        .gt('created_at', latestCreatedAt)
+        .order('created_at', ascending: false);
+
+    final posts = response
+        .map<PostModel>((e) => PostModel.fromJson(e))
+        .toList();
+
+    debugPrint('[DEBUG-REPO] New posts found = ${posts.length}');
+
+    return posts;
   }
 }
