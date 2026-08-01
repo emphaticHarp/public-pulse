@@ -21,7 +21,7 @@ class HomePage extends StatelessWidget {
       body: NetworkWrapper(
         child: Obx(() {
           return RefreshIndicator(
-            onRefresh: controller.loadPosts,
+          onRefresh: controller.refreshFeed,
             color: AppColors.loginAccentRed,
 
             child: CustomScrollView(
@@ -38,6 +38,56 @@ class HomePage extends StatelessWidget {
                     child: SearchBarWidget(),
                   ),
                 ),
+
+                
+
+                Obx(() {
+                  return SliverToBoxAdapter(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: controller.newPostCount.value == 0
+                          ? const SizedBox.shrink()
+                          : Padding(
+                              key: const ValueKey("new_posts_banner"),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: GestureDetector(
+                                onTap: () async {
+                                  await controller.refreshFeed();
+
+                                  if (controller.scrollController.hasClients) {
+                                    controller.scrollController.animateTo(
+                                      0,
+                                      duration: const Duration(milliseconds: 400),
+                                      curve: Curves.easeOut,
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.loginAccentRed,
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      controller.newPostCount.value == 1
+                                          ? "1 New Post"
+                                          : "${controller.newPostCount.value} New Posts",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  );
+                }),
 
                 // Loading state
                 if (controller.isLoading.value)

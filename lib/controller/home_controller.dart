@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/model/post_model.dart';
@@ -36,6 +37,15 @@ class HomeController extends GetxController {
 
   final isLoadingMore = false.obs;
 
+  /// Posts waiting for refresh
+  final RxList<PostModel> pendingPosts = <PostModel>[].obs;
+
+  /// Number of new posts
+  final RxInt newPostCount = 0.obs;
+
+  /// Timer for background checking
+  Timer? _newPostTimer;
+
   @override
   void onInit() {
     super.onInit();
@@ -46,7 +56,13 @@ class HomeController extends GetxController {
       debugPrint('[DEBUG-CONTROLLER] User logged in');
 
       loadCachedPosts();
-      loadPosts();
+
+      if (posts.isEmpty) {
+        loadPosts(); // first install only
+      } else {
+        _startNewPostChecker(); // cache already exists
+      }
+
       loadMyPosts();
 
       scrollController.addListener(_onScroll);
@@ -112,6 +128,7 @@ class HomeController extends GetxController {
       pc.dispose();
     }
     _carouselPageControllers.clear();
+    _newPostTimer?.cancel();
     super.onClose();
   }
 
@@ -139,13 +156,14 @@ class HomeController extends GetxController {
         isLoading.value = true;
       }
 
-      final page = await _repository.getPosts(cursor: null, limit: 10);
+      final page = await _repository.getInitialPosts(limit: 10);
 
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
 
-      // Repository already returns merged + sorted posts.
-      posts.assignAll(page.posts);
+      if (posts.isEmpty) {
+        posts.assignAll(page.posts);
+      }
 
       await CacheManager.cachePosts(
         posts,
@@ -153,10 +171,57 @@ class HomeController extends GetxController {
         hasMore: hasMore.value,
       );
 
+      if (_newPostTimer == null) {
+        _startNewPostChecker();
+      }
+
       debugPrint('[DEBUG-CONTROLLER] Feed refreshed: ${posts.length} posts');
     } catch (e, stackTrace) {
       debugPrint('[DEBUG-CONTROLLER] loadPosts ERROR: $e');
       debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> refreshFeed() async {
+    if (isLoading.value) return;
+
+    isLoading.value = true;
+
+    try {
+      debugPrint('[DEBUG] Refresh Feed');
+
+      final page = await _repository.getInitialPosts(limit: 10);
+
+      nextCursor = page.nextCursor;
+      hasMore.value = page.hasMore;
+
+      // IDs of currently loaded posts
+      final Map<String, PostModel> mergedMap = {};
+
+      for (final post in page.posts) {
+        mergedMap[post.id] = post;
+      }
+
+      for (final post in posts) {
+        mergedMap.putIfAbsent(post.id, () => post);
+      }
+
+      posts.assignAll(mergedMap.values.toList());
+
+      pendingPosts.clear();
+      newPostCount.value = 0;
+
+      await CacheManager.cachePosts(
+        posts,
+        nextCursor: nextCursor,
+        hasMore: hasMore.value,
+      );
+
+      debugPrint('[DEBUG] Feed refreshed');
+    } catch (e) {
+      debugPrint('[DEBUG] refreshFeed ERROR: $e');
     } finally {
       isLoading.value = false;
     }
@@ -170,12 +235,21 @@ class HomeController extends GetxController {
     isLoadingMore.value = true;
 
     try {
-      final page = await _repository.getPosts(cursor: nextCursor, limit: 10);
+      final page = await _repository.getMorePosts(
+        cursor: nextCursor!,
+        limit: 10,
+      );
 
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
 
-      posts.assignAll(page.posts);
+      final existingIds = posts.map((e) => e.id).toSet();
+
+      for (final post in page.posts) {
+        if (!existingIds.contains(post.id)) {
+          posts.add(post);
+        }
+      }
 
       await CacheManager.cachePosts(
         posts,
@@ -188,6 +262,50 @@ class HomeController extends GetxController {
       debugPrint(e.toString());
     } finally {
       isLoadingMore.value = false;
+    }
+  }
+
+  void _startNewPostChecker() {
+    _newPostTimer?.cancel();
+
+    _newPostTimer = Timer.periodic(const Duration(minutes: 2), (_) async {
+      if (Get.currentRoute != '/home') return;
+
+      await _checkForNewPosts();
+    });
+
+    debugPrint('[DEBUG] New post checker started');
+  }
+
+  Future<void> _checkForNewPosts() async {
+    try {
+      // Don't check while the feed is loading or paginating
+      if (isLoading.value || isLoadingMore.value) return;
+
+      if (posts.isEmpty) return;
+
+      final latestCreatedAt = posts.first.createdAt.toIso8601String();
+
+      final newPosts = await _repository.getNewPosts(
+        latestCreatedAt: latestCreatedAt,
+      );
+
+      if (newPosts.isEmpty) {
+        debugPrint('[DEBUG] No new posts');
+        return;
+      }
+
+      for (final post in newPosts) {
+        if (!pendingPosts.any((e) => e.id == post.id)) {
+          pendingPosts.add(post);
+        }
+      }
+
+      newPostCount.value = pendingPosts.length;
+
+      debugPrint('[DEBUG] Pending Posts = ${pendingPosts.length}');
+    } catch (e) {
+      debugPrint('[DEBUG] _checkForNewPosts ERROR: $e');
     }
   }
 }

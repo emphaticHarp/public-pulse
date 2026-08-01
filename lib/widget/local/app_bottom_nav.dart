@@ -62,7 +62,7 @@ class AppBottomNavBar extends StatelessWidget {
 
   Widget _navItem(_NavItemData item) {
     final bool isActive = currentIndex == item.index;
-    final Color color = isActive ? AppColors.loginAccentRed : AppColors.gray500;
+    final Color color = isActive ? const Color.fromRGBO(226, 29, 72, 1) : AppColors.gray500;
 
     return InkWell(
       onTap: () => onTap(item.index),
