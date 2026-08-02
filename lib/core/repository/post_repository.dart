@@ -18,16 +18,9 @@ class PostRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<String?> getCurrentProfileId() async {
-    debugPrint('[DEBUG-REPO] getCurrentProfileId: starting');
     final user = _supabase.auth.currentUser;
-    debugPrint(
-      '[DEBUG-REPO] getCurrentProfileId: currentUser = ${user?.id ?? "null"}',
-    );
 
     if (user == null) {
-      debugPrint(
-        '[DEBUG-REPO] getCurrentProfileId: user is null, returning null',
-      );
       return null;
     }
 
@@ -38,26 +31,19 @@ class PostRepository {
           .eq('user_id', user.id)
           .maybeSingle();
 
-      debugPrint(
-        '[DEBUG-REPO] getCurrentProfileId: profile lookup result = $profile',
-      );
       return profile?['id'];
     } catch (e) {
-      debugPrint('[DEBUG-REPO] getCurrentProfileId: ERROR = $e');
+      debugPrint('[ERROR] getCurrentProfileId: $e');
       return null;
     }
   }
 
   Future<PostPage> getInitialPosts({int limit = 10}) async {
-    debugPrint('[DEBUG-REPO] getInitialPosts: Starting...');
+    debugPrint("======== getInitialPosts CALLED ========");
     try {
-      debugPrint('[DEBUG-REPO] getPosts: Fetching from Supabase...');
-
-      // 2️⃣ Fetch latest posts from Supabase
       var query = _supabase
           .from('posts')
-          .select('''
-          id,
+          .select('''id,
           profile_id,
           caption,
           location_name,
@@ -90,21 +76,9 @@ class PostRepository {
           .order('created_at', ascending: false)
           .limit(limit);
 
-      debugPrint(
-        '[DEBUG-REPO] getPosts: Supabase response length = ${response.length}',
-      );
-      debugPrint('[DEBUG-REPO] getPosts: Raw Supabase data: $response');
-
       final posts = response
           .map<PostModel>((e) => PostModel.fromJson(e))
           .toList();
-
-      debugPrint('[DEBUG-REPO] getPosts: Parsed ${posts.length} posts');
-      debugPrint(
-        '[DEBUG-REPO] getPosts: Parsed post IDs: ${posts.map((e) => e.id).toList()}',
-      );
-
-      // Merge cached + fresh posts
 
       final String? nextCursor = posts.isNotEmpty
           ? posts.last.createdAt.toIso8601String()
@@ -112,11 +86,9 @@ class PostRepository {
 
       final bool hasMore = posts.length == limit;
 
-      debugPrint('[DEBUG-REPO] Returning ${posts.length} posts');
-
       return PostPage(posts: posts, nextCursor: nextCursor, hasMore: hasMore);
     } catch (e, stackTrace) {
-      debugPrint('[DEBUG-REPO] getInitialPosts ERROR: $e');
+      debugPrint('[ERROR] getInitialPosts: $e');
       debugPrintStack(stackTrace: stackTrace);
 
       return PostPage(posts: [], nextCursor: null, hasMore: false);
@@ -127,12 +99,10 @@ class PostRepository {
     required String cursor,
     int limit = 10,
   }) async {
-    debugPrint('[DEBUG-REPO] getMorePosts');
-
+    debugPrint("======== getMorePosts CALLED ========");
     var query = _supabase
         .from('posts')
-        .select('''
-      id,
+        .select('''id,
       profile_id,
       caption,
       location_name,
@@ -182,22 +152,17 @@ class PostRepository {
   }
 
   Future<List<PostModel>> getMyPosts() async {
-    debugPrint('[DEBUG-REPO] getMyPosts: starting');
-
+    debugPrint("======== getMyPosts CALLED ========");
     try {
       final currentProfileId = await getCurrentProfileId();
 
       if (currentProfileId == null) {
-        debugPrint('[DEBUG-REPO] getMyPosts: profile id is null');
         return [];
       }
 
-      debugPrint('[DEBUG-REPO] getMyPosts: profileId = $currentProfileId');
-
       final response = await _supabase
           .from('posts')
-          .select('''
-          id,
+          .select('''id,
           profile_id,
           caption,
           location_name,
@@ -228,23 +193,19 @@ class PostRepository {
           .filter('deleted_at', 'is', null)
           .order('created_at', ascending: false);
 
-      debugPrint('[DEBUG-REPO] getMyPosts: fetched ${response.length} posts');
-
       return response.map((e) => PostModel.fromJson(e)).toList();
     } catch (e, stackTrace) {
-      debugPrint('[DEBUG-REPO] getMyPosts ERROR: $e');
+      debugPrint('[ERROR] getMyPosts: $e');
       debugPrintStack(stackTrace: stackTrace);
       return [];
     }
   }
 
   Future<List<PostModel>> getNewPosts({required String latestCreatedAt}) async {
-    debugPrint('[DEBUG-REPO] Checking posts newer than $latestCreatedAt');
-
+    debugPrint("======== getNewPosts CALLED ========");
     final response = await _supabase
         .from('posts')
-        .select('''
-        id,
+        .select('''id,
         profile_id,
         caption,
         location_name,
@@ -279,8 +240,98 @@ class PostRepository {
         .map<PostModel>((e) => PostModel.fromJson(e))
         .toList();
 
-    debugPrint('[DEBUG-REPO] New posts found = ${posts.length}');
-
     return posts;
+  }
+
+  Future<bool> isPostLiked(String postId) async {
+    final profileId = await getCurrentProfileId();
+
+    if (profileId == null) return false;
+
+    final data = await _supabase
+        .from('post_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('profile_id', profileId)
+        .maybeSingle();
+
+    return data != null;
+  }
+
+  Future<void> likePost(String postId) async {
+    final profileId = await getCurrentProfileId();
+
+    if (profileId == null) return;
+
+    await _supabase.from('post_likes').insert({
+      'post_id': postId,
+      'profile_id': profileId,
+    });
+
+    await _supabase.rpc(
+      'increment_post_like_count',
+      params: {'post_id_input': postId},
+    );
+  }
+
+  Future<void> unlikePost(String postId) async {
+    final profileId = await getCurrentProfileId();
+
+    if (profileId == null) return;
+
+    await _supabase
+        .from('post_likes')
+        .delete()
+        .eq('post_id', postId)
+        .eq('profile_id', profileId);
+
+    await _supabase.rpc(
+      'decrement_post_like_count',
+      params: {'post_id_input': postId},
+    );
+  }
+
+
+  // like api with toggle functionality
+
+  Future<bool> toggleLike({
+    required String postId,
+    required bool isLiked,
+  }) async {
+    try {
+      final profileId = await getCurrentProfileId();
+
+      if (profileId == null) return false;
+
+      if (isLiked) {
+        // Unlike
+        await _supabase
+            .from('post_likes')
+            .delete()
+            .eq('post_id', postId)
+            .eq('profile_id', profileId);
+
+        await _supabase.rpc(
+          'decrement_like_count',
+          params: {'p_post_id': postId},
+        );
+      } else {
+        // Like
+        await _supabase.from('post_likes').insert({
+          'post_id': postId,
+          'profile_id': profileId,
+        });
+
+        await _supabase.rpc(
+          'increment_like_count',
+          params: {'p_post_id': postId},
+        );
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint("Like Error: $e");
+      return false;
+    }
   }
 }

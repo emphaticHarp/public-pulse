@@ -13,94 +13,93 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint(
-      '[DEBUG-UI] HomePage.build: called, posts.length=${controller.posts.length}',
-    );
     return Scaffold(
       backgroundColor: Colors.white,
       body: NetworkWrapper(
-        child: Obx(() {
-          return RefreshIndicator(
+        child: RefreshIndicator(
           onRefresh: controller.refreshFeed,
-            color: AppColors.loginAccentRed,
+          color: AppColors.loginAccentRed,
+          child: CustomScrollView(
+            controller: controller.scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // Header (static - no Obx needed)
+              SliverToBoxAdapter(child: _buildHeader(context)),
 
-            child: CustomScrollView(
-              controller: controller.scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                // Header
-                SliverToBoxAdapter(child: _buildHeader(context)),
-
-                // Search Bar (always visible)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: SearchBarWidget(),
-                  ),
+              // Search Bar (static - no Obx needed)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: SearchBarWidget(),
                 ),
+              ),
 
-                
-
-                Obx(() {
-                  return SliverToBoxAdapter(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      child: controller.newPostCount.value == 0
-                          ? const SizedBox.shrink()
-                          : Padding(
-                              key: const ValueKey("new_posts_banner"),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              child: GestureDetector(
-                                onTap: () async {
-                                  await controller.refreshFeed();
-
-                                  if (controller.scrollController.hasClients) {
-                                    controller.scrollController.animateTo(
-                                      0,
-                                      duration: const Duration(milliseconds: 400),
-                                      curve: Curves.easeOut,
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.loginAccentRed,
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      controller.newPostCount.value == 1
-                                          ? "1 New Post"
-                                          : "${controller.newPostCount.value} New Posts",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+              // New Posts Banner (reactive - wrapped in Obx)
+              Obx(() {
+                return SliverToBoxAdapter(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: controller.newPostCount.value == 0
+                        ? const SizedBox.shrink()
+                        : Padding(
+                            key: const ValueKey("new_posts_banner"),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: GestureDetector(
+                              onTap: () async {
+                                await controller.refreshFeed();
+                                if (controller.scrollController.hasClients) {
+                                  controller.scrollController.animateTo(
+                                    0,
+                                    duration: const Duration(milliseconds: 400),
+                                    curve: Curves.easeOut,
+                                  );
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.loginAccentRed,
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    controller.newPostCount.value == 1
+                                        ? "1 New Post"
+                                        : "${controller.newPostCount.value} New Posts",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                    ),
-                  );
-                }),
+                          ),
+                  ),
+                );
+              }),
 
+              // Loading / Empty / Posts (reactive - wrapped in Obx)
+              Obx(() {
                 // Loading state
-                if (controller.isLoading.value)
-                  const SliverFillRemaining(
+                if (controller.isLoading.value) {
+                  return const SliverFillRemaining(
                     child: Center(
                       child: CircularProgressIndicator(
                         color: AppColors.loginAccentRed,
                       ),
                     ),
-                  )
+                  );
+                }
+
                 // Empty state
-                else if (controller.posts.isEmpty)
-                  SliverFillRemaining(
+                if (controller.posts.isEmpty) {
+                  return SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
                       child: Column(
@@ -127,69 +126,66 @@ class HomePage extends StatelessWidget {
                         ],
                       ),
                     ),
-                  )
+                  );
+                }
+
                 // Posts loaded
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          if (index >= controller.posts.length) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.loginAccentRed,
-                                ),
+                return SliverPadding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (index >= controller.posts.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.loginAccentRed,
                               ),
-                            );
-                          }
-
-                          final post = controller.posts[index];
-
-                          return PostCard(
-                            key: ValueKey(post.id),
-                            profileImage: post.profileImage ?? '',
-                            username: post.username,
-                            location: post.location ?? '',
-
-                            isCarousel: post.isCarousel,
-
-                            imageUrl: post.mediaUrls.isNotEmpty
-                                ? post.mediaUrls.first
-                                : null,
-                            imageUrls: post.mediaUrls,
-
-                            postId: post.isCarousel ? post.id : null,
-                            likeIcon: post.isLiked
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            likeIconColor: post.isLiked
-                                ? AppColors.loginAccentRed
-                                : AppColors.gray900,
-
-                            likeCount: post.likeCount.toString(),
-                            commentCount: post.commentCount.toString(),
-                            shareCount: post.shareCount.toString(),
-                            caption: post.caption ?? '',
-                            captionCommentCount: post.commentCount.toString(),
-                            onLikeTap: () {
-                              post.isLiked = !post.isLiked;
-                              controller.posts.refresh();
-                            },
+                            ),
                           );
-                        },
-                        childCount:
-                            controller.posts.length +
-                            (controller.isLoadingMore.value ? 1 : 0),
-                      ),
+                        }
+
+                        final post = controller.posts[index];
+
+                        return PostCard(
+                          key: ValueKey(post.id),
+                          profileImage: post.profileImage ?? '',
+                          username: post.username,
+                          location: post.location ?? '',
+                          isCarousel: post.isCarousel,
+                          imageUrl: post.mediaUrls.isNotEmpty
+                              ? post.mediaUrls.first
+                              : null,
+                          imageUrls: post.mediaUrls,
+                          postId: post.isCarousel ? post.id : null,
+                          likeIcon: post.isLiked
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          likeIconColor: post.isLiked
+                              ? AppColors.loginAccentRed
+                              : AppColors.gray900,
+                          likeCount: post.likeCount.toString(),
+                          commentCount: post.commentCount.toString(),
+                          shareCount: post.shareCount.toString(),
+                          caption: post.caption ?? '',
+                          captionCommentCount: post.commentCount.toString(),
+                          onLikeTap: () {
+                            post.isLiked = !post.isLiked;
+                            controller.posts.refresh();
+                          },
+                        );
+                      },
+                      childCount:
+                          controller.posts.length +
+                          (controller.isLoadingMore.value ? 1 : 0),
                     ),
                   ),
-              ],
-            ),
-          );
-        }),
+                );
+              }),
+            ],
+          ),
+        ),
       ),
     );
   }

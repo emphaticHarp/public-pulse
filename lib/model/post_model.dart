@@ -24,7 +24,7 @@ class PostModel {
   final List<String> thumbnailUrls;
   final bool isCarousel;
   // Counts
-  final int likeCount;
+  int likeCount;
   final int commentCount;
   final int shareCount;
   final int saveCount;
@@ -58,7 +58,6 @@ class PostModel {
     required this.mediaUrls,
     required this.thumbnailUrls,
     required this.isCarousel,
-
 
     // Required count fields
     required this.likeCount,
@@ -95,7 +94,9 @@ class PostModel {
 
       mediaUrls: media.map((item) {
         final path = item['storage_path'] as String;
-        return Supabase.instance.client.storage.from('posts-images').getPublicUrl(path);
+        return Supabase.instance.client.storage
+            .from('posts-images')
+            .getPublicUrl(path);
       }).toList(),
 
       thumbnailUrls: const [],

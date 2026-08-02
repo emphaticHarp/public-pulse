@@ -63,8 +63,6 @@ class PostCard extends StatelessWidget {
           else
             PostMedia(imageUrl: imageUrl!),
 
-
-
           InteractionBar(
             likeIcon: likeIcon,
             likeIconColor: likeIconColor,
