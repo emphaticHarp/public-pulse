@@ -46,7 +46,8 @@ class HomeController extends GetxController {
   /// Timer for background checking
   Timer? _newPostTimer;
 
-  
+  /// Track previously loaded post IDs to detect duplicates
+  final Set<String> _previouslyLoadedPostIds = {};
 
   @override
   void onInit() {
@@ -55,8 +56,6 @@ class HomeController extends GetxController {
     final user = Supabase.instance.client.auth.currentUser;
 
     if (user != null) {
-      debugPrint('[DEBUG-CONTROLLER] User logged in');
-
       loadCachedPosts();
 
       if (posts.isEmpty) {
@@ -68,8 +67,6 @@ class HomeController extends GetxController {
       loadMyPosts();
 
       scrollController.addListener(_onScroll);
-    } else {
-      debugPrint('[DEBUG-CONTROLLER] User not logged in');
     }
   }
 
@@ -83,6 +80,28 @@ class HomeController extends GetxController {
     }
   }
 
+  /// Helper: Detect and log duplicate post IDs
+  void _logDuplicateCheck(String source, List<PostModel> newPosts) {
+    final newIds = newPosts.map((p) => p.id).toSet();
+    final duplicates = newIds.intersection(_previouslyLoadedPostIds);
+    if (duplicates.isNotEmpty) {
+      debugPrint(
+        '[POST-TRACE] ⚠️ DUPLICATE DETECTED ($source): '
+        '${duplicates.length} posts already loaded: $duplicates',
+      );
+    }
+    // Register these IDs as seen
+    _previouslyLoadedPostIds.addAll(newIds);
+  }
+
+  /// Helper: Log post IDs with their source
+  void _logPostSource(String source, List<PostModel> postList) {
+    final ids = postList.map((p) => p.id).toList();
+    debugPrint(
+      '[POST-TRACE] $source → ${postList.length} posts | IDs: $ids',
+    );
+  }
+
   Future<void> loadMyPosts() async {
     try {
       // Load posts through the repository.
@@ -92,10 +111,8 @@ class HomeController extends GetxController {
       final fetchedPosts = await _repository.getMyPosts();
 
       myPosts.assignAll(fetchedPosts);
-
-      debugPrint('[DEBUG-CONTROLLER] My Posts loaded: ${myPosts.length}');
     } catch (e, stackTrace) {
-      debugPrint('[DEBUG-CONTROLLER] loadMyPosts ERROR: $e');
+      debugPrint('[ERROR] loadMyPosts: $e');
       debugPrintStack(stackTrace: stackTrace);
     }
   }
@@ -135,21 +152,29 @@ class HomeController extends GetxController {
   }
 
   void loadCachedPosts() {
-    debugPrint('[DEBUG-CONTROLLER] Loading cached posts...');
-
     final cachedPosts = CacheManager.getCachedPosts();
 
     if (cachedPosts.isEmpty) {
-      debugPrint('[DEBUG-CONTROLLER] No cached posts found');
+      debugPrint('[CACHE] No cached posts found → will fetch from Supabase');
       return;
     }
+
+    _logPostSource('[CACHE] Loaded from Hive cache', cachedPosts);
 
     posts.assignAll(cachedPosts);
 
     nextCursor = CacheManager.getNextCursor();
     hasMore.value = CacheManager.getHasMore();
 
-    debugPrint('[DEBUG-CONTROLLER] Loaded ${cachedPosts.length} cached posts');
+    // Register cached posts as seen
+    for (final p in cachedPosts) {
+      _previouslyLoadedPostIds.add(p.id);
+    }
+
+    // FIX: Set isLoading to false after loading from cache so the loader
+    // disappears immediately. Without this, isLoading stays true forever
+    // when cache exists, because loadPosts() is never called.
+    isLoading.value = false;
   }
 
   Future<void> loadPosts() async {
@@ -163,9 +188,10 @@ class HomeController extends GetxController {
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
 
-    posts.assignAll(page.posts);//--------changed------
+      _logPostSource('[SUPABASE] Fetched initial posts', page.posts);
+      _logDuplicateCheck('loadPosts', page.posts);
 
-
+      posts.assignAll(page.posts);
 
       await CacheManager.cachePosts(
         posts,
@@ -176,10 +202,8 @@ class HomeController extends GetxController {
       if (_newPostTimer == null) {
         _startNewPostChecker();
       }
-
-      debugPrint('[DEBUG-CONTROLLER] Feed refreshed: ${posts.length} posts');
     } catch (e, stackTrace) {
-      debugPrint('[DEBUG-CONTROLLER] loadPosts ERROR: $e');
+      debugPrint('[ERROR] loadPosts: $e');
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
@@ -192,9 +216,10 @@ class HomeController extends GetxController {
     isLoading.value = true;
 
     try {
-      debugPrint('[DEBUG] Refresh Feed');
-
       final page = await _repository.getInitialPosts(limit: 10);
+
+      _logPostSource('[SUPABASE] Refreshed feed', page.posts);
+      _logDuplicateCheck('refreshFeed', page.posts);
 
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
@@ -220,10 +245,8 @@ class HomeController extends GetxController {
         nextCursor: nextCursor,
         hasMore: hasMore.value,
       );
-
-      debugPrint('[DEBUG] Feed refreshed');
     } catch (e) {
-      debugPrint('[DEBUG] refreshFeed ERROR: $e');
+      debugPrint('[ERROR] refreshFeed: $e');
     } finally {
       isLoading.value = false;
     }
@@ -242,6 +265,9 @@ class HomeController extends GetxController {
         limit: 10,
       );
 
+      _logPostSource('[SUPABASE] Loaded more posts (pagination)', page.posts);
+      _logDuplicateCheck('loadMorePosts', page.posts);
+
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
 
@@ -258,10 +284,8 @@ class HomeController extends GetxController {
         nextCursor: nextCursor,
         hasMore: hasMore.value,
       );
-
-      debugPrint('[DEBUG-CONTROLLER] Loaded ${page.posts.length} more posts');
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('[ERROR] loadMorePosts: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -275,8 +299,6 @@ class HomeController extends GetxController {
 
       await _checkForNewPosts();
     });
-
-    debugPrint('[DEBUG] New post checker started');
   }
 
   Future<void> _checkForNewPosts() async {
@@ -292,10 +314,7 @@ class HomeController extends GetxController {
         latestCreatedAt: latestCreatedAt,
       );
 
-      if (newPosts.isEmpty) {
-        debugPrint('[DEBUG] No new posts');
-        return;
-      }
+      if (newPosts.isEmpty) return;
 
       for (final post in newPosts) {
         if (!pendingPosts.any((e) => e.id == post.id)) {
@@ -305,9 +324,12 @@ class HomeController extends GetxController {
 
       newPostCount.value = pendingPosts.length;
 
-      debugPrint('[DEBUG] Pending Posts = ${pendingPosts.length}');
+      debugPrint(
+        '[POST-TRACE] [SUPABASE] New posts check: '
+        '${newPosts.length} new, ${pendingPosts.length} pending',
+      );
     } catch (e) {
-      debugPrint('[DEBUG] _checkForNewPosts ERROR: $e');
+      debugPrint('[ERROR] _checkForNewPosts: $e');
     }
   }
 }
