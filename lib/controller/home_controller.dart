@@ -58,12 +58,10 @@ class HomeController extends GetxController {
     if (user != null) {
       loadCachedPosts();
 
-      if (posts.isEmpty) {
-        loadPosts(); // first install only
-      } else {
-        _startNewPostChecker(); // cache already exists
-      }
+      // Always verify cache with server
+      loadPosts();
 
+      _startNewPostChecker();
       loadMyPosts();
 
       scrollController.addListener(_onScroll);
@@ -97,9 +95,7 @@ class HomeController extends GetxController {
   /// Helper: Log post IDs with their source
   void _logPostSource(String source, List<PostModel> postList) {
     final ids = postList.map((p) => p.id).toList();
-    debugPrint(
-      '[POST-TRACE] $source → ${postList.length} posts | IDs: $ids',
-    );
+    debugPrint('[POST-TRACE] $source → ${postList.length} posts | IDs: $ids');
   }
 
   Future<void> loadMyPosts() async {
@@ -183,7 +179,16 @@ class HomeController extends GetxController {
         isLoading.value = true;
       }
 
+      debugPrint('[CTRL] BEFORE update: posts.length = ${posts.length}');
+
       final page = await _repository.getInitialPosts(limit: 10);
+
+      debugPrint("====== REFRESH START ======");
+      debugPrint("SERVER RETURNED ${page.posts.length} POSTS");
+
+      for (final post in page.posts) {
+        debugPrint("SERVER POST ID: ${post.id}");
+      }
 
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
@@ -191,12 +196,20 @@ class HomeController extends GetxController {
       _logPostSource('[SUPABASE] Fetched initial posts', page.posts);
       _logDuplicateCheck('loadPosts', page.posts);
 
-      posts.assignAll(page.posts);
+      // Only update if server data changed
+      final cacheIds = posts.map((e) => e.id).toList();
+      final serverIds = page.posts.map((e) => e.id).toList();
+
+      if (cacheIds.toString() != serverIds.toString()) {
+        posts.assignAll(page.posts);
+      }
+
+      debugPrint('[CTRL] AFTER update: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}');
 
       await CacheManager.cachePosts(
         posts,
-        nextCursor: nextCursor,
-        hasMore: hasMore.value,
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
       );
 
       if (_newPostTimer == null) {
@@ -211,11 +224,14 @@ class HomeController extends GetxController {
   }
 
   Future<void> refreshFeed() async {
+    debugPrint("====== REFRESH START ======");
     if (isLoading.value) return;
 
     isLoading.value = true;
 
     try {
+      debugPrint('[CTRL] BEFORE refresh: posts.length = ${posts.length}');
+
       final page = await _repository.getInitialPosts(limit: 10);
 
       _logPostSource('[SUPABASE] Refreshed feed', page.posts);
@@ -224,18 +240,14 @@ class HomeController extends GetxController {
       nextCursor = page.nextCursor;
       hasMore.value = page.hasMore;
 
-      // IDs of currently loaded posts
-      final Map<String, PostModel> mergedMap = {};
+      // Server is the source of truth on manual refresh
+      posts
+        ..clear()
+        ..addAll(page.posts);
 
-      for (final post in page.posts) {
-        mergedMap[post.id] = post;
-      }
+      debugPrint('[CTRL] AFTER refresh: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}');
 
-      for (final post in posts) {
-        mergedMap.putIfAbsent(post.id, () => post);
-      }
-
-      posts.assignAll(mergedMap.values.toList());
+      debugPrint("NEW POSTS COUNT: ${posts.length}");
 
       pendingPosts.clear();
       newPostCount.value = 0;
@@ -249,6 +261,57 @@ class HomeController extends GetxController {
       debugPrint('[ERROR] refreshFeed: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> toggleLike(PostModel post) async {
+    // Save old values (for rollback if API fails)
+    final oldLiked = post.isLiked;
+    final oldCount = post.likeCount;
+
+    // -------------------------
+    // Optimistic UI Update
+    // -------------------------
+    post.isLiked = !oldLiked;
+
+    if (post.isLiked) {
+      post.likeCount++;
+    } else {
+      post.likeCount--;
+    }
+
+    // Refresh UI immediately
+    posts.refresh();
+
+    // Save updated state into Hive cache
+    await CacheManager.cachePosts(
+      posts,
+      nextCursor: nextCursor,
+      hasMore: hasMore.value,
+    );
+
+    // -------------------------
+    // Background Upload
+    // -------------------------
+    final success = await _repository.toggleLike(
+      postId: post.id,
+      currentlyLiked: oldLiked,
+    );
+
+    // -------------------------
+    // Rollback if failed
+    // -------------------------
+    if (!success) {
+      post.isLiked = oldLiked;
+      post.likeCount = oldCount;
+
+      posts.refresh();
+
+      await CacheManager.cachePosts(
+        posts,
+        nextCursor: nextCursor,
+        hasMore: hasMore.value,
+      );
     }
   }
 

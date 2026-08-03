@@ -170,10 +170,14 @@ class HomePage extends StatelessWidget {
                           shareCount: post.shareCount.toString(),
                           caption: post.caption ?? '',
                           captionCommentCount: post.commentCount.toString(),
+                         
+                         
+                         //like with like api
                           onLikeTap: () {
-                            post.isLiked = !post.isLiked;
-                            controller.posts.refresh();
+                            controller.toggleLike(post);
                           },
+
+
                         );
                       },
                       childCount:
