@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:public_pulse/model/post_model.dart';
+import 'package:public_pulse/model/comment_model.dart';
+
 import 'hive_boxes.dart';
 import 'cache_keys.dart';
 
@@ -76,5 +78,35 @@ class CacheManager {
     debugPrint('[CACHE] clearPostCache: Clearing all cached posts');
     await _postBox.clear();
     debugPrint('[CACHE] clearPostCache: Cache cleared');
+  }
+
+  // ---------------- COMMENTS CACHE ----------------
+
+  static Box get _commentBox => Hive.box(HiveBoxes.cachedComments);
+
+  static String _commentKey(String postId) => 'comments_$postId';
+
+  static Future<void> cacheComments(
+    String postId,
+    List<CommentModel> comments,
+  ) async {
+    await _commentBox.put(
+      _commentKey(postId),
+      comments.map((e) => e.toMap()).toList(),
+    );
+  }
+
+  static List<CommentModel> getCachedComments(String postId) {
+    final data = _commentBox.get(_commentKey(postId));
+
+    if (data == null) return [];
+
+    return (data as List)
+        .map((e) => CommentModel.fromMap(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  static Future<void> clearComments(String postId) async {
+    await _commentBox.delete(_commentKey(postId));
   }
 }
