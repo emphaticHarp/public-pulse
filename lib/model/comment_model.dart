@@ -35,10 +35,16 @@ class CommentModel {
       id: map['id'] as String,
       postId: map['post_id'] as String,
       profileId: map['profile_id'] as String,
-      username: map['username'] ?? '',
-      profileImage: map['profile_image'],
+
+      username: map['username'] ?? map['profiles']?['username'] ?? '',
+
+      profileImage: map['profile_image'] ?? map['profiles']?['avatar_path'],
+
       content: map['content'] ?? '',
+
       createdAt: DateTime.parse(map['created_at']),
+
+      isPending: map['is_pending'] ?? false,
     );
   }
 

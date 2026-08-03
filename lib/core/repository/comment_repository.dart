@@ -48,6 +48,16 @@ avatar_path
     }
   }
 
+  Future<int> getCommentCount(String postId) async {
+    final response = await _supabase
+        .from('posts')
+        .select('comment_count')
+        .eq('id', postId)
+        .single();
+
+    return response['comment_count'] ?? 0;
+  }
+
   Future<List<CommentModel>> getComments(String postId) async {
     try {
       final response = await _supabase
