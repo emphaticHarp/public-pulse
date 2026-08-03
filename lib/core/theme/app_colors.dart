@@ -5,10 +5,10 @@ class AppColors {
 
   // ── Primary Brand Colors ──────────────────────────────────────────────
   /// Login accent red - used for buttons and links on login page
-  static const Color loginAccentRed = Color.fromARGB(255, 226,29,72);
+  static const Color loginAccentRed = Color.fromRGBO(226, 29, 72, 1);
 
   /// Onboarding/Splash accent red - used for buttons and highlights
-  static const Color accentRed = Color.fromARGB(255, 241, 50, 35);
+  static const Color accentRed = Color.fromARGB(255, 205, 12, 80);
 
   // ── Surface Colors ────────────────────────────────────────────────────
   /// Primary white - used for card backgrounds and light surfaces
@@ -80,33 +80,33 @@ class AppColors {
 
   // ── Create Post Page Colors ─────────────────────────────────────────────
   /// Create Post Red 600 - primary red for create post page
-  static const Color createPostRed600 = Color(0xFFD91D2A);
+  static const Color createPostRed600 = Color.fromARGB(255, 205, 12, 80);
 
   /// Create Post Red 700 - darker red for create post buttons
-  static const Color createPostRed700 = Color(0xFFC51B27);
+  static const Color createPostRed700 = Color.fromARGB(255, 205, 12, 80);
 
   /// Create Post Red 800 - darkest red for hover states
-  static const Color createPostRed800 = Color(0xFFA8151F);
+  static const Color createPostRed800 = Color.fromARGB(255, 205, 12, 80);
 
   /// Create Post Gray 300 - light gray for inactive elements
-  static const Color createPostGray300 = Color(0xFFE5E7EB);
+  static const Color createPostGray300 = Color.fromARGB(255, 235, 234, 229);
 
   /// Create Post Gray 800 - dark gray for text
   static const Color createPostGray800 = Color(0xFF1F2937);
 
   // ── Login Page Specific Colors ───────────────────────────────────────
   /// Pure black - used for Apple sign-in button and dark UI elements
-  static const Color pureBlack = Color(0xFF000000);
+  static const Color pureBlack = Color.fromARGB(0, 34, 33, 33);
 
   /// Login box shadow color (black at ~8% opacity)
-  static const Color loginBoxShadow = Color(0x14000000);
+  static const Color loginBoxShadow = Color.fromARGB(0, 23, 22, 22);
 
   static const Color slate500 = Color(0xFF64748B);
 
   // ── Profile Page Colors ───────────────────────────────────────────────
   /// Success green - used for "username available" status on Edit Profile
-  static const Color profileSuccessGreen = Color(0xFF16A34A);
+  static const Color profileSuccessGreen = Color.fromARGB(238, 19, 167, 105);
 
   /// Fully transparent - used for inactive tab underline on Profile Screen
-  static const Color transparent = Color.fromARGB(0, 0, 0, 0);
+  static const Color transparent = Color.fromARGB(0, 23, 22, 22);
 }

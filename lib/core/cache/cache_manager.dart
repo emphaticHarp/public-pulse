@@ -24,7 +24,9 @@ class CacheManager {
     await _postBox.put(CacheKeys.nextCursor, nextCursor);
     await _postBox.put(CacheKeys.hasMore, hasMore);
 
-    debugPrint('[CACHE] Saved to Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}');
+    debugPrint(
+      '[CACHE] Saved to Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}',
+    );
   }
 
   // Load cached posts if available.
@@ -34,11 +36,15 @@ class CacheManager {
     final cached = _postBox.get(CacheKeys.posts);
 
     if (cached == null) {
-      debugPrint('[CACHE] getCachedPosts: cached is NULL, returning empty list');
+      debugPrint(
+        '[CACHE] getCachedPosts: cached is NULL, returning empty list',
+      );
       return [];
     }
 
-    debugPrint('[CACHE] getCachedPosts: cached raw length = ${(cached as List).length}');
+    debugPrint(
+      '[CACHE] getCachedPosts: cached raw length = ${(cached as List).length}',
+    );
 
     final List<PostModel> posts = [];
     for (int i = 0; i < cached.length; i++) {
@@ -51,7 +57,9 @@ class CacheManager {
       }
     }
 
-    debugPrint('[CACHE] Loaded from Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}');
+    debugPrint(
+      '[CACHE] Loaded from Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}',
+    );
     return posts;
   }
 
@@ -62,7 +70,6 @@ class CacheManager {
   static String? getNextCursor() {
     return _postBox.get(CacheKeys.nextCursor);
   }
-
 
   // Remove all cached posts.
   static Future<void> clearPostCache() async {

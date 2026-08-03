@@ -35,9 +35,9 @@ class LoginCodePage extends StatelessWidget {
         color: AppColors.slate900,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color.fromARGB(255, 102, 101, 101),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.slate200, width: 1.5),
+        border: Border.all(color: const Color.fromARGB(255, 121, 123, 126), width: 1.5),
       ),
     );
 
@@ -46,7 +46,7 @@ class LoginCodePage extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 246, 241, 239),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -58,7 +58,7 @@ class LoginCodePage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.05),
+                    color: const Color.fromRGBO(209, 37, 94, 1).withValues(alpha: 0.05),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -71,13 +71,26 @@ class LoginCodePage extends StatelessWidget {
                 const SizedBox(height: 32),
 
                 /// Title
-                Text(
-                  "Account Verification",
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.loginHeading.copyWith(
-                    fontSize: 28,
-                    color: AppColors.slate900,
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Verification",
+                        style: AppTextStyles.loginHeading.copyWith(
+                          fontSize: 28,
+                          color: const  Color.fromRGBO(222, 55, 91, 1),
+                        ),
+                      ),
+                      TextSpan(
+                        text: " Code",
+                        style: AppTextStyles.loginHeading.copyWith(
+                          fontSize: 28,
+                          color: AppColors.slate900,
+                        ),
+                      ),
+                    ],
                   ),
+                  textAlign: TextAlign.center,
                 ),
 
                 const SizedBox(height: 12),
@@ -124,7 +137,7 @@ class LoginCodePage extends StatelessWidget {
                           ? null
                           : controller.verifyCode,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.pureBlack,
+                        backgroundColor: Color.fromRGBO(222, 55, 91, 1),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
