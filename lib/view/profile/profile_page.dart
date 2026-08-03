@@ -14,7 +14,8 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = ProfileController.to;
+    final controller = ProfileController.to;       ///load
+    controller.ensureProfileLoaded();
 
     return Scaffold(
       backgroundColor: AppColors.surfaceDefault,
@@ -32,33 +33,42 @@ class ProfilePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ProfileHeaderImage(
-                  coverImage: resolveProfileImage(url: profile.coverPhotoUrl),
-                  profileImage: resolveProfileImage(
-                    url: profile.profilePhotoUrl,
+                  coverImage: resolveProfileImage(url: controller.coverUrl),
+                  profileImage: resolveProfileImage(url: controller.avatarUrl),
+                ),
+                const SizedBox(height: 0),
+                Transform.translate(
+                  offset: const Offset(0, -30),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 130, right: 15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ProfileStatColumn(
+                          count: controller.postCount.value,
+                          label: 'Posts',
+                        ),
+                        GestureDetector(
+                          onTap: () => controller.openFollowersFollowing(0),
+                          behavior: HitTestBehavior.opaque,
+                          child: ProfileStatColumn(
+                            count: controller.followerCount.value,
+                            label: 'Followers',
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => controller.openFollowersFollowing(1),
+                          behavior: HitTestBehavior.opaque,
+                          child: ProfileStatColumn(
+                            count: controller.followingCount.value,
+                            label: 'Following',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ProfileStatColumn(
-                        count: profile.postsCount,
-                        label: 'Posts',
-                      ),
-                      ProfileStatColumn(
-                        count: profile.followersCount,
-                        label: 'Followers',
-                      ),
-                      ProfileStatColumn(
-                        count: profile.followingCount,
-                        label: 'Following',
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 3),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
@@ -77,33 +87,28 @@ class ProfilePage extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (profile.isVerified) ...[
-                            const SizedBox(width: 6),
-                            const Icon(
-                              Icons.verified,
-                              color: AppColors.brand,
-                              size: 20,
-                            ),
-                          ],
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
                         '@${profile.username}',
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.textSecondary,
                         ),
                       ),
-                      if ((profile.bio ?? '').isNotEmpty) ...[
-                        const SizedBox(height: 8),
+                      const SizedBox(height: 8),
+                      if ((profile.bio ?? '').isNotEmpty)
                         Text(
                           profile.bio!,
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.textSecondary,
                           ),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      else
+                        const SizedBox(height: 20),
+                      const SizedBox(height: 8),
                       AppOutlinedButton(
                         label: 'Edit Profile',
                         icon: Icons.edit_outlined,
@@ -124,6 +129,7 @@ class ProfilePage extends StatelessWidget {
                   () => _TabContent(
                     tab: controller.selectedTab.value,
                     photoPosts: controller.photoPosts,
+                    videoPosts: controller.videoPosts,
                     savedPosts: controller.savedPosts,
                   ),
                 ),
@@ -136,21 +142,22 @@ class ProfilePage extends StatelessWidget {
   }
 
   void _openEditProfile() {
+    Get.delete<EditProfileController>(force: true);
     Get.put(EditProfileController());
-    Get.to(
-      () => const EditProfilePage(),
-    )?.whenComplete(() => Get.delete<EditProfileController>());
+    Get.to(() => const EditProfilePage());
   }
 }
 
 class _TabContent extends StatelessWidget {
   final ProfileTab tab;
   final List<String> photoPosts;
+  final List<String> videoPosts;
   final List<String> savedPosts;
 
   const _TabContent({
     required this.tab,
     required this.photoPosts,
+    required this.videoPosts,
     required this.savedPosts,
   });
 
@@ -158,6 +165,11 @@ class _TabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final (urls, icon, emptyMessage) = switch (tab) {
       ProfileTab.photos => (photoPosts, Icons.photo_outlined, 'No photos yet'),
+      ProfileTab.videos => (
+        videoPosts,
+        Icons.videocam_outlined,
+        'No videos yet',
+      ),
       ProfileTab.saved => (
         savedPosts,
         Icons.bookmark_border,

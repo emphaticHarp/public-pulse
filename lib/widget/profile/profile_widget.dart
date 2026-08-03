@@ -11,9 +11,6 @@ final _buttonShape = RoundedRectangleBorder(
   borderRadius: BorderRadius.circular(10),
 );
 
-/// Resolves a freshly picked local [file] (priority) or an already-saved
-/// remote [url] into a single [ImageProvider]. Used by both pages so image
-/// resolution logic exists in exactly one place.
 ImageProvider? resolveProfileImage({File? file, String? url}) {
   if (file != null) return FileImage(file);
   if (url != null && url.isNotEmpty) return NetworkImage(url);
@@ -62,16 +59,14 @@ class ChangePhotoButton extends StatelessWidget {
       ),
       child: Icon(
         Icons.camera_alt_outlined,
-        color: AppColors.primaryWhite,
+        color: AppColors.gray400,
         size: size * 0.5,
       ),
     ),
   );
 }
 
-/// Cover photo + floating circular avatar. Shared by Profile Screen (no
-/// actions) and Edit Profile Screen ([coverAction] / [avatarAction] set),
-/// so the header is built in exactly one place.
+/// Cover photo + floating circular avatar. Shared by Profile Screen and Edit Profile Screen
 class ProfileHeaderImage extends StatelessWidget {
   final ImageProvider? coverImage;
   final ImageProvider? profileImage;
@@ -96,10 +91,10 @@ class ProfileHeaderImage extends StatelessWidget {
           height: 170,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: AppColors.brand,
-            image: coverImage != null
-                ? DecorationImage(image: coverImage!, fit: BoxFit.cover)
-                : null,
+            image: DecorationImage(
+              image: coverImage ?? const AssetImage('assets/images/cover_placeholder.png'),
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         if (coverAction != null)
@@ -163,6 +158,7 @@ class ProfileTabSelector extends StatelessWidget {
 
   static const _labels = {
     ProfileTab.photos: 'Photos',
+    ProfileTab.videos: 'Videos',
     ProfileTab.saved: 'Saved',
   };
 
@@ -213,15 +209,18 @@ class ProfileEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 64),
-    child: Column(
-      children: [
-        Icon(icon, size: 56, color: AppColors.gray400),
-        const SizedBox(height: 12),
-        Text(
-          message,
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.gray400),
-        ),
-      ],
+    child: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 56, color: AppColors.gray400),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.gray400),
+          ),
+        ],
+      ),
     ),
   );
 }

@@ -37,18 +37,16 @@ class EditProfilePage extends StatelessWidget {
             children: [
               ProfileHeaderImage(
                 coverImage: resolveProfileImage(
-                  file: controller.pickedCoverPhoto.value,
-                  url: controller.original.coverPhotoUrl,
+                  file: controller.pickedCover.value,
+                  url: controller.coverUrl,
                 ),
                 profileImage: resolveProfileImage(
-                  file: controller.pickedProfilePhoto.value,
-                  url: controller.original.profilePhotoUrl,
+                  file: controller.pickedAvatar.value,
+                  url: controller.avatarUrl,
                 ),
-                coverAction: ChangePhotoButton(
-                  onTap: controller.pickCoverPhoto,
-                ),
+                coverAction: ChangePhotoButton(onTap: controller.pickCover),
                 avatarAction: ChangePhotoButton(
-                  onTap: controller.pickProfilePhoto,
+                  onTap: controller.pickAvatar,
                   size: 28,
                 ),
               ),
@@ -66,7 +64,7 @@ class EditProfilePage extends StatelessWidget {
                       controller: controller.usernameCtrl,
                       onChanged: controller.validateUsername,
                       style: AppTextStyles.inputText.copyWith(
-                        color: AppColors.textPrimary,
+                        color: const Color.fromARGB(255, 21, 22, 22),
                       ),
                       decoration: _fieldDecoration('Username'),
                     ),
@@ -86,7 +84,7 @@ class EditProfilePage extends StatelessWidget {
                       controller: controller.bioCtrl,
                       maxLines: 3,
                       style: AppTextStyles.inputText.copyWith(
-                        color: AppColors.textPrimary,
+                        color: const Color.fromARGB(234, 19, 19, 20),
                       ),
                       decoration: _fieldDecoration(
                         'Write something about yourself',
@@ -98,7 +96,7 @@ class EditProfilePage extends StatelessWidget {
                         child: Text(
                           controller.errorMessage.value,
                           style: AppTextStyles.linkText.copyWith(
-                            color: AppColors.loginAccentRed,
+                            color: const Color.fromARGB(255, 229, 29, 92),
                           ),
                         ),
                       ),
@@ -134,7 +132,9 @@ class EditProfilePage extends StatelessWidget {
 
   InputDecoration _fieldDecoration(String hint) => InputDecoration(
     hintText: hint,
-    hintStyle: AppTextStyles.inputText.copyWith(color: AppColors.gray400),
+    hintStyle: AppTextStyles.inputText.copyWith(
+      color: const Color.fromARGB(255, 75, 78, 83),
+    ),
     filled: true,
     fillColor: AppColors.gray100,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
