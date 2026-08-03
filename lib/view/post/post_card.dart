@@ -20,9 +20,9 @@ class PostCard extends StatelessWidget {
   final String commentCount; //interaction bar import
   final String shareCount; //interaction bar import
   final VoidCallback? onLikeTap; //interaction bar import
+  final VoidCallback? onCommentTap; //interaction bar import
 
   final String caption; //post caption import
-  final String captionCommentCount; //post caption import
 
   const PostCard({
     super.key,
@@ -40,9 +40,9 @@ class PostCard extends StatelessWidget {
     required this.commentCount,
     required this.shareCount,
     this.onLikeTap,
+    this.onCommentTap,
 
     required this.caption,
-    required this.captionCommentCount,
   });
 
   @override
@@ -70,13 +70,10 @@ class PostCard extends StatelessWidget {
             commentCount: commentCount,
             shareCount: shareCount,
             onLikeTap: onLikeTap,
+            onCommentTap: onCommentTap,
           ),
 
-          PostCaption(
-            username: username,
-            caption: caption,
-            commentCount: captionCommentCount,
-          ),
+          PostCaption(username: username, caption: caption),
         ],
       ),
     );

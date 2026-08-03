@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:public_pulse/model/post_model.dart';
+import 'package:public_pulse/model/comment_model.dart';
+
 import 'hive_boxes.dart';
 import 'cache_keys.dart';
 
@@ -24,7 +26,9 @@ class CacheManager {
     await _postBox.put(CacheKeys.nextCursor, nextCursor);
     await _postBox.put(CacheKeys.hasMore, hasMore);
 
-    debugPrint('[CACHE] Saved to Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}');
+    debugPrint(
+      '[CACHE] Saved to Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}',
+    );
   }
 
   // Load cached posts if available.
@@ -34,11 +38,15 @@ class CacheManager {
     final cached = _postBox.get(CacheKeys.posts);
 
     if (cached == null) {
-      debugPrint('[CACHE] getCachedPosts: cached is NULL, returning empty list');
+      debugPrint(
+        '[CACHE] getCachedPosts: cached is NULL, returning empty list',
+      );
       return [];
     }
 
-    debugPrint('[CACHE] getCachedPosts: cached raw length = ${(cached as List).length}');
+    debugPrint(
+      '[CACHE] getCachedPosts: cached raw length = ${(cached as List).length}',
+    );
 
     final List<PostModel> posts = [];
     for (int i = 0; i < cached.length; i++) {
@@ -51,7 +59,9 @@ class CacheManager {
       }
     }
 
-    debugPrint('[CACHE] Loaded from Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}');
+    debugPrint(
+      '[CACHE] Loaded from Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}',
+    );
     return posts;
   }
 
@@ -63,11 +73,40 @@ class CacheManager {
     return _postBox.get(CacheKeys.nextCursor);
   }
 
-
   // Remove all cached posts.
   static Future<void> clearPostCache() async {
     debugPrint('[CACHE] clearPostCache: Clearing all cached posts');
     await _postBox.clear();
     debugPrint('[CACHE] clearPostCache: Cache cleared');
+  }
+
+  // ---------------- COMMENTS CACHE ----------------
+
+  static Box get _commentBox => Hive.box(HiveBoxes.cachedComments);
+
+  static String _commentKey(String postId) => 'comments_$postId';
+
+  static Future<void> cacheComments(
+    String postId,
+    List<CommentModel> comments,
+  ) async {
+    await _commentBox.put(
+      _commentKey(postId),
+      comments.map((e) => e.toMap()).toList(),
+    );
+  }
+
+  static List<CommentModel> getCachedComments(String postId) {
+    final data = _commentBox.get(_commentKey(postId));
+
+    if (data == null) return [];
+
+    return (data as List)
+        .map((e) => CommentModel.fromMap(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  static Future<void> clearComments(String postId) async {
+    await _commentBox.delete(_commentKey(postId));
   }
 }

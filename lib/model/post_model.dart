@@ -25,7 +25,7 @@ class PostModel {
   final bool isCarousel;
   // Counts
   int likeCount;
-  final int commentCount;
+  int commentCount;
   final int shareCount;
   final int saveCount;
   final int viewCount;
