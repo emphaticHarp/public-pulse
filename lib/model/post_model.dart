@@ -79,6 +79,8 @@ class PostModel {
 
     final media = List<Map<String, dynamic>>.from(json['media'] ?? []);
 
+    final liked = (json['my_like'] as List?)?.isNotEmpty ?? false;
+
     return PostModel(
       id: json['id'],
       profileId: json['profile_id'],
@@ -87,7 +89,6 @@ class PostModel {
       displayName: profile['display_name'] ?? '',
       profileImage: profile['avatar_path'],
 
-      // Store the original Supabase storage paths for each media file.
       storagePaths: media
           .map((item) => item['storage_path'] as String)
           .toList(),
@@ -115,10 +116,11 @@ class PostModel {
       saveCount: json['save_count'],
       viewCount: json['view_count'],
 
+      isLiked: liked,
+
       createdAt: DateTime.parse(json['created_at']),
     );
   }
-
   //Convert PostModel to and from JSON so it can be stored and retrieved from Hive cache.
 
   Map<String, dynamic> toJson() {

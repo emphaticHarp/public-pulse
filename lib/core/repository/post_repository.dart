@@ -43,38 +43,48 @@ class PostRepository {
     try {
       var query = _supabase
           .from('posts')
-          .select('''id,
-          profile_id,
-          caption,
-          location_name,
-          visibility,
-          like_count,
-          comment_count,
-          share_count,
-          save_count,
-          view_count,
-          created_at,
+          .select('''
+id,
+profile_id,
+caption,
+location_name,
+visibility,
+like_count,
+comment_count,
+share_count,
+save_count,
+view_count,
+created_at,
 
-          profile:profiles(
-            username,
-            display_name,
-            avatar_path,
-            is_private
-          ),
+profile:profiles(
+  username,
+  display_name,
+  avatar_path,
+  is_private
+),
 
-          media:post_media(
-            storage_path,
-            thumbnail_path,
-            media_type,
-            media_order
-          )
-        ''')
+media:post_media(
+  storage_path,
+  thumbnail_path,
+  media_type,
+  media_order
+),
+
+my_like:post_likes!left(
+  id,
+  profile_id,
+  post_id
+)
+''')
           .eq('status', 'ACTIVE')
           .filter('deleted_at', 'is', null);
 
       final response = await query
           .order('created_at', ascending: false)
           .limit(limit);
+
+      debugPrint('[REPO] getInitialPosts RAW response length: ${response.length}');
+      debugPrint('[REPO] getInitialPosts RAW ids: ${response.map((e) => e['id']).toList()}');
 
       final posts = response
           .map<PostModel>((e) => PostModel.fromJson(e))
@@ -121,20 +131,30 @@ class PostRepository {
         is_private
       ),
 
-      media:post_media(
-        storage_path,
-        thumbnail_path,
-        media_type,
-        media_order
-      )
+     media:post_media(
+  storage_path,
+  thumbnail_path,
+  media_type,
+  media_order
+),
+
+my_like:post_likes!left(
+  id,
+  profile_id,
+  post_id
+)
     ''')
         .eq('status', 'ACTIVE')
-        .filter('deleted_at', 'is', null)
-        .lt('created_at', cursor);
+        .filter('deleted_at', 'is', null);
+
+    query = query.lt('created_at', cursor);
 
     final response = await query
         .order('created_at', ascending: false)
         .limit(limit);
+
+    debugPrint('[REPO] getMorePosts RAW response length: ${response.length}');
+    debugPrint('[REPO] getMorePosts RAW ids: ${response.map((e) => e['id']).toList()}');
 
     final posts = response
         .map<PostModel>((e) => PostModel.fromJson(e))
@@ -181,12 +201,18 @@ class PostRepository {
             is_private
           ),
 
-          media:post_media(
-            storage_path,
-            thumbnail_path,
-            media_type,
-            media_order
-          )
+        media:post_media(
+  storage_path,
+  thumbnail_path,
+  media_type,
+  media_order
+),
+
+my_like:post_likes!left(
+  id,
+  profile_id,
+  post_id
+)
         ''')
           .eq('profile_id', currentProfileId)
           .eq('status', 'ACTIVE')
@@ -203,7 +229,7 @@ class PostRepository {
 
   Future<List<PostModel>> getNewPosts({required String latestCreatedAt}) async {
     debugPrint("======== getNewPosts CALLED ========");
-    final response = await _supabase
+    var query = _supabase
         .from('posts')
         .select('''id,
         profile_id,
@@ -224,17 +250,28 @@ class PostRepository {
           is_private
         ),
 
-        media:post_media(
-          storage_path,
-          thumbnail_path,
-          media_type,
-          media_order
-        )
+      media:post_media(
+  storage_path,
+  thumbnail_path,
+  media_type,
+  media_order
+),
+
+my_like:post_likes!left(
+  id,
+  profile_id,
+  post_id
+)
       ''')
         .eq('status', 'ACTIVE')
-        .filter('deleted_at', 'is', null)
+        .filter('deleted_at', 'is', null);
+
+    final response = await query
         .gt('created_at', latestCreatedAt)
         .order('created_at', ascending: false);
+
+    debugPrint('[REPO] getNewPosts RAW response length: ${response.length}');
+    debugPrint('[REPO] getNewPosts RAW ids: ${response.map((e) => e['id']).toList()}');
 
     final posts = response
         .map<PostModel>((e) => PostModel.fromJson(e))
@@ -243,94 +280,35 @@ class PostRepository {
     return posts;
   }
 
-  Future<bool> isPostLiked(String postId) async {
-    final profileId = await getCurrentProfileId();
-
-    if (profileId == null) return false;
-
-    final data = await _supabase
-        .from('post_likes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('profile_id', profileId)
-        .maybeSingle();
-
-    return data != null;
-  }
-
-  Future<void> likePost(String postId) async {
-    final profileId = await getCurrentProfileId();
-
-    if (profileId == null) return;
-
-    await _supabase.from('post_likes').insert({
-      'post_id': postId,
-      'profile_id': profileId,
-    });
-
-    await _supabase.rpc(
-      'increment_post_like_count',
-      params: {'post_id_input': postId},
-    );
-  }
-
-  Future<void> unlikePost(String postId) async {
-    final profileId = await getCurrentProfileId();
-
-    if (profileId == null) return;
-
-    await _supabase
-        .from('post_likes')
-        .delete()
-        .eq('post_id', postId)
-        .eq('profile_id', profileId);
-
-    await _supabase.rpc(
-      'decrement_post_like_count',
-      params: {'post_id_input': postId},
-    );
-  }
-
-
   // like api with toggle functionality
 
   Future<bool> toggleLike({
     required String postId,
-    required bool isLiked,
+    required bool currentlyLiked,
   }) async {
     try {
       final profileId = await getCurrentProfileId();
 
       if (profileId == null) return false;
 
-      if (isLiked) {
+      if (currentlyLiked) {
         // Unlike
         await _supabase
             .from('post_likes')
             .delete()
             .eq('post_id', postId)
             .eq('profile_id', profileId);
-
-        await _supabase.rpc(
-          'decrement_like_count',
-          params: {'p_post_id': postId},
-        );
       } else {
         // Like
         await _supabase.from('post_likes').insert({
           'post_id': postId,
           'profile_id': profileId,
         });
-
-        await _supabase.rpc(
-          'increment_like_count',
-          params: {'p_post_id': postId},
-        );
       }
 
       return true;
     } catch (e) {
-      debugPrint("Like Error: $e");
+      debugPrint("toggleLike Error : $e");
       return false;
     }
   }
