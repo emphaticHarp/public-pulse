@@ -39,9 +39,7 @@ class CommentController extends GetxController {
 
     await _loadCurrentProfile();
 
-    // -----------------------------
-    // 1. Load cached comments first
-    // -----------------------------
+    // Load cache first
     final cachedComments = CacheManager.getCachedComments(postId);
 
     if (cachedComments.isNotEmpty) {
@@ -51,20 +49,21 @@ class CommentController extends GetxController {
     try {
       isLoading.value = comments.isEmpty;
 
-      // -----------------------------
-      // 2. Fetch latest from Supabase
-      // -----------------------------
+      // Only fetch comment count
+      final serverCount = await _repository.getCommentCount(postId);
+
+      // Cache is already correct
+      if (serverCount == comments.length) {
+        isLoading.value = false;
+        return;
+      }
+
+      // Something changed -> fetch latest comments
       final serverComments = await _repository.getComments(postId);
 
-      final cacheIds = comments.map((e) => e.id).toList();
-      final serverIds = serverComments.map((e) => e.id).toList();
+      comments.assignAll(serverComments);
 
-      // Only update if something changed
-      if (cacheIds.toString() != serverIds.toString()) {
-        comments.assignAll(serverComments);
-
-        await CacheManager.cacheComments(postId, serverComments);
-      }
+      await CacheManager.cacheComments(postId, serverComments);
     } finally {
       isLoading.value = false;
     }
@@ -105,8 +104,6 @@ class CommentController extends GetxController {
 
     comments.insert(0, tempComment);
 
-    await CacheManager.cacheComments(currentPostId!, comments);
-
     final home = Get.find<HomeController>();
 
     final postIndex = home.posts.indexWhere((e) => e.id == currentPostId);
@@ -119,30 +116,36 @@ class CommentController extends GetxController {
     commentController.clear();
 
     /// ---------- BACKGROUND UPLOAD ----------
-    final uploadedComment = await _repository.addComment(
-      postId: currentPostId!,
-      content: text,
-    );
+    try {
+      final uploadedComment = await _repository.addComment(
+        postId: currentPostId!,
+        content: text,
+      );
 
-    if (uploadedComment != null) {
-      final index = comments.indexWhere((e) => e.id == tempId);
+      if (uploadedComment != null) {
+        final index = comments.indexWhere((e) => e.id == tempId);
 
-      if (index != -1) {
-        comments[index] = uploadedComment;
+        if (index != -1) {
+          comments[index] = uploadedComment;
+
+          await CacheManager.cacheComments(currentPostId!, comments);
+        }
+
+        await home.refreshSinglePost(currentPostId!);
+      } else {
+        comments.removeWhere((e) => e.id == tempId);
 
         await CacheManager.cacheComments(currentPostId!, comments);
+
+        if (postIndex != -1) {
+          home.posts[postIndex].commentCount--;
+          home.posts.refresh();
+        }
+
+        Get.snackbar("Error", "Failed to send comment");
       }
-    } else {
-      comments.removeWhere((e) => e.id == tempId);
-
-      await CacheManager.cacheComments(currentPostId!, comments);
-
-      if (postIndex != -1) {
-        home.posts[postIndex].commentCount--;
-        home.posts.refresh();
-      }
-
-      Get.snackbar("Error", "Failed to send comment");
+    } finally {
+      isSubmitting.value = false;
     }
   }
 }

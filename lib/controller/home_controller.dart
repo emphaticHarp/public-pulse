@@ -204,7 +204,9 @@ class HomeController extends GetxController {
         posts.assignAll(page.posts);
       }
 
-      debugPrint('[CTRL] AFTER update: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}');
+      debugPrint(
+        '[CTRL] AFTER update: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}',
+      );
 
       await CacheManager.cachePosts(
         posts,
@@ -245,7 +247,9 @@ class HomeController extends GetxController {
         ..clear()
         ..addAll(page.posts);
 
-      debugPrint('[CTRL] AFTER refresh: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}');
+      debugPrint(
+        '[CTRL] AFTER refresh: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}',
+      );
 
       debugPrint("NEW POSTS COUNT: ${posts.length}");
 
@@ -393,6 +397,32 @@ class HomeController extends GetxController {
       );
     } catch (e) {
       debugPrint('[ERROR] _checkForNewPosts: $e');
+    }
+  }
+
+  Future<void> refreshSinglePost(String postId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('posts')
+          .select('comment_count')
+          .eq('id', postId)
+          .single();
+
+      final index = posts.indexWhere((e) => e.id == postId);
+
+      if (index != -1) {
+        posts[index].commentCount = response['comment_count'] ?? 0;
+
+        posts.refresh();
+
+        await CacheManager.cachePosts(
+          posts,
+          nextCursor: nextCursor,
+          hasMore: hasMore.value,
+        );
+      }
+    } catch (e) {
+      debugPrint("refreshSinglePost error: $e");
     }
   }
 }
