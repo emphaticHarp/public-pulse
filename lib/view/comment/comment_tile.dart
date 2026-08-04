@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:pie_menu/pie_menu.dart';
 
-import '../../controller/comment_controller.dart';
-import '../../model/comment_model.dart';
+import 'package:public_pulse/controller/comment_controller.dart';
+import 'package:public_pulse/model/comment_model.dart';
+import 'package:public_pulse/widget/post/instagram_comment_menu.dart';
+import 'package:public_pulse/widget/local/app_alert.dart';
 
 class CommentTile extends StatelessWidget {
   final CommentModel comment;
@@ -21,91 +22,17 @@ class CommentTile extends StatelessWidget {
     return "${date.day}/${date.month}/${date.year}";
   }
 
-  void _confirmDelete(BuildContext context, CommentController controller) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(.08),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: Colors.red,
-                  size: 32,
-                ),
-              ),
-
-              const SizedBox(height: 18),
-
-              const Text(
-                "Delete Comment?",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 10),
-
-              Text(
-                "This action cannot be undone.",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade600, height: 1.4),
-              ),
-
-              const SizedBox(height: 24),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text("Cancel"),
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        controller.deleteComment(comment.id);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDC2626),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text(
-                        "Delete",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+  void _confirmDelete(BuildContext context, CommentController controller) async {
+    final confirmed = await CustomAlert.showConfirm(
+      title: 'Delete Comment?',
+      message: 'This action cannot be undone.',
+      icon: Icons.delete_outline_rounded,
+      color: Colors.red,
+      confirmText: 'Delete',
     );
+    if (confirmed) {
+      controller.deleteComment(comment.id);
+    }
   }
 
   @override
@@ -189,33 +116,34 @@ class CommentTile extends StatelessWidget {
       ],
     );
 
-    // Only the comment owner gets edit/delete, and never on a pending comment
-    if (!isOwner || comment.isPending) {
+    if (comment.isPending) {
       return tileContent;
     }
 
-    return PieMenu(
-      actions: [
-        PieAction(
-          tooltip: const Text("Edit"),
-          buttonTheme: const PieButtonTheme(
-            backgroundColor: Color(0xFF2563EB),
-            iconColor: Colors.white,
-          ),
-          onSelect: () => controller.startEditing(comment),
-          child: const Icon(Icons.edit_rounded),
-        ),
+    return CommentLongPressMenu(
+      isOwner: isOwner,
+      commentText: comment.content,
+      authorName: comment.username,
 
-        PieAction(
-          tooltip: const Text("Delete"),
-          buttonTheme: const PieButtonTheme(
-            backgroundColor: Color(0xFFDC2626),
-            iconColor: Colors.white,
-          ),
-          onSelect: () => _confirmDelete(context, controller),
-          child: const Icon(Icons.delete_rounded),
-        ),
-      ],
+      avatar: CircleAvatar(
+        radius: 18,
+        backgroundImage:
+            comment.profileImage != null && comment.profileImage!.isNotEmpty
+            ? NetworkImage(comment.profileImage!)
+            : null,
+        child: (comment.profileImage == null || comment.profileImage!.isEmpty)
+            ? const Icon(Icons.person, size: 18)
+            : null,
+      ),
+
+      onEdit: (newText) async {
+        await controller.editComment(comment.id, newText);
+      },
+
+      onDelete: () async {
+        _confirmDelete(context, controller);
+      },
+
       child: tileContent,
     );
   }

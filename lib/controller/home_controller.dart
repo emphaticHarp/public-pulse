@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import 'package:public_pulse/model/post_model.dart';
 import 'package:public_pulse/core/repository/post_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:public_pulse/core/cache/cache_manager.dart';
+import 'package:public_pulse/widget/local/app_alert.dart';
 
 class HomeController extends GetxController {
   final RxInt currentIndex = 0.obs;
@@ -457,6 +457,40 @@ class HomeController extends GetxController {
       }
     } catch (e) {
       debugPrint("refreshSinglePost error: $e");
+    }
+  }
+
+  Future<void> deletePost(String postId) async {
+    final index = posts.indexWhere((e) => e.id == postId);
+
+    if (index == -1) return;
+
+    final removedPost = posts[index];
+
+    posts.removeAt(index);
+
+    await CacheManager.cachePosts(posts);
+
+    final success = await _repository.deletePost(postId);
+
+    if (!success) {
+      posts.insert(index, removedPost);
+
+      await CacheManager.cachePosts(posts);
+
+      CustomAlert.show(
+        title: 'Error',
+        message: 'Failed to delete post',
+        icon: Icons.error_outline,
+        color: Colors.red,
+      );
+    } else {
+      CustomAlert.show(
+        title: 'Deleted',
+        message: 'Post deleted successfully',
+        icon: Icons.check_circle_outline,
+        color: Colors.green,
+      );
     }
   }
 }

@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 
+import 'package:get/get.dart';
+import 'package:public_pulse/controller/home_controller.dart';
+import 'package:public_pulse/widget/local/app_alert.dart';
+
 class PostHeader extends StatelessWidget {
   final String profileImage;
   final String username;
   final String location;
+  final String postId;
+  final bool isOwner;
+  final VoidCallback? onDelete;
 
   const PostHeader({
     super.key,
     required this.profileImage,
     required this.username,
     required this.location,
+    required this.postId,
+    required this.isOwner,
+    this.onDelete,
   });
 
   @override
@@ -67,17 +77,128 @@ class PostHeader extends StatelessWidget {
                   ],
                 ),
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_horiz, color: AppColors.gray500),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'unfollow',
-                      child: Text('Unfollow'),
+                  elevation: 12,
+                  color: Colors.white,
+                  shadowColor: Colors.black26,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  position: PopupMenuPosition.under,
+                  splashRadius: 20,
+                  icon: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    child: const Icon(
+                      Icons.more_horiz_rounded,
+                      color: AppColors.gray700,
+                      size: 20,
+                    ),
+                  ),
 
-                    const PopupMenuItem(value: 'report', child: Text('Report')),
+                  onSelected: (value) async {
+                    if (value == "delete") {
+                      final controller = Get.find<HomeController>();
+                      final confirmed = await CustomAlert.showConfirm(
+                        title: 'Delete Post?',
+                        message: 'This post will be permanently removed.',
+                        icon: Icons.delete_outline_rounded,
+                        color: Colors.red,
+                        confirmText: 'Delete',
+                      );
+                      if (confirmed) {
+                        await controller.deletePost(postId);
+                      }
+                    }
 
-                    const PopupMenuItem(value: 'block', child: Text('Block')),
-                  ],
+                    if (value == "report") {
+                      CustomAlert.show(
+                        title: 'Report',
+                        message: 'Report feature coming soon',
+                        icon: Icons.flag_outlined,
+                        color: Colors.orange,
+                      );
+                    }
+
+                    if (value == "block") {
+                      CustomAlert.show(
+                        title: 'Block',
+                        message: 'Block feature coming soon',
+                        icon: Icons.block_outlined,
+                        color: Colors.red,
+                      );
+                    }
+
+                    if (value == "unfollow") {
+                      CustomAlert.show(
+                        title: 'Unfollow',
+                        message: 'Unfollow feature coming soon',
+                        icon: Icons.person_remove_outlined,
+                        color: Colors.blue,
+                      );
+                    }
+                  },
+
+                  itemBuilder: (context) {
+                    if (isOwner) {
+                      return [
+                        PopupMenuItem<String>(
+                          value: "delete",
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete_outline_rounded,
+                                color: Colors.red,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                "Delete Post",
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ];
+                    }
+
+                    return [
+                      const PopupMenuItem(
+                        value: "report",
+                        child: Row(
+                          children: [
+                            Icon(Icons.flag_outlined, color: Colors.orange),
+                            SizedBox(width: 10),
+                            Text("Report"),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: "block",
+                        child: Row(
+                          children: [
+                            Icon(Icons.block_outlined, color: Colors.red),
+                            SizedBox(width: 10),
+                            Text("Block"),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: "unfollow",
+                        child: Row(
+                          children: [
+                            Icon(Icons.person_remove_outlined),
+                            SizedBox(width: 10),
+                            Text("Unfollow"),
+                          ],
+                        ),
+                      ),
+                    ];
+                  },
                 ),
               ],
             ),
