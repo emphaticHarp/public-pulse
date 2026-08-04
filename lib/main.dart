@@ -13,7 +13,6 @@ import 'package:public_pulse/controller/network_controller.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
 import 'package:public_pulse/controller/profile_controller.dart';
 import 'package:public_pulse/controller/login_controller.dart';
-import 'package:pie_menu/pie_menu.dart';
 import 'package:public_pulse/core/cache/hive_service.dart';
 
 /// A simple HTTP client that logs every request and response status code.
@@ -70,9 +69,6 @@ class PublicPulseApp extends StatelessWidget {
       title: 'Public Pulse',
       theme: ThemeData(fontFamily: 'Poppins', useMaterial3: true),
       home: SplashScreenPage(),
-      builder: (context, child) {
-        return PieCanvas(child: child ?? const SizedBox.shrink());
-      },
     );
   }
 }

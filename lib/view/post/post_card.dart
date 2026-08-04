@@ -10,9 +10,10 @@ class PostCard extends StatelessWidget {
   final String location; //post header import
 
   final bool isCarousel; //post media import
+  final bool isOwner;
   final String? imageUrl; //post media import
   final List<String>? imageUrls; //post media import
-  final String? postId; //post media import
+  final String postId; //post media import
   final IconData likeIcon; //interaction bar import
   final Color likeIconColor; //interaction bar import
 
@@ -33,9 +34,10 @@ class PostCard extends StatelessWidget {
     required this.location,
 
     required this.isCarousel,
+    required this.isOwner,
     this.imageUrl,
     this.imageUrls,
-    this.postId,
+    required this.postId,
     required this.likeIcon,
     required this.likeIconColor,
     required this.likeCount,
@@ -61,10 +63,12 @@ class PostCard extends StatelessWidget {
             profileImage: profileImage,
             username: username,
             location: location,
+            postId: postId,
+            isOwner: isOwner,
           ),
 
           if (isCarousel)
-            PostCarouselMedia(imageUrls: imageUrls!, postId: postId!)
+            PostCarouselMedia(imageUrls: imageUrls!, postId: postId)
           else
             PostMedia(imageUrl: imageUrl!),
 

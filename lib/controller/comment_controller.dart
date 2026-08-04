@@ -4,8 +4,8 @@ import 'package:uuid/uuid.dart';
 import '../core/repository/comment_repository.dart';
 import '../model/comment_model.dart';
 import 'package:public_pulse/controller/home_controller.dart';
-
 import 'package:public_pulse/core/cache/cache_manager.dart';
+import 'package:public_pulse/widget/local/app_alert.dart';
 
 class CommentController extends GetxController {
   final CommentRepository _repository = CommentRepository();
@@ -81,7 +81,12 @@ class CommentController extends GetxController {
     if (text.isEmpty) return;
 
     if (text.length > 500) {
-      Get.snackbar("Too long", "Maximum 500 characters");
+      CustomAlert.show(
+        title: 'Too long',
+        message: 'Maximum 500 characters',
+        icon: Icons.warning_amber_rounded,
+        color: Colors.orange,
+      );
       return;
     }
 
@@ -146,7 +151,12 @@ class CommentController extends GetxController {
           home.posts.refresh();
         }
 
-        Get.snackbar("Error", "Failed to send comment");
+        CustomAlert.show(
+          title: 'Error',
+          message: 'Failed to send comment',
+          icon: Icons.error_outline,
+          color: Colors.red,
+        );
       }
     } finally {
       isSubmitting.value = false;
@@ -168,20 +178,29 @@ class CommentController extends GetxController {
 
   Future<void> submitComment() async {
     if (editingCommentId.value != null) {
-      await _updateComment(editingCommentId.value!);
+      await _updateComment(editingCommentId.value!, commentController.text);
     } else {
       await addComment();
     }
   }
 
-  Future<void> _updateComment(String commentId) async {
+  Future<void> editComment(String commentId, String newText) async {
+    await _updateComment(commentId, newText);
+  }
+
+  Future<void> _updateComment(String commentId, String content) async {
     if (isSubmitting.value) return;
 
-    final text = commentController.text.trim();
+    final text = content.trim();
     if (text.isEmpty) return;
 
     if (text.length > 500) {
-      Get.snackbar("Too long", "Maximum 500 characters");
+      CustomAlert.show(
+        title: 'Too long',
+        message: 'Maximum 500 characters',
+        icon: Icons.warning_amber_rounded,
+        color: Colors.orange,
+      );
       return;
     }
 
@@ -214,7 +233,12 @@ class CommentController extends GetxController {
         }
       } else {
         if (i != -1) comments[i] = original;
-        Get.snackbar("Error", "Failed to update comment");
+        CustomAlert.show(
+          title: 'Error',
+          message: 'Failed to update comment',
+          icon: Icons.error_outline,
+          color: Colors.red,
+        );
       }
     } finally {
       isSubmitting.value = false;
@@ -251,7 +275,12 @@ class CommentController extends GetxController {
         home.posts[postIndex].commentCount++;
         home.posts.refresh();
       }
-      Get.snackbar("Error", "Failed to delete comment");
+      CustomAlert.show(
+        title: 'Error',
+        message: 'Failed to delete comment',
+        icon: Icons.error_outline,
+        color: Colors.red,
+      );
     }
   }
 }

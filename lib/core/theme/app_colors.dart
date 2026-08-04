@@ -109,4 +109,10 @@ class AppColors {
 
   /// Fully transparent - used for inactive tab underline on Profile Screen
   static const Color transparent = Color.fromARGB(0, 23, 22, 22);
+
+  static const Color grayshade200 = Color(0xFFEEEEEE);
+
+  static const Color gray700 = Color(0xFF374151);
+
+
 }

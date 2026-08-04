@@ -96,8 +96,10 @@ my_save:saved_posts!left(
         '[REPO] getInitialPosts RAW ids: ${response.map((e) => e['id']).toList()}',
       );
 
+      final currentProfileId = await getCurrentProfileId();
+
       final posts = response
-          .map<PostModel>((e) => PostModel.fromJson(e))
+          .map<PostModel>((e) => PostModel.fromJson(e, currentProfileId))
           .toList();
 
       final String? nextCursor = posts.isNotEmpty
@@ -173,10 +175,11 @@ my_save:saved_posts!left(
       '[REPO] getMorePosts RAW ids: ${response.map((e) => e['id']).toList()}',
     );
 
-    final posts = response
-        .map<PostModel>((e) => PostModel.fromJson(e))
-        .toList();
+    final currentProfileId = await getCurrentProfileId();
 
+    final posts = response
+        .map<PostModel>((e) => PostModel.fromJson(e, currentProfileId))
+        .toList();
     final nextCursor = posts.isNotEmpty
         ? posts.last.createdAt.toIso8601String()
         : null;
@@ -241,7 +244,9 @@ my_save:saved_posts!left(
           .filter('deleted_at', 'is', null)
           .order('created_at', ascending: false);
 
-      return response.map((e) => PostModel.fromJson(e)).toList();
+      return response
+          .map((e) => PostModel.fromJson(e, currentProfileId))
+          .toList();
     } catch (e, stackTrace) {
       debugPrint('[ERROR] getMyPosts: $e');
       debugPrintStack(stackTrace: stackTrace);
@@ -302,8 +307,10 @@ my_save:saved_posts!left(
       '[REPO] getNewPosts RAW ids: ${response.map((e) => e['id']).toList()}',
     );
 
+    final currentProfileId = await getCurrentProfileId();
+
     final posts = response
-        .map<PostModel>((e) => PostModel.fromJson(e))
+        .map<PostModel>((e) => PostModel.fromJson(e, currentProfileId))
         .toList();
 
     return posts;
@@ -367,6 +374,25 @@ my_save:saved_posts!left(
       return true;
     } catch (e) {
       debugPrint("toggleSave Error: $e");
+      return false;
+    }
+  }
+
+  Future<bool> deletePost(String postId) async {
+    try {
+      final response = await _supabase
+          .from('posts')
+          .delete()
+          .eq('id', postId)
+          .select();
+
+      debugPrint("DELETE RESPONSE: $response");
+      return response.isNotEmpty;
+    } on PostgrestException catch (e) {
+
+      return false;
+    } catch (e) {
+      debugPrint("DELETE ERROR: $e");
       return false;
     }
   }

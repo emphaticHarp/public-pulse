@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/services/auth_service.dart';
 import 'package:public_pulse/view/main/main_page.dart';
+import 'package:public_pulse/widget/local/app_alert.dart';
 
 class LoginCodeController extends GetxController {
   final pinController = TextEditingController();
@@ -17,14 +18,24 @@ class LoginCodeController extends GetxController {
       final code = pinController.text.trim().toUpperCase();
 
       if (code.length != 6) {
-        Get.snackbar("Invalid Code", "Enter a 6-character code.");
+        CustomAlert.show(
+          title: 'Invalid Code',
+          message: 'Enter a 6-character code.',
+          icon: Icons.warning_amber_rounded,
+          color: Colors.orange,
+        );
         return;
       }
 
       final valid = await _authService.verifyLoginCode(code);
 
       if (!valid) {
-        Get.snackbar("Invalid Code", "Incorrect login code.");
+        CustomAlert.show(
+          title: 'Invalid Code',
+          message: 'Incorrect login code.',
+          icon: Icons.warning_amber_rounded,
+          color: Colors.orange,
+        );
         return;
       }
 
@@ -32,7 +43,12 @@ class LoginCodeController extends GetxController {
 
       Get.offAll(() => MainPage());
     } catch (e) {
-      Get.snackbar("Error", "Something went wrong.");
+      CustomAlert.show(
+        title: 'Error',
+        message: 'Something went wrong.',
+        icon: Icons.error_outline,
+        color: Colors.red,
+      );
     } finally {
       isLoading.value = false;
     }
