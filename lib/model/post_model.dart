@@ -80,6 +80,7 @@ class PostModel {
     final media = List<Map<String, dynamic>>.from(json['media'] ?? []);
 
     final liked = (json['my_like'] as List?)?.isNotEmpty ?? false;
+    final saved = (json['my_save'] as List?)?.isNotEmpty ?? false;
 
     return PostModel(
       id: json['id'],
@@ -117,7 +118,9 @@ class PostModel {
       viewCount: json['view_count'],
 
       isLiked: liked,
+      isSaved: saved,
 
+      
       createdAt: DateTime.parse(json['created_at']),
     );
   }

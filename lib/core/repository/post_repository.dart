@@ -74,6 +74,12 @@ my_like:post_likes!left(
   id,
   profile_id,
   post_id
+),
+
+my_save:saved_posts!left(
+  id,
+  profile_id,
+  post_id
 )
 ''')
           .eq('status', 'ACTIVE')
@@ -83,8 +89,12 @@ my_like:post_likes!left(
           .order('created_at', ascending: false)
           .limit(limit);
 
-      debugPrint('[REPO] getInitialPosts RAW response length: ${response.length}');
-      debugPrint('[REPO] getInitialPosts RAW ids: ${response.map((e) => e['id']).toList()}');
+      debugPrint(
+        '[REPO] getInitialPosts RAW response length: ${response.length}',
+      );
+      debugPrint(
+        '[REPO] getInitialPosts RAW ids: ${response.map((e) => e['id']).toList()}',
+      );
 
       final posts = response
           .map<PostModel>((e) => PostModel.fromJson(e))
@@ -142,6 +152,11 @@ my_like:post_likes!left(
   id,
   profile_id,
   post_id
+),
+my_save:saved_posts!left(
+  id,
+  profile_id,
+  post_id
 )
     ''')
         .eq('status', 'ACTIVE')
@@ -154,7 +169,9 @@ my_like:post_likes!left(
         .limit(limit);
 
     debugPrint('[REPO] getMorePosts RAW response length: ${response.length}');
-    debugPrint('[REPO] getMorePosts RAW ids: ${response.map((e) => e['id']).toList()}');
+    debugPrint(
+      '[REPO] getMorePosts RAW ids: ${response.map((e) => e['id']).toList()}',
+    );
 
     final posts = response
         .map<PostModel>((e) => PostModel.fromJson(e))
@@ -212,6 +229,11 @@ my_like:post_likes!left(
   id,
   profile_id,
   post_id
+),
+my_save:saved_posts!left(
+  id,
+  profile_id,
+  post_id
 )
         ''')
           .eq('profile_id', currentProfileId)
@@ -261,6 +283,11 @@ my_like:post_likes!left(
   id,
   profile_id,
   post_id
+),
+my_save:saved_posts!left(
+  id,
+  profile_id,
+  post_id
 )
       ''')
         .eq('status', 'ACTIVE')
@@ -271,7 +298,9 @@ my_like:post_likes!left(
         .order('created_at', ascending: false);
 
     debugPrint('[REPO] getNewPosts RAW response length: ${response.length}');
-    debugPrint('[REPO] getNewPosts RAW ids: ${response.map((e) => e['id']).toList()}');
+    debugPrint(
+      '[REPO] getNewPosts RAW ids: ${response.map((e) => e['id']).toList()}',
+    );
 
     final posts = response
         .map<PostModel>((e) => PostModel.fromJson(e))
@@ -309,6 +338,35 @@ my_like:post_likes!left(
       return true;
     } catch (e) {
       debugPrint("toggleLike Error : $e");
+      return false;
+    }
+  }
+
+  Future<bool> toggleSave({
+    required String postId,
+    required bool currentlySaved,
+  }) async {
+    try {
+      final profileId = await getCurrentProfileId();
+
+      if (profileId == null) return false;
+
+      if (currentlySaved) {
+        await _supabase
+            .from('saved_posts')
+            .delete()
+            .eq('post_id', postId)
+            .eq('profile_id', profileId);
+      } else {
+        await _supabase.from('saved_posts').insert({
+          'post_id': postId,
+          'profile_id': profileId,
+        });
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint("toggleSave Error: $e");
       return false;
     }
   }

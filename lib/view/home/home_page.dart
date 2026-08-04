@@ -171,12 +171,17 @@ class HomePage extends StatelessWidget {
                           commentCount: post.commentCount.toString(),
                           shareCount: post.shareCount.toString(),
                           caption: post.caption ?? '',
-
+                          //for save post
+                          isBookmarked: post.isSaved,
+                          onBookmarkTap: () {
+                            controller.toggleSave(post);
+                          },
+                          // for like
                           // Like
                           onLikeTap: () {
                             controller.toggleLike(post);
                           },
-
+                          // for opeming the comment tile
                           // Comment
                           onCommentTap: () async {
                             CommentController commentController;

@@ -103,7 +103,7 @@ class CommentSheet extends StatelessWidget {
 
                   IconButton(
                     onPressed: () {
-                      controller.addComment();
+                      controller.submitComment();
                     },
                     icon: const Icon(
                       Icons.send_rounded,

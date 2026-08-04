@@ -22,6 +22,10 @@ class CommentController extends GetxController {
 
   String? currentPostId;
 
+  String? get currentProfileId => _currentProfile?['id'];
+
+  final RxnString editingCommentId = RxnString();
+
   @override
   void onClose() {
     commentController.dispose();
@@ -146,6 +150,108 @@ class CommentController extends GetxController {
       }
     } finally {
       isSubmitting.value = false;
+    }
+  }
+
+  void startEditing(CommentModel comment) {
+    editingCommentId.value = comment.id;
+    commentController.text = comment.content;
+    commentController.selection = TextSelection.fromPosition(
+      TextPosition(offset: commentController.text.length),
+    );
+  }
+
+  void cancelEditing() {
+    editingCommentId.value = null;
+    commentController.clear();
+  }
+
+  Future<void> submitComment() async {
+    if (editingCommentId.value != null) {
+      await _updateComment(editingCommentId.value!);
+    } else {
+      await addComment();
+    }
+  }
+
+  Future<void> _updateComment(String commentId) async {
+    if (isSubmitting.value) return;
+
+    final text = commentController.text.trim();
+    if (text.isEmpty) return;
+
+    if (text.length > 500) {
+      Get.snackbar("Too long", "Maximum 500 characters");
+      return;
+    }
+
+    final index = comments.indexWhere((e) => e.id == commentId);
+    if (index == -1) {
+      cancelEditing();
+      return;
+    }
+
+    final original = comments[index];
+
+    isSubmitting.value = true;
+
+    comments[index] = original.copyWith(content: text);
+    commentController.clear();
+    editingCommentId.value = null;
+
+    try {
+      final updated = await _repository.updateComment(
+        commentId: commentId,
+        content: text,
+      );
+
+      final i = comments.indexWhere((e) => e.id == commentId);
+
+      if (updated != null) {
+        if (i != -1) {
+          comments[i] = updated;
+          await CacheManager.cacheComments(currentPostId!, comments);
+        }
+      } else {
+        if (i != -1) comments[i] = original;
+        Get.snackbar("Error", "Failed to update comment");
+      }
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
+
+  Future<void> deleteComment(String commentId) async {
+    final index = comments.indexWhere((e) => e.id == commentId);
+    if (index == -1) return;
+
+    final removed = comments[index];
+
+    comments.removeAt(index);
+
+    if (currentPostId != null) {
+      await CacheManager.cacheComments(currentPostId!, comments);
+    }
+
+    final home = Get.find<HomeController>();
+    final postIndex = home.posts.indexWhere((e) => e.id == currentPostId);
+    if (postIndex != -1) {
+      home.posts[postIndex].commentCount--;
+      home.posts.refresh();
+    }
+
+    final success = await _repository.deleteComment(commentId);
+
+    if (!success) {
+      comments.insert(index, removed);
+      if (currentPostId != null) {
+        await CacheManager.cacheComments(currentPostId!, comments);
+      }
+      if (postIndex != -1) {
+        home.posts[postIndex].commentCount++;
+        home.posts.refresh();
+      }
+      Get.snackbar("Error", "Failed to delete comment");
     }
   }
 }
