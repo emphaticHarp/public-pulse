@@ -121,6 +121,35 @@ profiles!comments_profile_id_fkey(
     }
   }
 
+  Future<CommentModel?> updateComment({
+    required String commentId,
+    required String content,
+  }) async {
+    try {
+      final response = await _supabase
+          .from('comments')
+          .update({'content': content})
+          .eq('id', commentId)
+          .select('''
+id,
+post_id,
+profile_id,
+content,
+created_at,
+profiles!comments_profile_id_fkey(
+  username,
+  avatar_path
+)
+''')
+          .single();
+
+      return CommentModel.fromMap(response);
+    } catch (e) {
+      debugPrint("updateComment Error: $e");
+      return null;
+    }
+  }
+
   Future<bool> deleteComment(String commentId) async {
     try {
       await _supabase.from('comments').delete().eq('id', commentId);

@@ -21,6 +21,8 @@ class PostCard extends StatelessWidget {
   final String shareCount; //interaction bar import
   final VoidCallback? onLikeTap; //interaction bar import
   final VoidCallback? onCommentTap; //interaction bar import
+  final bool isBookmarked;
+  final VoidCallback? onBookmarkTap;
 
   final String caption; //post caption import
 
@@ -41,6 +43,9 @@ class PostCard extends StatelessWidget {
     required this.shareCount,
     this.onLikeTap,
     this.onCommentTap,
+
+    this.isBookmarked = false,
+    this.onBookmarkTap,
 
     required this.caption,
   });
@@ -71,6 +76,9 @@ class PostCard extends StatelessWidget {
             shareCount: shareCount,
             onLikeTap: onLikeTap,
             onCommentTap: onCommentTap,
+
+            isBookmarked: isBookmarked,
+            onBookmarkTap: onBookmarkTap,
           ),
 
           PostCaption(username: username, caption: caption),

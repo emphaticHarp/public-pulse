@@ -319,6 +319,40 @@ class HomeController extends GetxController {
     }
   }
 
+  Future<void> toggleSave(PostModel post) async {
+    final oldSaved = post.isSaved;
+
+    // Optimistic UI
+    post.isSaved = !oldSaved;
+
+    posts.refresh();
+
+    await CacheManager.cachePosts(
+      posts,
+      nextCursor: nextCursor,
+      hasMore: hasMore.value,
+    );
+
+    // Background upload
+    final success = await _repository.toggleSave(
+      postId: post.id,
+      currentlySaved: oldSaved,
+    );
+
+    // Rollback if failed
+    if (!success) {
+      post.isSaved = oldSaved;
+
+      posts.refresh();
+
+      await CacheManager.cachePosts(
+        posts,
+        nextCursor: nextCursor,
+        hasMore: hasMore.value,
+      );
+    }
+  }
+
   Future<void> loadMorePosts() async {
     if (isLoadingMore.value) return;
 
