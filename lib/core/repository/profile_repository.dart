@@ -169,7 +169,6 @@ class ProfileRepository {
         .toList();
   }
 
-
   /// Fetches both [follower_count] and [following_count] for [userId] in a
   /// single round-trip from the `profiles` table.
   ///
@@ -186,5 +185,14 @@ class ProfileRepository {
       followers: (data['follower_count'] as num?)?.toInt() ?? 0,
       following: (data['following_count'] as num?)?.toInt() ?? 0,
     );
+  }
+
+  Future<List<ProfileModel>> searchUsers(String query) async {
+    final data = await _db
+        .select()
+        .or('username.ilike.%$query%,display_name.ilike.%$query%')
+        .limit(20);
+
+    return (data as List).map((e) => ProfileModel.fromJson(e)).toList();
   }
 }

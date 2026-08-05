@@ -8,5 +8,7 @@ class HiveService {
     await Hive.openBox(HiveBoxes.cachedPosts);
     await Hive.openBox(HiveBoxes.cachedProfiles);
     await Hive.openBox(HiveBoxes.cachedComments);
+
+    await Hive.openBox(HiveBoxes.recentSearches);
   }
 }

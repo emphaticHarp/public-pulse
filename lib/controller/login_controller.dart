@@ -28,6 +28,14 @@ class LoginController extends GetxController {
         _isCheckingUser.value = true;
 
         try {
+          // var profile = await _authService.getCurrentProfile();
+
+          // if (profile == null) {
+          //   debugPrint("Profile missing. Recreating profile...");
+
+          //   profile = await _authService.createProfile();
+          // }
+
           final profile = await _authService.getCurrentProfile();
 
           if (profile == null) {
@@ -118,4 +126,3 @@ class LoginController extends GetxController {
     }
   }
 }
-
