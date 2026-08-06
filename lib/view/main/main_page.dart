@@ -5,7 +5,7 @@ import 'package:public_pulse/controller/home_controller.dart';
 
 import 'package:public_pulse/view/home/home_page.dart';
 import 'package:public_pulse/view/notification/notification_page.dart';
-import 'package:public_pulse/view/community/community_page.dart';
+import 'package:public_pulse/view/explore/explore_page.dart';
 import 'package:public_pulse/view/profile/profile_page.dart';
 
 import 'package:public_pulse/widget/local/app_bottom_nav.dart';
@@ -30,7 +30,7 @@ class MainPage extends StatelessWidget {
             if (pages[index] == null) {
               switch (index) {
                 case 1:
-                  pages[1] = const CommunityPage();
+                  pages[1] =  ExplorePage();
                   break;
 
                 case 2:

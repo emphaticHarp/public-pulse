@@ -23,7 +23,7 @@ class AppBottomNavBar extends StatelessWidget {
 
   static const List<_NavItemData> _items = [
     _NavItemData(index: 0, icon: Icons.home_rounded, label: 'Home'),
-    _NavItemData(index: 1, icon: Icons.groups_rounded, label: 'Community'),
+     _NavItemData(index: 1, icon: Icons.explore_rounded, label: 'Explore'),
     _NavItemData(
       index: 2,
       icon: Icons.notifications_none_rounded,
