@@ -162,4 +162,85 @@ static const TextStyle nextButtonText = TextStyle(
     fontWeight: FontWeight.w600,
     letterSpacing: 2.2,
   );
+
+  // ── Settings Page Styles ──────────────────────────────────────────────
+  static const TextStyle settingsHeading = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.normal,
+    letterSpacing: -0.5,
+  );
+
+  static const TextStyle settingsSectionTitle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    letterSpacing: 1.2,
+  );
+
+  static const TextStyle settingsBodySmall = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.normal,
+  );
+
+  static const TextStyle settingsLabel = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+  );
+}
+
+// ── Dimensions & Spacing ──────────────────────────────────────────────
+class AppSpacing {
+  AppSpacing._();
+
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 12.0;
+  static const double lg = 16.0;
+  static const double xl = 24.0;
+  static const double xxl = 32.0;
+  static const double section = 40.0;
+}
+
+// ── Border Radius ─────────────────────────────────────────────────────
+class AppRadius {
+  AppRadius._();
+
+  static const double sm = 4.0;
+  static const double md = 8.0;
+  static const double lg = 12.0;
+  static const double xl = 16.0;
+  static const double xxl = 24.0;
+
+  static const BorderRadius borderSm = BorderRadius.all(Radius.circular(sm));
+  static const BorderRadius borderMd = BorderRadius.all(Radius.circular(md));
+  static const BorderRadius borderLg = BorderRadius.all(Radius.circular(lg));
+  static const BorderRadius borderXl = BorderRadius.all(Radius.circular(xl));
+}
+
+// ── Shadows ───────────────────────────────────────────────────────────
+class AppShadow {
+  AppShadow._();
+
+  static const List<BoxShadow> sm = [
+    BoxShadow(
+      color: Color(0x0C000000),
+      blurRadius: 4,
+      offset: Offset(0, 1),
+    ),
+  ];
+
+  static const List<BoxShadow> md = [
+    BoxShadow(
+      color: Color(0x0C000000),
+      blurRadius: 8,
+      offset: Offset(0, 2),
+    ),
+  ];
+
+  static const List<BoxShadow> card = [
+    BoxShadow(
+      color: Color(0x0A000000),
+      blurRadius: 12,
+      offset: Offset(0, 4),
+    ),
+  ];
 }
