@@ -35,6 +35,9 @@ class ProfileModel {
   final String? coverPath;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  // DB-computed counters — populated when the query includes these columns.
+  final int? followerCount;
+  final int? followingCount;
 
   const ProfileModel({
     required this.id,
@@ -45,21 +48,22 @@ class ProfileModel {
     this.coverPath,
     this.createdAt,
     this.updatedAt,
+    this.followerCount,
+    this.followingCount,
   });
 
-  factory ProfileModel.fromJson(Map<String, dynamic> json) {
-    final profile = ProfileModel(
-      id: json['user_id'] as String,
-      username: json['username'] as String? ?? '',
-      displayName: json['display_name'] as String?,
-      bio: json['bio'] as String?,
-      avatarPath: json['avatar_path'] as String?,
-      coverPath: json['cover_path'] as String?,
-      createdAt: _parseDate(json['created_at']),
-      updatedAt: _parseDate(json['updated_at']),
-    );
-    return profile;
-  }
+  factory ProfileModel.fromJson(Map<String, dynamic> json) => ProfileModel(
+    id: json['user_id'] as String,
+    username: json['username'] as String? ?? '',
+    displayName: json['display_name'] as String?,
+    bio: json['bio'] as String?,
+    avatarPath: json['avatar_path'] as String?,
+    coverPath: json['cover_path'] as String?,
+    createdAt: _parseDate(json['created_at']),
+    updatedAt: _parseDate(json['updated_at']),
+    followerCount: (json['follower_count'] as num?)?.toInt(),
+    followingCount: (json['following_count'] as num?)?.toInt(),
+  );
 
   static DateTime? _parseDate(dynamic value) =>
       value is String ? DateTime.tryParse(value) : null;
@@ -89,6 +93,8 @@ class ProfileModel {
     coverPath: coverPath ?? this.coverPath,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    followerCount: followerCount,
+    followingCount: followingCount,
   );
 
   @override
@@ -102,9 +108,11 @@ class ProfileModel {
           avatarPath == other.avatarPath &&
           coverPath == other.coverPath &&
           createdAt == other.createdAt &&
-          updatedAt == other.updatedAt);
-  
-  /// Override hashCode to ensure that two ProfileModel instances with the same value
+          updatedAt == other.updatedAt &&
+          followerCount == other.followerCount &&
+          followingCount == other.followingCount);
+
+  /// Override hashCode to ensure that two ProfileModel instances with the same values are equal.
   @override
   int get hashCode => Object.hash(
     id,
@@ -115,5 +123,7 @@ class ProfileModel {
     coverPath,
     createdAt,
     updatedAt,
+    followerCount,
+    followingCount,
   );
 }
