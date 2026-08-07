@@ -61,7 +61,9 @@ class ExplorePage extends StatelessWidget {
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundImage: profile.avatarPath != null
-                              ? NetworkImage(controller.avatarUrl(profile))
+                              ? NetworkImage(
+                                  controller.avatarUrl(profile.avatarPath),
+                                )
                               : null,
                           child: profile.avatarPath == null
                               ? const Icon(Icons.person)
@@ -76,7 +78,8 @@ class ExplorePage extends StatelessWidget {
                           },
                         ),
                         onTap: () {
-                          controller.openProfile(profile);
+                          // TODO:
+                          // Get.to(() => UserProfilePage(userId: profile.userId));
                         },
                       );
                     },
@@ -101,7 +104,9 @@ class ExplorePage extends StatelessWidget {
                     return ListTile(
                       leading: CircleAvatar(
                         backgroundImage: profile.avatarPath != null
-                            ? NetworkImage(controller.avatarUrl(profile))
+                            ? NetworkImage(
+                                controller.avatarUrl(profile.avatarPath),
+                              )
                             : null,
                         child: profile.avatarPath == null
                             ? const Icon(Icons.person)

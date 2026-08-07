@@ -3,9 +3,10 @@ import 'package:get/get.dart';
 import 'package:public_pulse/core/cache/recent_search_cache.dart';
 import 'package:public_pulse/core/repository/profile_repository.dart';
 import 'package:public_pulse/model/profile_model.dart';
+import 'package:public_pulse/model/recent_search_model.dart';
 
 class ExploreController extends GetxController {
- final RxList<ProfileModel> recentSearches = <ProfileModel>[].obs;
+  final RxList<RecentSearchModel> recentSearches = <RecentSearchModel>[].obs;
 
   final TextEditingController searchController = TextEditingController();
 
@@ -15,11 +16,11 @@ class ExploreController extends GetxController {
 
   final RxList<ProfileModel> searchResults = <ProfileModel>[].obs;
 
-  String avatarUrl(ProfileModel profile) {
-  if (profile.avatarPath == null) return '';
+  String avatarUrl(String? avatarPath) {
+    if (avatarPath == null || avatarPath.isEmpty) return '';
 
-  return _repository.resolveUrl(profile.avatarPath!);
-}
+    return _repository.resolveUrl(avatarPath);
+  }
 
   Future<void> onSearchChanged(String value) async {
     searchText.value = value;
@@ -32,12 +33,19 @@ class ExploreController extends GetxController {
     searchResults.assignAll(await _repository.searchUsers(value));
   }
 
- Future<void> openProfile(ProfileModel user) async {
-  await addRecentSearch(user);
+  Future<void> openProfile(ProfileModel user) async {
+    await addRecentSearch(
+      RecentSearchModel(
+        userId: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        avatarPath: user.avatarPath,
+      ),
+    );
 
-  // TODO:
-  // Get.to(() => ProfilePage(userId: user.id));
-}
+    // TODO:
+    // Get.to(() => ProfilePage(userId: user.id));
+  }
 
   @override
   void onInit() {
@@ -49,15 +57,15 @@ class ExploreController extends GetxController {
     recentSearches.assignAll(RecentSearchCache.getSearches());
   }
 
-  Future<void> addRecentSearch(ProfileModel profile) async {
-    await RecentSearchCache.addSearch(profile);
-    loadRecentSearches();
-  }
+ Future<void> addRecentSearch(RecentSearchModel profile) async {
+  await RecentSearchCache.addSearch(profile);
+  loadRecentSearches();
+}
 
-  Future<void> removeRecentSearch(ProfileModel profile) async {
-    await RecentSearchCache.removeSearch(profile);
-    loadRecentSearches();
-  }
+Future<void> removeRecentSearch(RecentSearchModel profile) async {
+  await RecentSearchCache.removeSearch(profile);
+  loadRecentSearches();
+}
 
   Future<void> clearRecentSearches() async {
     await RecentSearchCache.clearAll();

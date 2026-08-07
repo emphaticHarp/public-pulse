@@ -1,5 +1,5 @@
 import 'package:hive_ce_flutter/hive_flutter.dart';
-import 'package:public_pulse/model/profile_model.dart';
+import 'package:public_pulse/model/recent_search_model.dart';
 
 import 'cache_keys.dart';
 import 'hive_boxes.dart';
@@ -7,21 +7,21 @@ import 'hive_boxes.dart';
 class RecentSearchCache {
   static Box get _box => Hive.box(HiveBoxes.recentSearches);
 
-  static List<ProfileModel> getSearches() {
+  static List<RecentSearchModel> getSearches() {
     final List data = _box.get(
       CacheKeys.recentSearches,
       defaultValue: <Map<String, dynamic>>[],
     );
 
     return data
-        .map((e) => ProfileModel.fromJson(Map<String, dynamic>.from(e)))
+        .map((e) => RecentSearchModel.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
 
-  static Future<void> addSearch(ProfileModel profile) async {
+  static Future<void> addSearch(RecentSearchModel profile) async {
     final searches = getSearches();
 
-    searches.removeWhere((e) => e.id == profile.id);
+    searches.removeWhere((e) => e.userId == profile.userId);
 
     searches.insert(0, profile);
 
@@ -35,10 +35,10 @@ class RecentSearchCache {
     );
   }
 
-  static Future<void> removeSearch(ProfileModel profile) async {
+  static Future<void> removeSearch(RecentSearchModel profile) async {
     final searches = getSearches();
 
-    searches.removeWhere((e) => e.id == profile.id);
+    searches.removeWhere((e) => e.userId == profile.userId);
 
     await _box.put(
       CacheKeys.recentSearches,
@@ -47,6 +47,9 @@ class RecentSearchCache {
   }
 
   static Future<void> clearAll() async {
-    await _box.put(CacheKeys.recentSearches, []);
+    await _box.put(
+      CacheKeys.recentSearches,
+      <Map<String, dynamic>>[],
+    );
   }
 }
