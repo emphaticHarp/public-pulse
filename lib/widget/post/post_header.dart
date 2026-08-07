@@ -5,10 +5,13 @@ import 'package:get/get.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
 
+import 'package:public_pulse/widget/post/follow_button.dart';
+
 class PostHeader extends StatelessWidget {
   final String profileImage;
   final String username;
-  final String location;
+  final String authorId;
+  final String? location;
   final String postId;
   final bool isOwner;
   final VoidCallback? onDelete;
@@ -17,7 +20,8 @@ class PostHeader extends StatelessWidget {
     super.key,
     required this.profileImage,
     required this.username,
-    required this.location,
+    required this.authorId,
+    this.location,
     required this.postId,
     required this.isOwner,
     this.onDelete,
@@ -36,45 +40,66 @@ class PostHeader extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundImage: NetworkImage(profileImage),
-                      onBackgroundImageError: (error, stackTrace) {},
-                      backgroundColor: AppColors.gray100,
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          username,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Row(
+                Expanded(
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundImage: NetworkImage(profileImage),
+                        onBackgroundImageError: (error, stackTrace) {},
+                        backgroundColor: AppColors.gray100,
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.location_on,
-                              size: 12,
-                              color: AppColors.gray500,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    username,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+
+                                FollowButton(
+                                  profileId: authorId,
+                                  isOwner: isOwner,
+                                ),
+                              ],
                             ),
-                            Text(
-                              location,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.gray500,
+
+                            if (location != null && location!.trim().isNotEmpty)
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.location_on,
+                                    size: 12,
+                                    color: AppColors.gray500,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    location!,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.gray500,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                      ],
-                    ),
-                  ],
+                      ),
+
+                    
+                    ],
+                  ),
                 ),
                 PopupMenuButton<String>(
                   elevation: 12,

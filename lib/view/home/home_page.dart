@@ -145,6 +145,7 @@ class HomePage extends StatelessWidget {
                           key: ValueKey(post.id),
                           profileImage: post.profileImage ?? '',
                           username: post.username,
+                          authorId: post.profileId,
                           location: post.location ?? '',
                           isCarousel: post.isCarousel,
                           isOwner: post.isOwner,
