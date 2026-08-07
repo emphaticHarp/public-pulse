@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import 'package:public_pulse/model/post_model.dart';
 import 'package:public_pulse/core/repository/post_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:public_pulse/core/cache/cache_manager.dart';
+import 'package:public_pulse/widget/local/app_alert.dart';
 
 class HomeController extends GetxController {
   final RxInt currentIndex = 0.obs;
@@ -204,7 +204,9 @@ class HomeController extends GetxController {
         posts.assignAll(page.posts);
       }
 
-      debugPrint('[CTRL] AFTER update: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}');
+      debugPrint(
+        '[CTRL] AFTER update: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}',
+      );
 
       await CacheManager.cachePosts(
         posts,
@@ -245,7 +247,9 @@ class HomeController extends GetxController {
         ..clear()
         ..addAll(page.posts);
 
-      debugPrint('[CTRL] AFTER refresh: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}');
+      debugPrint(
+        '[CTRL] AFTER refresh: posts.length = ${posts.length}, ids = ${posts.map((e) => e.id).toList()}',
+      );
 
       debugPrint("NEW POSTS COUNT: ${posts.length}");
 
@@ -304,6 +308,40 @@ class HomeController extends GetxController {
     if (!success) {
       post.isLiked = oldLiked;
       post.likeCount = oldCount;
+
+      posts.refresh();
+
+      await CacheManager.cachePosts(
+        posts,
+        nextCursor: nextCursor,
+        hasMore: hasMore.value,
+      );
+    }
+  }
+
+  Future<void> toggleSave(PostModel post) async {
+    final oldSaved = post.isSaved;
+
+    // Optimistic UI
+    post.isSaved = !oldSaved;
+
+    posts.refresh();
+
+    await CacheManager.cachePosts(
+      posts,
+      nextCursor: nextCursor,
+      hasMore: hasMore.value,
+    );
+
+    // Background upload
+    final success = await _repository.toggleSave(
+      postId: post.id,
+      currentlySaved: oldSaved,
+    );
+
+    // Rollback if failed
+    if (!success) {
+      post.isSaved = oldSaved;
 
       posts.refresh();
 
@@ -393,6 +431,66 @@ class HomeController extends GetxController {
       );
     } catch (e) {
       debugPrint('[ERROR] _checkForNewPosts: $e');
+    }
+  }
+
+  Future<void> refreshSinglePost(String postId) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('posts')
+          .select('comment_count')
+          .eq('id', postId)
+          .single();
+
+      final index = posts.indexWhere((e) => e.id == postId);
+
+      if (index != -1) {
+        posts[index].commentCount = response['comment_count'] ?? 0;
+
+        posts.refresh();
+
+        await CacheManager.cachePosts(
+          posts,
+          nextCursor: nextCursor,
+          hasMore: hasMore.value,
+        );
+      }
+    } catch (e) {
+      debugPrint("refreshSinglePost error: $e");
+    }
+  }
+
+  Future<void> deletePost(String postId) async {
+    final index = posts.indexWhere((e) => e.id == postId);
+
+    if (index == -1) return;
+
+    final removedPost = posts[index];
+
+    posts.removeAt(index);
+
+    await CacheManager.cachePosts(posts);
+
+    final success = await _repository.deletePost(postId);
+
+    if (!success) {
+      posts.insert(index, removedPost);
+
+      await CacheManager.cachePosts(posts);
+
+      CustomAlert.show(
+        title: 'Error',
+        message: 'Failed to delete post',
+        icon: Icons.error_outline,
+        color: Colors.red,
+      );
+    } else {
+      CustomAlert.show(
+        title: 'Deleted',
+        message: 'Post deleted successfully',
+        icon: Icons.check_circle_outline,
+        color: Colors.green,
+      );
     }
   }
 }

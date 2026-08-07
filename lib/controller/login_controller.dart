@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/services/auth_service.dart';
 import 'package:public_pulse/widget/login/login_code_page.dart';
@@ -28,6 +28,14 @@ class LoginController extends GetxController {
         _isCheckingUser.value = true;
 
         try {
+          // var profile = await _authService.getCurrentProfile();
+
+          // if (profile == null) {
+          //   debugPrint("Profile missing. Recreating profile...");
+
+          //   profile = await _authService.createProfile();
+          // }
+
           final profile = await _authService.getCurrentProfile();
 
           if (profile == null) {

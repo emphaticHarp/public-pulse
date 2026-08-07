@@ -7,7 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String? webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
-String? get currentUserId => _supabase.auth.currentUser?.id;
+  String? get currentUserId => _supabase.auth.currentUser?.id;
   final String? androidClientId = dotenv.env['GOOGLE_ANDROID_CLIENT_ID'];
 
   late final GoogleSignIn _googleSignIn;
@@ -196,4 +196,38 @@ String? get currentUserId => _supabase.auth.currentUser?.id;
       debugPrint("activateCurrentUser ERROR: $e");
     }
   }
+
+  // // this function is used for if user is deleted from
+  // Future<Map<String, dynamic>> createProfile() async {
+  //   final user = _supabase.auth.currentUser!;
+
+  //   // Check if profile already exists
+  //   final existing = await _supabase
+  //       .from('profiles')
+  //       .select()
+  //       .eq('user_id', user.id)
+  //       .maybeSingle();
+
+  //   if (existing != null) {
+  //     debugPrint("Profile already exists.");
+  //     return existing;
+  //   }
+
+  // //   // Create new profile
+  // //   final profile = await _supabase
+  // //       .from('profiles')
+  // //       .insert({
+  // //         'user_id': user.id,
+  // //         'email': user.email,
+  // //         'status': 'pending',
+  // //         'display_name': user.userMetadata?['full_name'] ?? '',
+  // //         'username': null, // You can set a default username or leave it null
+  // //       })
+  // //       .select()
+  // //       .single();
+
+  // //   debugPrint("Profile created: $profile");
+
+  // //   return profile;
+  // // }
 }

@@ -17,6 +17,7 @@ class PostModel {
 
   final String visibility;
   final bool isPrivateAccount;
+  final bool isOwner;
 
   // Media
   final List<String> storagePaths;
@@ -25,7 +26,7 @@ class PostModel {
   final bool isCarousel;
   // Counts
   int likeCount;
-  final int commentCount;
+  int commentCount;
   final int shareCount;
   final int saveCount;
   final int viewCount;
@@ -52,6 +53,7 @@ class PostModel {
     //required for visibility constructor
     required this.visibility,
     required this.isPrivateAccount,
+    required this.isOwner,
 
     // Required media fields
     required this.storagePaths,
@@ -74,12 +76,16 @@ class PostModel {
     required this.createdAt,
   });
 
-  factory PostModel.fromJson(Map<String, dynamic> json) {
+  factory PostModel.fromJson(
+    Map<String, dynamic> json,
+    String? currentProfileId,
+  ) {
     final profile = json['profile'] ?? {};
 
     final media = List<Map<String, dynamic>>.from(json['media'] ?? []);
 
     final liked = (json['my_like'] as List?)?.isNotEmpty ?? false;
+    final saved = (json['my_save'] as List?)?.isNotEmpty ?? false;
 
     return PostModel(
       id: json['id'],
@@ -109,6 +115,7 @@ class PostModel {
 
       visibility: json['visibility'],
       isPrivateAccount: profile['is_private'],
+     isOwner: currentProfileId == json['profile_id'],
 
       likeCount: json['like_count'],
       commentCount: json['comment_count'],
@@ -117,6 +124,7 @@ class PostModel {
       viewCount: json['view_count'],
 
       isLiked: liked,
+      isSaved: saved,
 
       createdAt: DateTime.parse(json['created_at']),
     );
@@ -134,6 +142,7 @@ class PostModel {
       'location': location,
       'visibility': visibility,
       'is_private_account': isPrivateAccount,
+      'is_owner': isOwner,
       'storage_paths': storagePaths,
       'media_urls': mediaUrls,
       'thumbnail_urls': thumbnailUrls,
@@ -161,6 +170,7 @@ class PostModel {
       location: json['location'],
       visibility: json['visibility'],
       isPrivateAccount: json['is_private_account'],
+      isOwner: json['is_owner'] ?? false,
       storagePaths: List<String>.from(json['storage_paths'] ?? []),
       mediaUrls: List<String>.from(json['media_urls'] ?? []),
       thumbnailUrls: List<String>.from(json['thumbnail_urls'] ?? []),

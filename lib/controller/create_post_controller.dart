@@ -11,6 +11,7 @@ import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/core/compression/image_compressor.dart';
 import 'package:public_pulse/core/compression/metadata/media_metadata.dart';
 import 'package:public_pulse/model/pending_media.dart';
+import 'package:public_pulse/widget/local/app_alert.dart';
 
 class CreatePostController extends GetxController {
   final ImagePicker picker = ImagePicker();
@@ -383,20 +384,22 @@ class CreatePostController extends GetxController {
   void addLocation() {
     debugPrint('📍 [CreatePostController] addLocation() called');
     // Implement location picker
-    Get.snackbar(
-      'Location',
-      'Location picker coming soon!',
-      snackPosition: SnackPosition.BOTTOM,
+    CustomAlert.show(
+      title: 'Location',
+      message: 'Location picker coming soon!',
+      icon: Icons.location_on_outlined,
+      color: Colors.blue,
     );
   }
 
   // Show permission error
   void _showPermissionError(String permission) {
     debugPrint('🔴 [CreatePostController] Permission error: $permission');
-    Get.snackbar(
-      "Permission Required",
-      "Please grant $permission permission.",
-      snackPosition: SnackPosition.BOTTOM,
+    CustomAlert.show(
+      title: 'Permission Required',
+      message: 'Please grant $permission permission.',
+      icon: Icons.lock_outline,
+      color: Colors.orange,
     );
   }
 
@@ -407,10 +410,11 @@ class CreatePostController extends GetxController {
     );
     if (pendingMedia.length >= 10) {
       debugPrint('🟡 [CreatePostController] Media limit reached (10)');
-      Get.snackbar(
-        'Limit reached',
-        'You can add up to 10 media items',
-        snackPosition: SnackPosition.BOTTOM,
+      CustomAlert.show(
+        title: 'Limit reached',
+        message: 'You can add up to 10 media items',
+        icon: Icons.info_outline,
+        color: Colors.orange,
       );
       return;
     }

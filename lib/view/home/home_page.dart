@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/core/wrappers/network_wrapper.dart';
 import 'package:public_pulse/controller/home_controller.dart';
-import 'package:public_pulse/widget/local/app_search_bar.dart';
 import 'package:public_pulse/view/post/post_card.dart';
+import 'package:public_pulse/controller/comment_controller.dart';
+import 'package:public_pulse/view/comment/comment_sheet.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -25,14 +26,6 @@ class HomePage extends StatelessWidget {
             slivers: [
               // Header (static - no Obx needed)
               SliverToBoxAdapter(child: _buildHeader(context)),
-
-              // Search Bar (static - no Obx needed)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 8),
-                  child: SearchBarWidget(),
-                ),
-              ),
 
               // New Posts Banner (reactive - wrapped in Obx)
               Obx(() {
@@ -154,11 +147,12 @@ class HomePage extends StatelessWidget {
                           username: post.username,
                           location: post.location ?? '',
                           isCarousel: post.isCarousel,
+                          isOwner: post.isOwner,
                           imageUrl: post.mediaUrls.isNotEmpty
                               ? post.mediaUrls.first
                               : null,
                           imageUrls: post.mediaUrls,
-                          postId: post.isCarousel ? post.id : null,
+                          postId: post.id,
                           likeIcon: post.isLiked
                               ? Icons.favorite
                               : Icons.favorite_border,
@@ -169,15 +163,35 @@ class HomePage extends StatelessWidget {
                           commentCount: post.commentCount.toString(),
                           shareCount: post.shareCount.toString(),
                           caption: post.caption ?? '',
-                          captionCommentCount: post.commentCount.toString(),
-                         
-                         
-                         //like with like api
+                          //for save post
+                          isBookmarked: post.isSaved,
+                          onBookmarkTap: () {
+                            controller.toggleSave(post);
+                          },
+                          // for like
+                          // Like
                           onLikeTap: () {
                             controller.toggleLike(post);
                           },
+                          // for opeming the comment tile
+                          // Comment
+                          onCommentTap: () async {
+                            CommentController commentController;
 
+                            if (Get.isRegistered<CommentController>()) {
+                              commentController = Get.find<CommentController>();
+                            } else {
+                              commentController = Get.put(CommentController());
+                            }
 
+                            await commentController.loadComments(post.id);
+
+                            Get.bottomSheet(
+                              CommentSheet(postId: post.id),
+                              isScrollControlled: true,
+                              backgroundColor: Colors.white,
+                            );
+                          },
                         );
                       },
                       childCount:
