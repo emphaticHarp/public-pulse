@@ -7,7 +7,8 @@ import 'package:public_pulse/widget/post/post_caption.dart';
 class PostCard extends StatelessWidget {
   final String profileImage; //post header import
   final String username; //post header import
-  final String location; //post header import
+  final String authorId;
+  final String? location; //post header import
 
   final bool isCarousel; //post media import
   final bool isOwner;
@@ -31,7 +32,8 @@ class PostCard extends StatelessWidget {
     super.key,
     required this.profileImage,
     required this.username,
-    required this.location,
+    required this.authorId,
+    this.location,
 
     required this.isCarousel,
     required this.isOwner,
@@ -62,6 +64,7 @@ class PostCard extends StatelessWidget {
           PostHeader(
             profileImage: profileImage,
             username: username,
+            authorId: authorId,
             location: location,
             postId: postId,
             isOwner: isOwner,

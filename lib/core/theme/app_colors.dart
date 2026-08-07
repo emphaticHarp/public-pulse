@@ -152,6 +152,7 @@ class AppColors {
 
   static const Color black54 = Color(0x8A000000);
 
+  static const Color gray600 = Color.fromRGBO(158, 158, 158, 1);
 
   
 

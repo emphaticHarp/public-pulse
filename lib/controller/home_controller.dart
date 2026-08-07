@@ -6,6 +6,7 @@ import 'package:public_pulse/core/repository/post_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/core/cache/cache_manager.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
+import 'package:public_pulse/core/repository/follow_repository.dart';
 
 class HomeController extends GetxController {
   final RxInt currentIndex = 0.obs;
@@ -23,6 +24,8 @@ class HomeController extends GetxController {
 
   /// Home feed (everyone's posts)
   final RxList<PostModel> posts = <PostModel>[].obs;
+
+  final RxSet<String> followingIds = <String>{}.obs;
 
   /// Logged in user's posts
   final RxList<PostModel> myPosts = <PostModel>[].obs;
@@ -63,6 +66,8 @@ class HomeController extends GetxController {
 
       _startNewPostChecker();
       loadMyPosts();
+
+      loadFollowingIds();
 
       scrollController.addListener(_onScroll);
     }
@@ -266,6 +271,26 @@ class HomeController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> loadFollowingIds() async {
+    followingIds.value = await FollowRepository.instance.getFollowingIds();
+  }
+
+  Future<void> followUser(String profileId) async {
+    await FollowRepository.instance.followUser(profileId);
+
+    followingIds.add(profileId);
+
+    followingIds.refresh();
+  }
+
+  Future<void> unfollowUser(String profileId) async {
+    await FollowRepository.instance.unfollowUser(profileId);
+
+    followingIds.remove(profileId);
+
+    followingIds.refresh();
   }
 
   Future<void> toggleLike(PostModel post) async {
