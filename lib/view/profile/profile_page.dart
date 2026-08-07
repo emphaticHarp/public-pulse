@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 
 import '../../controller/profile_controller.dart';
 import '../../controller/edit_profile_controller.dart';
+import '../../controller/setting_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_font.dart';
 import '../../model/profile_model.dart';
 import '../../widget/profile/profile_widget.dart';
+import '../../view/setting/setting_page.dart';
 import 'edit_profile.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -19,6 +21,22 @@ class ProfilePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surfaceDefault,
+      appBar: AppBar(
+        backgroundColor: AppColors.surfaceDefault,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            color: AppColors.textPrimary,
+            tooltip: 'Settings',
+            onPressed: _openSettings,
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
       body: Obx(() {
         final profile = controller.profile.value;
         if (controller.isLoading.value || profile == null) {
@@ -145,6 +163,13 @@ class ProfilePage extends StatelessWidget {
     Get.delete<EditProfileController>(force: true);
     Get.put(EditProfileController());
     Get.to(() => const EditProfilePage());
+  }
+
+  void _openSettings() {
+    if (!Get.isRegistered<SettingController>()) {
+      Get.put(SettingController());
+    }
+    Get.to(() => const SettingPage());
   }
 }
 

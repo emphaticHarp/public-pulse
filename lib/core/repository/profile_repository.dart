@@ -100,7 +100,11 @@ class ProfileRepository {
   /// Already-absolute URLs (http/https) are returned unchanged so that
   /// OAuth avatar URLs work without modification.
   String resolveUrl(String path, {String bucket = _avatarBucket}) {
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    // Return absolute URLs (Google OAuth, CDN, etc.) unchanged.
+    // Checks 'http' prefix to handle both:
+    //   • https://  (normal)
+    //   • https:/   (single-slash edge case seen in Google OAuth avatar paths)
+    if (path.startsWith('http')) return path;
     final key = '$bucket/$path';
     return _urlCache[key] ??=
         '${_storage.from(bucket).getPublicUrl(path)}?t=${DateTime.now().millisecondsSinceEpoch}';
@@ -113,12 +117,6 @@ class ProfileRepository {
 
   // ── Followers / Following ─────────────────────────────────────────────────
 
-  /// Returns a cursor-paginated list of followers for [userId].
-  ///
-  /// Pass [afterCursor] (the `profiles.id` UUID of the last row on the
-  /// previous page) to advance; omit it (or pass `null`) for page one.
-  /// Results are ordered ascending by `follower_profile_id` for a stable
-  /// cursor across concurrent mutations.
   Future<List<FollowerModel>> getFollowers(
     String userId, {
     int limit = 10,
@@ -169,12 +167,6 @@ class ProfileRepository {
         .toList();
   }
 
-
-  /// Fetches both [follower_count] and [following_count] for [userId] in a
-  /// single round-trip from the `profiles` table.
-  ///
-  /// Prefer this over calling [getFollowersCount] + [getFollowingCount]
-  /// separately when you need both values at the same time (e.g. profile screen).
   Future<({int followers, int following})> getFollowCounts(
     String userId,
   ) async {

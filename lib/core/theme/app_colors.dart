@@ -8,7 +8,7 @@ class AppColors {
   static const Color loginAccentRed = Color.fromRGBO(226, 29, 72, 1);
 
   /// Onboarding/Splash accent red - used for buttons and highlights
-  static const Color accentRed = Color.fromARGB(255, 205, 12, 80);
+  static const Color accentRed = Color.fromRGBO(217, 33, 52, 0.83);
 
   // ── Surface Colors ────────────────────────────────────────────────────
   /// Primary white - used for card backgrounds and light surfaces
@@ -19,6 +19,7 @@ class AppColors {
 
   /// Back button background - very light gray
   static const Color buttonBackground = Color(0xFFF1F2F4);
+  
 
   // ── Text Colors ───────────────────────────────────────────────────────
   /// Slate 900 - dark text color for login page headings
@@ -78,6 +79,7 @@ class AppColors {
 
   static const Color divider = Color(0xFFF1F5F9); // slate-100
 
+
   // ── Create Post Page Colors ─────────────────────────────────────────────
   /// Create Post Red 600 - primary red for create post page
   static const Color createPostRed600 = Color.fromARGB(255, 205, 12, 80);
@@ -92,21 +94,55 @@ class AppColors {
   static const Color createPostGray300 = Color.fromARGB(255, 235, 234, 229);
 
   /// Create Post Gray 800 - dark gray for text
-  static const Color createPostGray800 = Color(0xFF1F2937);
+  static const Color createPostGray800 = Color.fromARGB(224, 15, 15, 16);
+
 
   // ── Login Page Specific Colors ───────────────────────────────────────
   /// Pure black - used for Apple sign-in button and dark UI elements
   static const Color pureBlack = Color.fromARGB(0, 34, 33, 33);
 
   /// Login box shadow color (black at ~8% opacity)
-  static const Color loginBoxShadow = Color.fromARGB(0, 23, 22, 22);
+  static const Color loginBoxShadow = Color.fromARGB(0, 18, 17, 17);
 
-  static const Color slate500 = Color(0xFF64748B);
+  static const Color slate500 = Color.fromARGB(255, 0, 0, 0);
+
 
   // ── Profile Page Colors ───────────────────────────────────────────────
   /// Success green - used for "username available" status on Edit Profile
-  static const Color profileSuccessGreen = Color.fromARGB(238, 19, 167, 105);
+  static const Color profileSuccessGreen = Color.fromARGB(255, 59, 207, 153);
 
   /// Fully transparent - used for inactive tab underline on Profile Screen
   static const Color transparent = Color.fromARGB(0, 23, 22, 22);
+
+
+  // setting page Colors ──────────────────────────────────────
+  /// Background - used for the main setting page background
+  static const Color background = Color(0xFFFAFAFA);
+
+  /// Surface - used for cards, dialogs, and container backgrounds
+  static const Color surface = Color(0xFFFFFFFF);
+
+  /// Primary text - used for main headings and titles
+  static const Color primaryText = Color(0xFF111827);
+
+  /// Secondary text - used for subtitles and descriptive text
+  static const Color secondaryText = Color(0xFF6B7280);
+
+  /// Icon color - standard color for icons
+  static const Color iconColor = Color(0xFF374151);
+
+  /// Divider color - used for lines between list items
+  static const Color dividerColor = Color(0xFFE5E7EB);
+
+  /// Icon background - circular background behind icons
+  static const Color iconBackground = Color(0xFFF3F4F6);
+
+  /// Success - used for active or success status indicators
+  static const Color success = Color(0xFF10B981);
+
+  /// Toggle red - used for destructive toggle switches
+  static const Color toggleRed = Color(0xFFEF4444);
+
+  /// Danger - used for destructive actions like delete, deactivate, or logout buttons
+  static const Color danger = Color(0xFFEF4444);
 }
