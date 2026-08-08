@@ -7,7 +7,7 @@ import '../../core/theme/app_font.dart';
 import '../../model/profile_model.dart';
 import '../../widget/profile/user_list_tile.dart';
 
-/// Followers / Following – cursor-paginated page.
+/// Followers / Following – client-side paginated page.
 class FollowersFollowingPage extends StatelessWidget {
   final int initialTab;
 
@@ -40,12 +40,14 @@ class FollowersFollowingPage extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            // ── Followers tab 
+            // ── Followers tab
             _UserList(
               isLoading: controller.isLoadingFollowers,
-              users: controller.followers,
-              hasNext: controller.hasNextFollowers,
-              hasPrev: controller.hasPrevFollowers,
+              pagedUsers: () => controller.pagedFollowers,
+              totalCount: () => controller.followers.length,
+              hasNext: () => controller.hasNextFollowers,
+              hasPrev: () => controller.hasPrevFollowers,
+              currentPage: controller.currentFollowersPage,
               onNext: () => controller.nextPage(isFollowers: true),
               onPrev: () => controller.prevPage(isFollowers: true),
               emptyMessage: 'No followers yet',
@@ -53,9 +55,11 @@ class FollowersFollowingPage extends StatelessWidget {
             // ── Following tab
             _UserList(
               isLoading: controller.isLoadingFollowing,
-              users: controller.following,
-              hasNext: controller.hasNextFollowing,
-              hasPrev: controller.hasPrevFollowing,
+              pagedUsers: () => controller.pagedFollowing,
+              totalCount: () => controller.following.length,
+              hasNext: () => controller.hasNextFollowing,
+              hasPrev: () => controller.hasPrevFollowing,
+              currentPage: controller.currentFollowingPage,
               onNext: () => controller.nextPage(isFollowers: false),
               onPrev: () => controller.prevPage(isFollowers: false),
               emptyMessage: 'Not following anyone yet',
@@ -67,7 +71,7 @@ class FollowersFollowingPage extends StatelessWidget {
   }
 }
 
-// ── Tab bar 
+// ── Tab bar
 class _FFTabBar extends StatelessWidget implements PreferredSizeWidget {
   final ValueChanged<int> onTabChanged;
 
@@ -93,21 +97,29 @@ class _FFTabBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 // ── Per-tab list with Prev / Next pagination bar
+//
+// `currentPage` is the RxInt the controller mutates on next/prev; reading
+// its `.value` inside Obx (via the getters below) is what makes this list
+// rebuild when the page changes.
 
 class _UserList extends StatelessWidget {
   final RxBool isLoading;
-  final RxList<FollowerModel> users;
-  final RxBool hasNext;
-  final RxBool hasPrev;
+  final List<FollowerModel> Function() pagedUsers;
+  final int Function() totalCount;
+  final bool Function() hasNext;
+  final bool Function() hasPrev;
+  final RxInt currentPage;
   final VoidCallback onNext;
   final VoidCallback onPrev;
   final String emptyMessage;
 
   const _UserList({
     required this.isLoading,
-    required this.users,
+    required this.pagedUsers,
+    required this.totalCount,
     required this.hasNext,
     required this.hasPrev,
+    required this.currentPage,
     required this.onNext,
     required this.onPrev,
     required this.emptyMessage,
@@ -116,17 +128,20 @@ class _UserList extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Obx(() {
     final loading = isLoading.value;
-    final list = users;
+    // ignore: unused_local_variable
+    final page = currentPage.value; // subscribes Obx to page changes
+    final total = totalCount();
+    final list = pagedUsers();
 
-    // ── Full-page loader (first page not yet loaded) 
-    if (loading && list.isEmpty) {
+    // ── Full-page loader (first page not yet loaded)
+    if (loading && total == 0) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.brand),
       );
     }
 
-    // ── Empty state 
-    if (!loading && list.isEmpty) {
+    // ── Empty state
+    if (!loading && total == 0) {
       return Center(
         child: Text(
           emptyMessage,
@@ -150,7 +165,7 @@ class _UserList extends StatelessWidget {
           ),
         ),
 
-        // Inline page-turn progress indicator (shown while fetching).
+        // Inline page-turn progress indicator (shown while (re)loading).
         if (loading)
           const LinearProgressIndicator(
             color: AppColors.brand,
@@ -160,8 +175,8 @@ class _UserList extends StatelessWidget {
 
         // Prev / Next navigation bar.
         _PaginationBar(
-          hasPrev: hasPrev.value,
-          hasNext: hasNext.value,
+          hasPrev: hasPrev(),
+          hasNext: hasNext(),
           loading: loading,
           onPrev: onPrev,
           onNext: onNext,
@@ -204,14 +219,14 @@ class _PaginationBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // ── Previous button 
+          // ── Previous button
           _NavButton(
             label: '← Previous',
             enabled: hasPrev && !loading,
             onTap: onPrev,
           ),
 
-          // ── Next button 
+          // ── Next button
           _NavButton(
             label: 'Next →',
             enabled: hasNext && !loading,
@@ -240,13 +255,13 @@ class _NavButton extends StatelessWidget {
       onPressed: enabled ? onTap : null,
       style: TextButton.styleFrom(
         foregroundColor: AppColors.brand,
-        disabledForegroundColor: const Color(0x6664748B), 
+        disabledForegroundColor: const Color(0x6664748B),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
             color: enabled
-                ? const Color(0x99E6192E) 
+                ? const Color(0x99E6192E)
                 : AppColors.divider,
             width: 1,
           ),
@@ -256,7 +271,7 @@ class _NavButton extends StatelessWidget {
         label,
         style: AppTextStyles.bodyMedium.copyWith(
           fontWeight: FontWeight.w600,
-          color: enabled ? AppColors.brand : const Color(0x6664748B), 
+          color: enabled ? AppColors.brand : const Color(0x6664748B),
         ),
       ),
     );

@@ -52,7 +52,7 @@ Future<void> main() async {
   Get.put(AuthService(), permanent: true);
 
   Get.put(NetworkController());
-  Get.lazyPut<HomeController>(() => HomeController());
+  Get.put(HomeController());
   Get.lazyPut<LoginController>(() => LoginController());
   Get.lazyPut<NotificationController>(() => NotificationController());
   Get.lazyPut<ProfileController>(() => ProfileController());
