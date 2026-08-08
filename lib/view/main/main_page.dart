@@ -15,48 +15,60 @@ class MainPage extends StatelessWidget {
 
   final HomeController controller = Get.find<HomeController>();
 
-  // Lazily create each page only when it is opened for the first time, then keep it in memory.
+  /// Home is created immediately.
+  /// Other pages are created only when opened for the first time.
   final List<Widget?> pages = [HomePage(), null, null, null];
+
+  Widget _getPage(int index) {
+    if (pages[index] != null) {
+      return pages[index]!;
+    }
+
+    switch (index) {
+      case 1:
+        pages[1] = ExplorePage();
+        break;
+
+      case 2:
+        pages[2] = NotificationPage();
+        break;
+
+      case 3:
+        pages[3] =  ProfilePage();
+        break;
+    }
+
+    return pages[index]!;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => Scaffold(
-        body: Builder(
-          builder: (_) {
-            final index = controller.currentIndex.value;
+    debugPrint('[MAIN] MainPage Build');
 
-            // Create the page only the first time it is opened.
-            if (pages[index] == null) {
-              switch (index) {
-                case 1:
-                  pages[1] =  ExplorePage();
-                  break;
+    return Obx(() {
+      final index = controller.currentIndex.value;
 
-                case 2:
-                  pages[2] =  NotificationPage(); // was ReelsPage
-                  break;
+      // Create the selected page only when it is first opened.
+      _getPage(index);
 
-                case 3:
-                  pages[3] = const ProfilePage();
-                  break;
-              }
-            }
-
-            return IndexedStack(
-              index: index,
-              children: pages.map((page) => page ?? const SizedBox()).toList(),
-            );
-          },
+      return Scaffold(
+        body: IndexedStack(
+          index: index,
+          children: pages
+              .map((page) => page ?? const SizedBox.shrink())
+              .toList(),
         ),
-
         bottomNavigationBar: AppBottomNavBar(
-          currentIndex: controller.currentIndex.value,
-          onTap: (index) {
-            controller.currentIndex.value = index;
+          currentIndex: index,
+          onTap: (newIndex) {
+            if (newIndex == index) return;
+
+            controller.currentIndex.value = newIndex;
+
+            debugPrint('[MAIN] Tab changed: $index → $newIndex');
           },
         ),
-      ),
-    );
+      );
+    });
   }
 }

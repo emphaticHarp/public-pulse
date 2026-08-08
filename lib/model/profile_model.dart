@@ -75,6 +75,10 @@ class ProfileModel {
     'bio': bio,
     'avatar_path': avatarPath,
     'cover_path': coverPath,
+    'created_at': createdAt?.toIso8601String(),
+    'updated_at': updatedAt?.toIso8601String(),
+    'follower_count': followerCount,
+    'following_count': followingCount,
   };
 
   ProfileModel copyWith({

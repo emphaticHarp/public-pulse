@@ -16,8 +16,8 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = ProfileController.to;       ///load
-    controller.ensureProfileLoaded();
+    debugPrint("📱 ProfilePage Build");
+    final controller = ProfileController.to;
 
     return Scaffold(
       backgroundColor: AppColors.surfaceDefault,
@@ -46,112 +46,116 @@ class ProfilePage extends StatelessWidget {
         }
 
         return SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ProfileHeaderImage(
-                  coverImage: resolveProfileImage(url: controller.coverUrl),
-                  profileImage: resolveProfileImage(url: controller.avatarUrl),
-                ),
-                const SizedBox(height: 0),
-                Transform.translate(
-                  offset: const Offset(0, -30),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 130, right: 15),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ProfileStatColumn(
-                          count: controller.postCount.value,
-                          label: 'Posts',
-                        ),
-                        GestureDetector(
-                          onTap: () => controller.openFollowersFollowing(0),
-                          behavior: HitTestBehavior.opaque,
-                          child: ProfileStatColumn(
-                            count: controller.followerCount.value,
-                            label: 'Followers',
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => controller.openFollowersFollowing(1),
-                          behavior: HitTestBehavior.opaque,
-                          child: ProfileStatColumn(
-                            count: controller.followingCount.value,
-                            label: 'Following',
-                          ),
-                        ),
-                      ],
-                    ),
+          child: RefreshIndicator(
+            onRefresh: controller.refreshProfile,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ProfileHeaderImage(
+                    coverImage: resolveProfileImage(url: controller.coverUrl),
+                    profileImage: resolveProfileImage(url: controller.avatarUrl),
                   ),
-                ),
-                const SizedBox(height: 3),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                  const SizedBox(height: 0),
+                  Transform.translate(
+                    offset: const Offset(0, -30),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 130, right: 15),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Flexible(
-                            child: Text(
-                              (profile.displayName?.isNotEmpty ?? false)
-                                  ? profile.displayName!
-                                  : profile.username,
-                              style: AppTextStyles.loginHeading.copyWith(
-                                color: AppColors.textPrimary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                          ProfileStatColumn(
+                            count: controller.postCount.value,
+                            label: 'Posts',
+                          ),
+                          GestureDetector(
+                            onTap: () => controller.openFollowersFollowing(0),
+                            behavior: HitTestBehavior.opaque,
+                            child: ProfileStatColumn(
+                              count: controller.followerCount.value,
+                              label: 'Followers',
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => controller.openFollowersFollowing(1),
+                            behavior: HitTestBehavior.opaque,
+                            child: ProfileStatColumn(
+                              count: controller.followingCount.value,
+                              label: 'Following',
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '@${profile.username}',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                (profile.displayName?.isNotEmpty ?? false)
+                                    ? profile.displayName!
+                                    : profile.username,
+                                style: AppTextStyles.loginHeading.copyWith(
+                                  color: AppColors.textPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      if ((profile.bio ?? '').isNotEmpty)
+                        const SizedBox(height: 4),
                         Text(
-                          profile.bio!,
+                          '@${profile.username}',
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.textSecondary,
                           ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        )
-                      else
-                        const SizedBox(height: 20),
-                      const SizedBox(height: 8),
-                      AppOutlinedButton(
-                        label: 'Edit Profile',
-                        icon: Icons.edit_outlined,
-                        onTap: () => _openEditProfile(),
-                      ),
-                    ],
+                        ),
+                        const SizedBox(height: 8),
+                        if ((profile.bio ?? '').isNotEmpty)
+                          Text(
+                            profile.bio!,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        else
+                          const SizedBox(height: 20),
+                        const SizedBox(height: 8),
+                        AppOutlinedButton(
+                          label: 'Edit Profile',
+                          icon: Icons.edit_outlined,
+                          onTap: () => _openEditProfile(),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Obx(
-                  () => ProfileTabSelector(
-                    selected: controller.selectedTab.value,
-                    onChanged: controller.changeTab,
+                  const SizedBox(height: 20),
+                  Obx(
+                    () => ProfileTabSelector(
+                      selected: controller.selectedTab.value,
+                      onChanged: controller.changeTab,
+                    ),
                   ),
-                ),
-                const Divider(height: 1, color: AppColors.divider),
-                Obx(
-                  () => _TabContent(
-                    tab: controller.selectedTab.value,
-                    photoPosts: controller.photoPosts,
-                    videoPosts: controller.videoPosts,
-                    savedPosts: controller.savedPosts,
+                  const Divider(height: 1, color: AppColors.divider),
+                  Obx(
+                    () => _TabContent(
+                      tab: controller.selectedTab.value,
+                      photoPosts: controller.photoPosts,
+                      videoPosts: controller.videoPosts,
+                      savedPosts: controller.savedPosts,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -191,15 +195,15 @@ class _TabContent extends StatelessWidget {
     final (urls, icon, emptyMessage) = switch (tab) {
       ProfileTab.photos => (photoPosts, Icons.photo_outlined, 'No photos yet'),
       ProfileTab.videos => (
-        videoPosts,
-        Icons.videocam_outlined,
-        'No videos yet',
-      ),
+          videoPosts,
+          Icons.videocam_outlined,
+          'No videos yet',
+        ),
       ProfileTab.saved => (
-        savedPosts,
-        Icons.bookmark_border,
-        'No saved posts yet',
-      ),
+          savedPosts,
+          Icons.bookmark_border,
+          'No saved posts yet',
+        ),
     };
 
     if (urls.isEmpty) {

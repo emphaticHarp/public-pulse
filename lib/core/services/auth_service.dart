@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:public_pulse/core/services/current_user_service.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -142,29 +143,25 @@ class AuthService {
 
   /// Get current logged-in user's profile
   Future<Map<String, dynamic>?> getCurrentProfile() async {
-    try {
-      final user = _supabase.auth.currentUser;
+    final user = _supabase.auth.currentUser;
 
-      debugPrint("Current User ID: ${user?.id}");
-      debugPrint("Current User Email: ${user?.email}");
+    if (user == null) return null;
 
-      final result = await _supabase.from('profiles').select('*');
+    final profile = await _supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      debugPrint("Profiles returned: $result");
+    if (profile != null) {
+      final profileId = profile['id'] as String?;
 
-      final profile = await _supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user!.id)
-          .maybeSingle();
-
-      debugPrint("Profile found: $profile");
-
-      return profile;
-    } catch (e) {
-      debugPrint("getCurrentProfile ERROR: $e");
-      return null;
+      if (profileId != null) {
+        CurrentUserService.instance.setProfileId(profileId);
+      }
     }
+
+    return profile;
   }
 
   Future<bool> verifyLoginCode(String code) async {
