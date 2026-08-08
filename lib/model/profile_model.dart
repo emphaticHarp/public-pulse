@@ -17,11 +17,25 @@ class FollowerModel {
 
   factory FollowerModel.fromJson(Map<String, dynamic> json) {
     final profile = json['profiles'] as Map<String, dynamic>? ?? json;
+    final userId = (profile['user_id'] ?? json['user_id'] ?? '') as String;
+    final username = (profile['username'] ?? '') as String;
+    final displayName = profile['display_name'] as String?;
+    final avatarPath = profile['avatar_path'] as String?;
+
+    // Debug logging
+    assert(() {
+      print('[FF_MODEL] fromJson - input json keys: ${json.keys.toList()}');
+      print('[FF_MODEL] fromJson - profiles key exists: ${json.containsKey("profiles")}');
+      print('[FF_MODEL] fromJson - profile: $profile');
+      print('[FF_MODEL] fromJson - parsed: userId=$userId, username=$username, displayName=$displayName, avatarPath=$avatarPath');
+      return true;
+    }());
+
     return FollowerModel(
-      userId: (profile['user_id'] ?? json['user_id'] ?? '') as String,
-      username: (profile['username'] ?? '') as String,
-      displayName: profile['display_name'] as String?,
-      avatarPath: profile['avatar_path'] as String?,
+      userId: userId,
+      username: username,
+      displayName: displayName,
+      avatarPath: avatarPath,
     );
   }
 }

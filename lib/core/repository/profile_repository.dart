@@ -2,6 +2,7 @@ import 'dart:io';
 import '../compression/image_compressor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../model/profile_model.dart';
+import 'package:flutter/foundation.dart';
 
 /// Singleton repository for all profile-related Supabase operations.
 ///
@@ -16,7 +17,7 @@ class ProfileRepository {
 
   // ── Supabase shortcuts ────────────────────────────────────────────────────
   final _db = Supabase.instance.client.from('profiles');
-  final _follows = Supabase.instance.client.from('user_follows');
+  final _followChunks = Supabase.instance.client.from('user_follow2_chunked');
   final _storage = Supabase.instance.client.storage;
   final _auth = Supabase.instance.client.auth;
 
@@ -106,8 +107,7 @@ class ProfileRepository {
     //   • https:/   (single-slash edge case seen in Google OAuth avatar paths)
     if (path.startsWith('http')) return path;
     final key = '$bucket/$path';
-   return _urlCache[key] ??=
-    _storage.from(bucket).getPublicUrl(path);
+    return _urlCache[key] ??= _storage.from(bucket).getPublicUrl(path);
   }
 
   /// Evicts [path] from the URL cache so the next [resolveUrl] call produces
@@ -117,56 +117,116 @@ class ProfileRepository {
 
   // ── Followers / Following ─────────────────────────────────────────────────
 
-  Future<List<FollowerModel>> getFollowers(
-    String userId, {
-    int limit = 10,
-    String? afterCursor,
-  }) async {
-    // Filter modifiers must come before ordering/limiting (Supabase SDK rule).
-    var q = _follows
-        .select(
-          'follower_profile_id,'
-          'profiles!user_follows_follower_profile_id_fkey'
-          '(user_id, username, display_name, avatar_path)',
-        )
-        .eq('following_profile_id', userId);
+  Future<List<FollowerModel>> getFollowers(String userId) async {
+  debugPrint('[FF_REPO] getFollowers - userId: $userId');
 
-    if (afterCursor != null) q = q.gt('follower_profile_id', afterCursor);
+  final data = await _followChunks
+      .select('follower_profile_ids')
+      .eq('profile_id', userId)
+      .order('chunk', ascending: true);
 
-    final data = await q
-        .order('follower_profile_id', ascending: true)
-        .limit(limit);
-    return (data as List)
-        .map((e) => FollowerModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+  debugPrint('[FF_REPO] Follower chunks: $data');
+
+  final Set<String> followerIds = {};
+
+  for (final row in data as List) {
+    final ids = row['follower_profile_ids'];
+
+    if (ids is List) {
+      for (final id in ids) {
+        if (id != null) {
+          followerIds.add(id.toString());
+        }
+      }
+    }
   }
+
+  debugPrint(
+    '[FF_REPO] Found ${followerIds.length} follower profile IDs',
+  );
+
+  if (followerIds.isEmpty) {
+    return [];
+  }
+
+  final profiles = await _db
+      .select(
+        'user_id, username, display_name, avatar_path',
+      )
+      .inFilter('user_id', followerIds.toList());
+
+  debugPrint('[FF_REPO] Follower profiles: $profiles');
+
+  return (profiles as List).map((e) {
+    final profile = ProfileModel.fromJson(
+      e as Map<String, dynamic>,
+    );
+
+    return FollowerModel(
+      userId: profile.id,
+      username: profile.username,
+      displayName: profile.displayName,
+      avatarPath: profile.avatarPath,
+    );
+  }).toList();
+}
 
   /// Returns a cursor-paginated list of accounts that [userId] is following.
   ///
   /// Pass [afterCursor] to advance; omit for page one.
-  Future<List<FollowerModel>> getFollowing(
-    String userId, {
-    int limit = 10,
-    String? afterCursor,
-  }) async {
-    var q = _follows
-        .select(
-          'following_profile_id,'
-          'profiles!user_follows_following_profile_id_fkey'
-          '(user_id, username, display_name, avatar_path)',
-        )
-        .eq('follower_profile_id', userId);
+ Future<List<FollowerModel>> getFollowing(String userId) async {
+  debugPrint('[FF_REPO] getFollowing - userId: $userId');
 
-    if (afterCursor != null) q = q.gt('following_profile_id', afterCursor);
+  final data = await _followChunks
+      .select('following_profile_ids')
+      .eq('profile_id', userId)
+      .order('chunk', ascending: true);
 
-    final data = await q
-        .order('following_profile_id', ascending: true)
-        .limit(limit);
-    return (data as List)
-        .map((e) => FollowerModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+  debugPrint('[FF_REPO] Following chunks: $data');
+
+  final Set<String> followingIds = {};
+
+  for (final row in data as List) {
+    final ids = row['following_profile_ids'];
+
+    if (ids is List) {
+      for (final id in ids) {
+        if (id != null) {
+          followingIds.add(id.toString());
+        }
+      }
+    }
   }
 
+  debugPrint(
+    '[FF_REPO] Found ${followingIds.length} following profile IDs',
+  );
+
+  if (followingIds.isEmpty) {
+    return [];
+  }
+
+  final profiles = await _db
+      .select(
+        'user_id, username, display_name, avatar_path',
+      )
+      .inFilter('user_id', followingIds.toList());
+
+  debugPrint('[FF_REPO] Following profiles: $profiles');
+
+  return (profiles as List).map((e) {
+    final profile = ProfileModel.fromJson(
+      e as Map<String, dynamic>,
+    );
+
+    return FollowerModel(
+      userId: profile.id,
+      username: profile.username,
+      displayName: profile.displayName,
+      avatarPath: profile.avatarPath,
+    );
+  }).toList();
+}
   /// Fetches both [follower_count] and [following_count] for [userId] in a
   /// single round-trip from the `profiles` table.
   ///
