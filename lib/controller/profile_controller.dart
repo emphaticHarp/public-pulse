@@ -44,16 +44,15 @@ class ProfileController extends GetxController {
 
     if (cachedProfile != null) {
       debugPrint('[PROFILE] Loaded profile from Hive');
+      debugPrint('[PROFILE] Cached user_id: ${cachedProfile.id}');
 
       profile.value = cachedProfile;
 
       followerCount.value = cachedProfile.followerCount ?? 0;
       followingCount.value = cachedProfile.followingCount ?? 0;
 
-      _profileLoaded = true;
-      isLoading.value = false;
-
-      return;
+      // Do NOT return here.
+      // Continue to Supabase so the profile ID and counts are verified.
     }
 
     // --------------------------------------------------
@@ -66,7 +65,6 @@ class ProfileController extends GetxController {
     try {
       final fetchedProfile = await _repo.getProfile();
 
-    
       final counts = await _repo.getFollowCounts(fetchedProfile.id);
 
       final profileWithCounts = ProfileModel(
@@ -229,17 +227,22 @@ class ProfileController extends GetxController {
   /// Navigates to the Followers/Following page with the given initial tab.
   /// is viewed for the first time (or after an explicit invalidation).
   void openFollowersFollowing(int initialTab) {
-    final uid = profile.value?.id;
-    if (uid == null) return;
+    final currentProfile = profile.value;
+    if (currentProfile == null) return;
 
-    // Reuse the existing controller; create only on first visit.
+    final uid = currentProfile.id;
+
+    debugPrint('[PROFILE] Opening Followers/Following');
+    debugPrint('[PROFILE] Profile user_id: $uid');
+
     if (!Get.isRegistered<FollowersFollowingController>()) {
       Get.put(FollowersFollowingController(userId: uid));
     }
 
     final ffController = FollowersFollowingController.to;
-    // switchTab is a no-op when the list is already cached.
+
     ffController.switchTab(initialTab);
+
     Get.to(() => FollowersFollowingPage(initialTab: initialTab));
   }
 

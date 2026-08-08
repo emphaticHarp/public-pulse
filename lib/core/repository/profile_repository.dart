@@ -118,115 +118,121 @@ class ProfileRepository {
   // ── Followers / Following ─────────────────────────────────────────────────
 
   Future<List<FollowerModel>> getFollowers(String userId) async {
-  debugPrint('[FF_REPO] getFollowers - userId: $userId');
+    debugPrint('[FF_REPO] ===== GET FOLLOWERS =====');
+    final profileId = await _getProfileIdFromUserId(userId);
 
-  final data = await _followChunks
-      .select('follower_profile_ids')
-      .eq('profile_id', userId)
-      .order('chunk', ascending: true);
+    debugPrint('[FF_REPO] actual profile_id = $profileId');
 
-  debugPrint('[FF_REPO] Follower chunks: $data');
+    final data = await _followChunks
+        .select('profile_id, chunk, follower_profile_ids')
+        .eq('profile_id', profileId)
+        .order('chunk', ascending: true);
+    debugPrint('[FF_REPO] Chunk rows = $data');
 
-  final Set<String> followerIds = {};
+    final Set<String> followerIds = {};
 
-  for (final row in data as List) {
-    final ids = row['follower_profile_ids'];
+    for (final row in data) {
+      debugPrint('[FF_REPO] Row = $row');
 
-    if (ids is List) {
-      for (final id in ids) {
-        if (id != null) {
-          followerIds.add(id.toString());
+      final ids = row['follower_profile_ids'];
+
+      if (ids is List) {
+        debugPrint('[FF_REPO] follower_profile_ids = $ids');
+
+        for (final id in ids) {
+          if (id != null) {
+            followerIds.add(id.toString());
+          }
         }
       }
     }
+
+    debugPrint('[FF_REPO] Total follower IDs = ${followerIds.length}');
+    debugPrint('[FF_REPO] IDs = $followerIds');
+
+    if (followerIds.isEmpty) {
+      return [];
+    }
+
+    final profiles = await _db
+        .select('user_id, username, display_name, avatar_path')
+        .inFilter('user_id', followerIds.toList());
+
+    debugPrint('[FF_REPO] Profiles returned = $profiles');
+
+    return profiles.map<FollowerModel>((row) {
+      return FollowerModel(
+        userId: row['user_id'] as String,
+        username: row['username'] as String? ?? '',
+        displayName: row['display_name'] as String?,
+        avatarPath: row['avatar_path'] as String?,
+      );
+    }).toList();
   }
 
-  debugPrint(
-    '[FF_REPO] Found ${followerIds.length} follower profile IDs',
-  );
+  Future<String> _getProfileIdFromUserId(String userId) async {
+    final data = await _db.select('id').eq('user_id', userId).single();
 
-  if (followerIds.isEmpty) {
-    return [];
+    return data['id'] as String;
   }
-
-  final profiles = await _db
-      .select(
-        'user_id, username, display_name, avatar_path',
-      )
-      .inFilter('user_id', followerIds.toList());
-
-  debugPrint('[FF_REPO] Follower profiles: $profiles');
-
-  return (profiles as List).map((e) {
-    final profile = ProfileModel.fromJson(
-      e as Map<String, dynamic>,
-    );
-
-    return FollowerModel(
-      userId: profile.id,
-      username: profile.username,
-      displayName: profile.displayName,
-      avatarPath: profile.avatarPath,
-    );
-  }).toList();
-}
 
   /// Returns a cursor-paginated list of accounts that [userId] is following.
   ///
   /// Pass [afterCursor] to advance; omit for page one.
- Future<List<FollowerModel>> getFollowing(String userId) async {
-  debugPrint('[FF_REPO] getFollowing - userId: $userId');
+  Future<List<FollowerModel>> getFollowing(String userId) async {
+    debugPrint('[FF_REPO] ===== GET FOLLOWING =====');
+    final profileId = await _getProfileIdFromUserId(userId);
 
-  final data = await _followChunks
-      .select('following_profile_ids')
-      .eq('profile_id', userId)
-      .order('chunk', ascending: true);
+    debugPrint('[FF_REPO] actual profile_id = $profileId');
 
-  debugPrint('[FF_REPO] Following chunks: $data');
+    final data = await _followChunks
+        .select('profile_id, chunk, following_profile_ids')
+        .eq('profile_id', profileId)
+        .order('chunk', ascending: true);
 
-  final Set<String> followingIds = {};
+    debugPrint('[FF_REPO] Chunk rows = $data');
 
-  for (final row in data as List) {
-    final ids = row['following_profile_ids'];
+    final Set<String> followingIds = {};
 
-    if (ids is List) {
-      for (final id in ids) {
-        if (id != null) {
-          followingIds.add(id.toString());
+    for (final row in data) {
+      debugPrint('[FF_REPO] Row = $row');
+
+      final ids = row['following_profile_ids'];
+
+      if (ids is List) {
+        debugPrint('[FF_REPO] following_profile_ids = $ids');
+
+        for (final id in ids) {
+          if (id != null) {
+            followingIds.add(id.toString());
+          }
         }
       }
     }
+
+    debugPrint('[FF_REPO] Total following IDs = ${followingIds.length}');
+    debugPrint('[FF_REPO] IDs = $followingIds');
+
+    if (followingIds.isEmpty) {
+      return [];
+    }
+
+    final profiles = await _db
+        .select('user_id, username, display_name, avatar_path')
+        .inFilter('user_id', followingIds.toList());
+
+    debugPrint('[FF_REPO] Profiles returned = $profiles');
+
+    return profiles.map<FollowerModel>((row) {
+      return FollowerModel(
+        userId: row['user_id'] as String,
+        username: row['username'] as String? ?? '',
+        displayName: row['display_name'] as String?,
+        avatarPath: row['avatar_path'] as String?,
+      );
+    }).toList();
   }
 
-  debugPrint(
-    '[FF_REPO] Found ${followingIds.length} following profile IDs',
-  );
-
-  if (followingIds.isEmpty) {
-    return [];
-  }
-
-  final profiles = await _db
-      .select(
-        'user_id, username, display_name, avatar_path',
-      )
-      .inFilter('user_id', followingIds.toList());
-
-  debugPrint('[FF_REPO] Following profiles: $profiles');
-
-  return (profiles as List).map((e) {
-    final profile = ProfileModel.fromJson(
-      e as Map<String, dynamic>,
-    );
-
-    return FollowerModel(
-      userId: profile.id,
-      username: profile.username,
-      displayName: profile.displayName,
-      avatarPath: profile.avatarPath,
-    );
-  }).toList();
-}
   /// Fetches both [follower_count] and [following_count] for [userId] in a
   /// single round-trip from the `profiles` table.
   ///
