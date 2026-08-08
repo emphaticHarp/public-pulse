@@ -145,8 +145,7 @@ class AppColors {
 
   /// Danger - used for destructive actions like delete, deactivate, or logout buttons
   static const Color danger = Color(0xFFEF4444);
-}
-  static const Color grayshade200 = Color(0xFFEEEEEE);
+   static const Color grayshade200 = Color(0xFFEEEEEE);
 
   static const Color gray700 = Color(0xFF374151);
 
@@ -154,7 +153,9 @@ class AppColors {
 
   static const Color gray600 = Color.fromRGBO(158, 158, 158, 1);
 
+}
+ 
   
 
 
-}
+

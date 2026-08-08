@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:public_pulse/core/services/current_user_service.dart';
 
 class FollowRepository {
   FollowRepository._();
@@ -12,13 +13,11 @@ class FollowRepository {
 
     if (user == null) return {};
 
-    final profile = await _client
-        .from('profiles')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+    final profileId = await CurrentUserService.instance.getProfileId();
 
-    final profileId = profile['id'];
+    if (profileId == null) {
+      return <String>{};
+    }
 
     final rows = await _client
         .from('user_follow2_chunked')
@@ -38,17 +37,24 @@ class FollowRepository {
     return ids;
   }
 
-  Future<void> followUser(String followingProfileId) async {
+  Future followUser(String followingProfileId) async {
     await _client.rpc(
       'follow_user',
       params: {'p_following_profile_id': followingProfileId},
     );
   }
 
-  Future<void> unfollowUser(String followingProfileId) async {
-    await _client.rpc(
-      'unfollow_user',
-      params: {'p_following_profile_id': followingProfileId},
-    );
+  Future<bool> unfollowUser(String followingProfileId) async {
+    try {
+      await _client.rpc(
+        'unfollow_user',
+        params: {'p_following_profile_id': followingProfileId},
+      );
+
+      return true;
+    } catch (e) {
+      print("Unfollow Error: $e");
+      return false;
+    }
   }
 }

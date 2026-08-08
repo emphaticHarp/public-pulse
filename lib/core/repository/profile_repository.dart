@@ -106,8 +106,8 @@ class ProfileRepository {
     //   • https:/   (single-slash edge case seen in Google OAuth avatar paths)
     if (path.startsWith('http')) return path;
     final key = '$bucket/$path';
-    return _urlCache[key] ??=
-        '${_storage.from(bucket).getPublicUrl(path)}?t=${DateTime.now().millisecondsSinceEpoch}';
+   return _urlCache[key] ??=
+    _storage.from(bucket).getPublicUrl(path);
   }
 
   /// Evicts [path] from the URL cache so the next [resolveUrl] call produces

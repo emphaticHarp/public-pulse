@@ -1,11 +1,21 @@
 import 'package:get/get.dart';
-import '../model/profile_model.dart';
-import '../core/repository/profile_repository.dart';
-import 'followers_following_controller.dart';
-import '../view/profile/followers_following_page.dart';
+import 'package:public_pulse/model/profile_model.dart';
+import 'package:flutter/foundation.dart';
+import 'package:public_pulse/core/repository/profile_repository.dart';
+import 'package:public_pulse/controller/followers_following_controller.dart';
+import 'package:public_pulse/view/profile/followers_following_page.dart';
+
+import 'package:public_pulse/core/cache/cache_manager.dart';
 
 class ProfileController extends GetxController {
   static ProfileController get to => Get.find();
+
+  @override
+  void onInit() {
+    super.onInit();
+    debugPrint("🔥 ProfileController Created");
+    ensureProfileLoaded();
+  }
 
   final ProfileRepository _repo = ProfileRepository.instance;
 
@@ -24,28 +34,143 @@ class ProfileController extends GetxController {
 
   bool _profileLoaded = false;
 
-  /// Loads profile only on first request; returns immediately on cache hit.
   Future<void> ensureProfileLoaded() async {
     if (_profileLoaded) return;
-    _profileLoaded = true;
-    isLoading(true);
+
+    // --------------------------------------------------
+    // 1. Load profile from Hive immediately
+    // --------------------------------------------------
+    final cachedProfile = CacheManager.getCachedUserProfile();
+
+    if (cachedProfile != null) {
+      debugPrint('[PROFILE] Loaded profile from Hive');
+
+      profile.value = cachedProfile;
+
+      followerCount.value = cachedProfile.followerCount ?? 0;
+      followingCount.value = cachedProfile.followingCount ?? 0;
+
+      _profileLoaded = true;
+      isLoading.value = false;
+
+      return;
+    }
+
+    // --------------------------------------------------
+    // 2. No cache -> fetch from Supabase
+    // --------------------------------------------------
+    debugPrint('[PROFILE] No cache -> fetching from Supabase');
+
+    isLoading.value = true;
+
     try {
-      profile.value = await _repo.getProfile();
-      final uid = profile.value!.id;
-      final counts = await _repo.getFollowCounts(uid);
+      final fetchedProfile = await _repo.getProfile();
+
+    
+      final counts = await _repo.getFollowCounts(fetchedProfile.id);
+
+      final profileWithCounts = ProfileModel(
+        id: fetchedProfile.id,
+        username: fetchedProfile.username,
+        displayName: fetchedProfile.displayName,
+        bio: fetchedProfile.bio,
+        avatarPath: fetchedProfile.avatarPath,
+        coverPath: fetchedProfile.coverPath,
+        createdAt: fetchedProfile.createdAt,
+        updatedAt: fetchedProfile.updatedAt,
+        followerCount: counts.followers,
+        followingCount: counts.following,
+      );
+
+      profile.value = profileWithCounts;
+
       followerCount.value = counts.followers;
       followingCount.value = counts.following;
-    } catch (e) {
+
+      await CacheManager.cacheUserProfile(profileWithCounts);
+
+      _profileLoaded = true;
+
+      debugPrint('[PROFILE] Profile fetched and cached');
+    } catch (e, stackTrace) {
       _profileLoaded = false;
-      errorMessage('Failed to load profile.');
+
+      errorMessage.value = 'Failed to load profile.';
+
+      debugPrint('[PROFILE] Load error: $e');
+      debugPrintStack(stackTrace: stackTrace);
     } finally {
-      isLoading(false);
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> refreshProfile() async {
+    final currentProfile = profile.value;
+
+    if (currentProfile == null) {
+      return;
+    }
+
+    debugPrint('[PROFILE] Pull-to-refresh started');
+
+    try {
+      final uid = currentProfile.id;
+
+      // --------------------------------------------------
+      // Fetch latest profile
+      // --------------------------------------------------
+      final updatedProfile = await _repo.getProfile();
+
+      // --------------------------------------------------
+      // Fetch latest follower/following counts
+      // --------------------------------------------------
+      final counts = await _repo.getFollowCounts(uid);
+
+      // --------------------------------------------------
+      // Create updated model with counts
+      // --------------------------------------------------
+      final profileWithCounts = ProfileModel(
+        id: updatedProfile.id,
+        username: updatedProfile.username,
+        displayName: updatedProfile.displayName,
+        bio: updatedProfile.bio,
+        avatarPath: updatedProfile.avatarPath,
+        coverPath: updatedProfile.coverPath,
+        createdAt: updatedProfile.createdAt,
+        updatedAt: updatedProfile.updatedAt,
+        followerCount: counts.followers,
+        followingCount: counts.following,
+      );
+
+      // --------------------------------------------------
+      // Update memory
+      // --------------------------------------------------
+      profile.value = profileWithCounts;
+
+      followerCount.value = counts.followers;
+      followingCount.value = counts.following;
+
+      // --------------------------------------------------
+      // Update Hive
+      // --------------------------------------------------
+      await CacheManager.cacheUserProfile(profileWithCounts);
+
+      debugPrint('[PROFILE] Refresh complete → Hive updated');
+    } catch (e, stackTrace) {
+      debugPrint('[PROFILE] Refresh failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      errorMessage('Failed to refresh profile.');
     }
   }
 
   /// Resets in-memory cache so the next ensureProfileLoaded() re-fetches.
-  void invalidateProfile() {
+  Future<void> invalidateProfile() async {
     _profileLoaded = false;
+
+    await CacheManager.clearUserProfileCache();
+
+    debugPrint('[PROFILE CACHE] Invalidated');
   }
 
   void changeTab(ProfileTab tab) {
@@ -63,16 +188,42 @@ class ProfileController extends GetxController {
 
   /// Called by [EditProfileController] after a successful save so the
   /// Profile screen refreshes automatically without a full reload.
-  void applyUpdatedProfile(ProfileModel updated) {
+  Future<void> applyUpdatedProfile(ProfileModel updated) async {
     final old = profile.value;
-    // Invalidate old image URLs when paths change after an upload.
+
     if (old?.avatarPath != null && old!.avatarPath != updated.avatarPath) {
       _repo.invalidateUrl(old.avatarPath!, bucket: 'avatars');
     }
+
     if (old?.coverPath != null && old!.coverPath != updated.coverPath) {
       _repo.invalidateUrl(old.coverPath!, bucket: 'covers');
     }
-    profile.value = updated;
+
+    // Keep existing counters.
+    final updatedWithCounts = ProfileModel(
+      id: updated.id,
+      username: updated.username,
+      displayName: updated.displayName,
+      bio: updated.bio,
+      avatarPath: updated.avatarPath,
+      coverPath: updated.coverPath,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+      followerCount: old?.followerCount ?? followerCount.value,
+      followingCount: old?.followingCount ?? followingCount.value,
+    );
+
+    // Update UI immediately.
+    profile.value = updatedWithCounts;
+
+    // Update counters.
+    followerCount.value = updatedWithCounts.followerCount ?? 0;
+    followingCount.value = updatedWithCounts.followingCount ?? 0;
+
+    // Update Hive cache.
+    await CacheManager.cacheUserProfile(updatedWithCounts);
+
+    debugPrint('[PROFILE CACHE] Updated after profile edit');
   }
 
   /// Navigates to the Followers/Following page with the given initial tab.

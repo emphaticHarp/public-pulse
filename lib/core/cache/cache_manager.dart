@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:public_pulse/model/post_model.dart';
 import 'package:public_pulse/model/comment_model.dart';
+import 'package:public_pulse/model/profile_model.dart';
 
 import 'hive_boxes.dart';
 import 'cache_keys.dart';
@@ -108,5 +109,55 @@ class CacheManager {
 
   static Future<void> clearComments(String postId) async {
     await _commentBox.delete(_commentKey(postId));
+  }
+
+  // ====================== FOLLOW CACHE ======================
+  static Box get _followingBox => Hive.box(HiveBoxes.cachedFollowing);
+
+  static Future cacheFollowingIds(Set<String> ids) async {
+    await _followingBox.put(CacheKeys.followingIds, ids.toList());
+  }
+
+  static Set<String> getCachedFollowingIds() {
+    final data = _followingBox.get(CacheKeys.followingIds);
+
+    if (data == null) {
+      return {};
+    }
+
+    return Set<String>.from(data);
+  }
+
+  static Future<void> clearFollowingCache() async {
+    await _followingBox.delete(CacheKeys.followingIds);
+  }
+
+  // ================= USER PROFILE CACHE =================
+
+  static Box get _userProfileBox => Hive.box(HiveBoxes.cachedUserProfile);
+
+  static Future cacheUserProfile(ProfileModel profile) async {
+    await _userProfileBox.put(CacheKeys.userProfile, profile.toJson());
+
+    await _userProfileBox.put(
+      CacheKeys.userProfileTimestamp,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+
+    debugPrint("[PROFILE CACHE] Saved");
+  }
+
+  static ProfileModel? getCachedUserProfile() {
+    final data = _userProfileBox.get(CacheKeys.userProfile);
+
+    if (data == null) return null;
+
+    debugPrint("[PROFILE CACHE] Loaded");
+
+    return ProfileModel.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  static Future clearUserProfileCache() async {
+    await _userProfileBox.clear();
   }
 }

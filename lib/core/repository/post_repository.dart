@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:public_pulse/core/services/current_user_service.dart';
 import 'package:public_pulse/model/post_model.dart';
 
 class PostPage {
@@ -17,182 +18,203 @@ class PostPage {
 class PostRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
 
+  // ============================================================
+  // CURRENT PROFILE ID CACHE
+  // ============================================================
+
+  String? _cachedProfileId;
+
+  Future<String?>? _profileIdRequest;
+
+  /// Gets the current user's profile ID.
+  ///
+  /// IMPORTANT:
+  /// The first call hits Supabase.
+  /// All subsequent calls use the in-memory cached ID.
   Future<String?> getCurrentProfileId() async {
-    final user = _supabase.auth.currentUser;
+  return await CurrentUserService.instance.getProfileId();
+}
 
-    if (user == null) {
-      return null;
-    }
+  /// Call this when the authenticated user changes.
+  void clearCurrentProfileIdCache() {
+    _cachedProfileId = null;
+    _profileIdRequest = null;
 
-    try {
-      final profile = await _supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-      return profile?['id'];
-    } catch (e) {
-      debugPrint('[ERROR] getCurrentProfileId: $e');
-      return null;
-    }
+    debugPrint('[PROFILE-ID] Cache cleared');
   }
 
+  // ============================================================
+  // INITIAL POSTS
+  // ============================================================
+
   Future<PostPage> getInitialPosts({int limit = 10}) async {
-    debugPrint("======== getInitialPosts CALLED ========");
+    debugPrint('[REPO] getInitialPosts()');
+
     try {
-      var query = _supabase
+      final response = await _supabase
           .from('posts')
           .select('''
-id,
-profile_id,
-caption,
-location_name,
-visibility,
-like_count,
-comment_count,
-share_count,
-save_count,
-view_count,
-created_at,
+                id,
+                profile_id,
+                caption,
+                location_name,
+                visibility,
+                like_count,
+                comment_count,
+                share_count,
+                save_count,
+                view_count,
+                created_at,
 
-profile:profiles(
-  username,
-  display_name,
-  avatar_path,
-  is_private
-),
+                profile:profiles(
+                  username,
+                  display_name,
+                  avatar_path,
+                  is_private
+                ),
 
-media:post_media(
-  storage_path,
-  thumbnail_path,
-  media_type,
-  media_order
-),
+                media:post_media(
+                  storage_path,
+                  thumbnail_path,
+                  media_type,
+                  media_order
+                ),
 
-my_like:post_likes!left(
-  id,
-  profile_id,
-  post_id
-),
+                my_like:post_likes!left(
+                  id,
+                  profile_id,
+                  post_id
+                ),
 
-my_save:saved_posts!left(
-  id,
-  profile_id,
-  post_id
-)
-''')
+                my_save:saved_posts!left(
+                  id,
+                  profile_id,
+                  post_id
+                )
+                ''')
           .eq('status', 'ACTIVE')
-          .filter('deleted_at', 'is', null);
-
-      final response = await query
+          .filter('deleted_at', 'is', null)
           .order('created_at', ascending: false)
           .limit(limit);
 
       debugPrint(
-        '[REPO] getInitialPosts RAW response length: ${response.length}',
-      );
-      debugPrint(
-        '[REPO] getInitialPosts RAW ids: ${response.map((e) => e['id']).toList()}',
+        '[REPO] Initial response: '
+        '${response.length}',
       );
 
       final currentProfileId = await getCurrentProfileId();
 
       final posts = response
-          .map<PostModel>((e) => PostModel.fromJson(e, currentProfileId))
+          .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
           .toList();
 
-      final String? nextCursor = posts.isNotEmpty
+      final nextCursor = posts.isNotEmpty
           ? posts.last.createdAt.toIso8601String()
           : null;
 
-      final bool hasMore = posts.length == limit;
-
-      return PostPage(posts: posts, nextCursor: nextCursor, hasMore: hasMore);
+      return PostPage(
+        posts: posts,
+        nextCursor: nextCursor,
+        hasMore: posts.length == limit,
+      );
     } catch (e, stackTrace) {
       debugPrint('[ERROR] getInitialPosts: $e');
+
       debugPrintStack(stackTrace: stackTrace);
 
       return PostPage(posts: [], nextCursor: null, hasMore: false);
     }
   }
 
+  // ============================================================
+  // MORE POSTS
+  // ============================================================
+
   Future<PostPage> getMorePosts({
     required String cursor,
     int limit = 10,
   }) async {
-    debugPrint("======== getMorePosts CALLED ========");
-    var query = _supabase
-        .from('posts')
-        .select('''id,
-      profile_id,
-      caption,
-      location_name,
-      visibility,
-      like_count,
-      comment_count,
-      share_count,
-      save_count,
-      view_count,
-      created_at,
+    debugPrint('[REPO] getMorePosts()');
 
-      profile:profiles(
-        username,
-        display_name,
-        avatar_path,
-        is_private
-      ),
+    try {
+      final response = await _supabase
+          .from('posts')
+          .select('''
+                id,
+                profile_id,
+                caption,
+                location_name,
+                visibility,
+                like_count,
+                comment_count,
+                share_count,
+                save_count,
+                view_count,
+                created_at,
 
-     media:post_media(
-  storage_path,
-  thumbnail_path,
-  media_type,
-  media_order
-),
+                profile:profiles(
+                  username,
+                  display_name,
+                  avatar_path,
+                  is_private
+                ),
 
-my_like:post_likes!left(
-  id,
-  profile_id,
-  post_id
-),
-my_save:saved_posts!left(
-  id,
-  profile_id,
-  post_id
-)
-    ''')
-        .eq('status', 'ACTIVE')
-        .filter('deleted_at', 'is', null);
+                media:post_media(
+                  storage_path,
+                  thumbnail_path,
+                  media_type,
+                  media_order
+                ),
 
-    query = query.lt('created_at', cursor);
+                my_like:post_likes!left(
+                  id,
+                  profile_id,
+                  post_id
+                ),
 
-    final response = await query
-        .order('created_at', ascending: false)
-        .limit(limit);
+                my_save:saved_posts!left(
+                  id,
+                  profile_id,
+                  post_id
+                )
+                ''')
+          .eq('status', 'ACTIVE')
+          .filter('deleted_at', 'is', null)
+          .lt('created_at', cursor)
+          .order('created_at', ascending: false)
+          .limit(limit);
 
-    debugPrint('[REPO] getMorePosts RAW response length: ${response.length}');
-    debugPrint(
-      '[REPO] getMorePosts RAW ids: ${response.map((e) => e['id']).toList()}',
-    );
+      final currentProfileId = await getCurrentProfileId();
 
-    final currentProfileId = await getCurrentProfileId();
+      final posts = response
+          .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
+          .toList();
 
-    final posts = response
-        .map<PostModel>((e) => PostModel.fromJson(e, currentProfileId))
-        .toList();
-    final nextCursor = posts.isNotEmpty
-        ? posts.last.createdAt.toIso8601String()
-        : null;
+      final nextCursor = posts.isNotEmpty
+          ? posts.last.createdAt.toIso8601String()
+          : null;
 
-    return PostPage(
-      posts: posts,
-      nextCursor: nextCursor,
-      hasMore: posts.length == limit,
-    );
+      return PostPage(
+        posts: posts,
+        nextCursor: nextCursor,
+        hasMore: posts.length == limit,
+      );
+    } catch (e, stackTrace) {
+      debugPrint('[ERROR] getMorePosts: $e');
+
+      debugPrintStack(stackTrace: stackTrace);
+
+      return PostPage(posts: [], nextCursor: null, hasMore: false);
+    }
   }
 
+  // ============================================================
+  // MY POSTS
+  // ============================================================
+
   Future<List<PostModel>> getMyPosts() async {
-    debugPrint("======== getMyPosts CALLED ========");
+    debugPrint('[REPO] getMyPosts()');
+
     try {
       final currentProfileId = await getCurrentProfileId();
 
@@ -202,121 +224,133 @@ my_save:saved_posts!left(
 
       final response = await _supabase
           .from('posts')
-          .select('''id,
-          profile_id,
-          caption,
-          location_name,
-          visibility,
-          like_count,
-          comment_count,
-          share_count,
-          save_count,
-          view_count,
-          created_at,
+          .select('''
+                id,
+                profile_id,
+                caption,
+                location_name,
+                visibility,
+                like_count,
+                comment_count,
+                share_count,
+                save_count,
+                view_count,
+                created_at,
 
-          profile:profiles(
-            username,
-            display_name,
-            avatar_path,
-            is_private
-          ),
+                profile:profiles(
+                  username,
+                  display_name,
+                  avatar_path,
+                  is_private
+                ),
 
-        media:post_media(
-  storage_path,
-  thumbnail_path,
-  media_type,
-  media_order
-),
+                media:post_media(
+                  storage_path,
+                  thumbnail_path,
+                  media_type,
+                  media_order
+                ),
 
-my_like:post_likes!left(
-  id,
-  profile_id,
-  post_id
-),
-my_save:saved_posts!left(
-  id,
-  profile_id,
-  post_id
-)
-        ''')
+                my_like:post_likes!left(
+                  id,
+                  profile_id,
+                  post_id
+                ),
+
+                my_save:saved_posts!left(
+                  id,
+                  profile_id,
+                  post_id
+                )
+                ''')
           .eq('profile_id', currentProfileId)
           .eq('status', 'ACTIVE')
           .filter('deleted_at', 'is', null)
           .order('created_at', ascending: false);
 
       return response
-          .map((e) => PostModel.fromJson(e, currentProfileId))
+          .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
           .toList();
     } catch (e, stackTrace) {
       debugPrint('[ERROR] getMyPosts: $e');
+
       debugPrintStack(stackTrace: stackTrace);
+
       return [];
     }
   }
 
+  // ============================================================
+  // NEW POSTS
+  // ============================================================
+
   Future<List<PostModel>> getNewPosts({required String latestCreatedAt}) async {
-    debugPrint("======== getNewPosts CALLED ========");
-    var query = _supabase
-        .from('posts')
-        .select('''id,
-        profile_id,
-        caption,
-        location_name,
-        visibility,
-        like_count,
-        comment_count,
-        share_count,
-        save_count,
-        view_count,
-        created_at,
+    debugPrint('[REPO] getNewPosts()');
 
-        profile:profiles(
-          username,
-          display_name,
-          avatar_path,
-          is_private
-        ),
+    try {
+      final response = await _supabase
+          .from('posts')
+          .select('''
+                id,
+                profile_id,
+                caption,
+                location_name,
+                visibility,
+                like_count,
+                comment_count,
+                share_count,
+                save_count,
+                view_count,
+                created_at,
 
-      media:post_media(
-  storage_path,
-  thumbnail_path,
-  media_type,
-  media_order
-),
+                profile:profiles(
+                  username,
+                  display_name,
+                  avatar_path,
+                  is_private
+                ),
 
-my_like:post_likes!left(
-  id,
-  profile_id,
-  post_id
-),
-my_save:saved_posts!left(
-  id,
-  profile_id,
-  post_id
-)
-      ''')
-        .eq('status', 'ACTIVE')
-        .filter('deleted_at', 'is', null);
+                media:post_media(
+                  storage_path,
+                  thumbnail_path,
+                  media_type,
+                  media_order
+                ),
 
-    final response = await query
-        .gt('created_at', latestCreatedAt)
-        .order('created_at', ascending: false);
+                my_like:post_likes!left(
+                  id,
+                  profile_id,
+                  post_id
+                ),
 
-    debugPrint('[REPO] getNewPosts RAW response length: ${response.length}');
-    debugPrint(
-      '[REPO] getNewPosts RAW ids: ${response.map((e) => e['id']).toList()}',
-    );
+                my_save:saved_posts!left(
+                  id,
+                  profile_id,
+                  post_id
+                )
+                ''')
+          .eq('status', 'ACTIVE')
+          .filter('deleted_at', 'is', null)
+          .gt('created_at', latestCreatedAt)
+          .order('created_at', ascending: false);
 
-    final currentProfileId = await getCurrentProfileId();
+      final currentProfileId = await getCurrentProfileId();
 
-    final posts = response
-        .map<PostModel>((e) => PostModel.fromJson(e, currentProfileId))
-        .toList();
+      return response
+          .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
+          .toList();
+    } catch (e, stackTrace) {
+      debugPrint('[ERROR] getNewPosts: $e');
 
-    return posts;
+      debugPrintStack(stackTrace: stackTrace);
+
+      return [];
+    }
   }
 
-  // like api with toggle functionality
+  // ============================================================
+  // LIKE
+  // ============================================================
 
   Future<bool> toggleLike({
     required String postId,
@@ -325,17 +359,17 @@ my_save:saved_posts!left(
     try {
       final profileId = await getCurrentProfileId();
 
-      if (profileId == null) return false;
+      if (profileId == null) {
+        return false;
+      }
 
       if (currentlyLiked) {
-        // Unlike
         await _supabase
             .from('post_likes')
             .delete()
             .eq('post_id', postId)
             .eq('profile_id', profileId);
       } else {
-        // Like
         await _supabase.from('post_likes').insert({
           'post_id': postId,
           'profile_id': profileId,
@@ -343,11 +377,18 @@ my_save:saved_posts!left(
       }
 
       return true;
-    } catch (e) {
-      debugPrint("toggleLike Error : $e");
+    } catch (e, stackTrace) {
+      debugPrint('[ERROR] toggleLike: $e');
+
+      debugPrintStack(stackTrace: stackTrace);
+
       return false;
     }
   }
+
+  // ============================================================
+  // SAVE
+  // ============================================================
 
   Future<bool> toggleSave({
     required String postId,
@@ -356,7 +397,9 @@ my_save:saved_posts!left(
     try {
       final profileId = await getCurrentProfileId();
 
-      if (profileId == null) return false;
+      if (profileId == null) {
+        return false;
+      }
 
       if (currentlySaved) {
         await _supabase
@@ -372,11 +415,18 @@ my_save:saved_posts!left(
       }
 
       return true;
-    } catch (e) {
-      debugPrint("toggleSave Error: $e");
+    } catch (e, stackTrace) {
+      debugPrint('[ERROR] toggleSave: $e');
+
+      debugPrintStack(stackTrace: stackTrace);
+
       return false;
     }
   }
+
+  // ============================================================
+  // DELETE
+  // ============================================================
 
   Future<bool> deletePost(String postId) async {
     try {
@@ -386,13 +436,18 @@ my_save:saved_posts!left(
           .eq('id', postId)
           .select();
 
-      debugPrint("DELETE RESPONSE: $response");
+      debugPrint('[REPO] DELETE RESPONSE: $response');
+
       return response.isNotEmpty;
     } on PostgrestException catch (e) {
+      debugPrint('[REPO] DELETE POSTGRES ERROR: $e');
 
       return false;
-    } catch (e) {
-      debugPrint("DELETE ERROR: $e");
+    } catch (e, stackTrace) {
+      debugPrint('[REPO] DELETE ERROR: $e');
+
+      debugPrintStack(stackTrace: stackTrace);
+
       return false;
     }
   }

@@ -144,7 +144,7 @@ class VersionCheckController extends GetxController {
                 Text(
                   update.updateMessage,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 15, color: AppColors.black54),
+                  style: const TextStyle(fontSize: 15, color: Color.fromARGB(137, 34, 29, 29)),
                 ),
 
                 const SizedBox(height: 20),
