@@ -1,11 +1,15 @@
 import 'package:get/get.dart';
 import 'package:public_pulse/model/profile_model.dart';
 import 'package:public_pulse/core/repository/profile_repository.dart';
+import 'package:public_pulse/core/cache/followers_following_cache.dart';
 
 class FollowersFollowingController extends GetxController {
   static FollowersFollowingController get to => Get.find();
 
   final ProfileRepository _repo = ProfileRepository.instance;
+
+  final FollowersFollowingCacheService _cache =
+      FollowersFollowingCacheService();
 
   final String userId;
 
@@ -79,8 +83,21 @@ class FollowersFollowingController extends GetxController {
     }
 
     print('[FF_DEBUG] Loading followers...');
-    print('[FF_DEBUG] Profile ID: $userId');
+    print('[FF_DEBUG] Profile userId: $userId');
 
+    // 1. Try cache first
+    final cached = _cache.get(userId);
+
+    if (cached != null) {
+      final cachedFollowers = cached['followers'] ?? [];
+
+      followers.assignAll(cachedFollowers);
+      _followersLoaded = true;
+
+      print('[FF_CACHE] Loaded ${followers.length} followers from cache');
+    }
+
+    // 2. Fetch latest data from Supabase
     isLoadingFollowers(true);
 
     try {
@@ -89,10 +106,14 @@ class FollowersFollowingController extends GetxController {
       print('[FF_DEBUG] Repository returned ${result.length} followers');
 
       followers.assignAll(result);
-
       _followersLoaded = true;
 
-      print('[FF_DEBUG] Followers list now contains ${followers.length}');
+      // 3. Save latest data
+      await _cache.updateFollowers(
+        profileId: userId,
+        followers: followers.cast(),
+      );
+      print('[FF_CACHE] Saved ${followers.length} followers to cache');
     } catch (e, stackTrace) {
       print('[FF_DEBUG] ERROR loading followers: $e');
       print(stackTrace);
@@ -111,8 +132,21 @@ class FollowersFollowingController extends GetxController {
     }
 
     print('[FF_DEBUG] Loading following...');
-    print('[FF_DEBUG] Profile ID: $userId');
+    print('[FF_DEBUG] Profile userId: $userId');
 
+    // 1. Try cache first
+    final cached = _cache.get(userId);
+
+    if (cached != null) {
+      final cachedFollowing = cached['following'] ?? [];
+
+      following.assignAll(cachedFollowing);
+      _followingLoaded = true;
+
+      print('[FF_CACHE] Loaded ${following.length} following from cache');
+    }
+
+    // 2. Fetch latest data
     isLoadingFollowing(true);
 
     try {
@@ -121,10 +155,14 @@ class FollowersFollowingController extends GetxController {
       print('[FF_DEBUG] Repository returned ${result.length} following');
 
       following.assignAll(result);
-
       _followingLoaded = true;
 
-      print('[FF_DEBUG] Following list now contains ${following.length}');
+      // 3. Save latest data
+      await _cache.updateFollowing(
+        profileId: userId,
+        following: following.cast(),
+      );
+      print('[FF_CACHE] Saved ${following.length} following to cache');
     } catch (e, stackTrace) {
       print('[FF_DEBUG] ERROR loading following: $e');
       print(stackTrace);
