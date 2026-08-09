@@ -156,7 +156,7 @@ class ProfileRepository {
 
     final profiles = await _db
         .select('user_id, username, display_name, avatar_path')
-        .inFilter('user_id', followerIds.toList());
+        .inFilter('id', followerIds.toList());
 
     debugPrint('[FF_REPO] Profiles returned = $profiles');
 
@@ -219,7 +219,7 @@ class ProfileRepository {
 
     final profiles = await _db
         .select('user_id, username, display_name, avatar_path')
-        .inFilter('user_id', followingIds.toList());
+        .inFilter('id', followingIds.toList());
 
     debugPrint('[FF_REPO] Profiles returned = $profiles');
 
