@@ -1,81 +1,171 @@
 import 'package:get/get.dart';
+
 import '../model/profile_model.dart';
 import '../core/repository/user_profile_repository.dart';
+
 import 'followers_following_controller.dart';
 import '../view/profile/followers_following_page.dart';
 
-/// Manages state for viewing another user's public profile.
 class UserProfileController extends GetxController {
   final String userId;
+
   UserProfileController({required this.userId});
 
-  final _repo = UserProfileRepository.instance;
+  final UserProfileRepository _repo = UserProfileRepository.instance;
 
-  // Tag reused for both this controller and the scoped FollowersFollowingController.
-  late final _ffTag = 'user_$userId';
+  // ─────────────────────────────────────────────
+  // FOLLOWERS / FOLLOWING CONTROLLER TAG
+  // ─────────────────────────────────────────────
+
+  late final String ffTag = 'user_$userId';
+
+  // ─────────────────────────────────────────────
+  // PROFILE
+  // ─────────────────────────────────────────────
 
   final profile = Rxn<ProfileModel>();
+
   final isLoading = false.obs;
+
+  // ─────────────────────────────────────────────
+  // FOLLOW STATE
+  // ─────────────────────────────────────────────
+
+  /// Me → target
   final isFollowing = false.obs;
+
+  /// Target → me
+  final followsMe = false.obs;
+
   final isFollowLoading = false.obs;
+
+  // ─────────────────────────────────────────────
+  // COUNTS
+  // ─────────────────────────────────────────────
+
   final followerCount = 0.obs;
+
   final followingCount = 0.obs;
+
+  // ─────────────────────────────────────────────
+  // TABS
+  // ─────────────────────────────────────────────
+
   final selectedTab = ProfileTab.photos.obs;
 
-  // Memoized public URLs — set once after profile loads; never recomputed per-get.
+  // ─────────────────────────────────────────────
+  // MEDIA
+  // ─────────────────────────────────────────────
+
+  final photoPosts = <dynamic>[].obs;
+
+  final videoPosts = <dynamic>[].obs;
+
+  // ─────────────────────────────────────────────
+  // URL CACHE
+  // ─────────────────────────────────────────────
+
   String? avatarUrl;
+
   String? coverUrl;
 
-  // Wire to PostRepository once the Posts feature exists.
-  final photoPosts = <String>[].obs;
-  final videoPosts = <String>[].obs;
+  // ─────────────────────────────────────────────
+  // INIT
+  // ─────────────────────────────────────────────
 
   @override
   void onInit() {
     super.onInit();
+
     _loadProfile();
   }
 
-  /// Loads the target user's profile (with follow counts) and follow status in parallel.
+  // ─────────────────────────────────────────────
+  // LOAD PROFILE
+  // ─────────────────────────────────────────────
+
   Future<void> _loadProfile() async {
     isLoading(true);
+
     try {
-      // getUserProfile already includes follower_count and following_count in
-      // its SELECT, so no separate getFollowCounts round-trip is needed.
       final profileFuture = _repo.getUserProfile(userId);
-      final followFuture = _repo.isFollowing(userId);
 
+      final followingFuture = _repo.isFollowing(userId);
+
+      final followsMeFuture = _repo.isFollowedBy(userId);
+
+      // Run all requests in parallel.
       final loadedProfile = await profileFuture;
-      final following = await followFuture;
 
-      // Memoize resolved URLs once so they are never recomputed per reactive read.
+      final following = await followingFuture;
+
+      final followedByMe = await followsMeFuture;
+
+      // Resolve URLs once.
       avatarUrl = loadedProfile.avatarPath != null
           ? _repo.resolveUrl(loadedProfile.avatarPath!, bucket: 'avatars')
           : null;
+
       coverUrl = loadedProfile.coverPath != null
           ? _repo.resolveUrl(loadedProfile.coverPath!, bucket: 'covers')
           : null;
 
       profile.value = loadedProfile;
+
       followerCount.value = loadedProfile.followerCount ?? 0;
+
       followingCount.value = loadedProfile.followingCount ?? 0;
+
       isFollowing.value = following;
-    } catch (_) {
-      // Silently fail; the UI stays in the loading state without crashing.
+
+      followsMe.value = followedByMe;
+    } catch (e) {
+      print('[USER_PROFILE] ERROR: $e');
     } finally {
       isLoading(false);
     }
   }
 
-  /// Toggles the follow state optimistically, then syncs with the database.
+  // ─────────────────────────────────────────────
+  // BUTTON LABEL
+  // ─────────────────────────────────────────────
+
+  String get followButtonLabel {
+    if (isFollowing.value) {
+      return 'Following';
+    }
+
+    if (followsMe.value) {
+      return 'Follow Back';
+    }
+
+    return 'Follow';
+  }
+
+  // ─────────────────────────────────────────────
+  // TOGGLE FOLLOW
+  // ─────────────────────────────────────────────
+
   Future<void> toggleFollow() async {
-    if (isFollowLoading.value) return;
+    if (isFollowLoading.value) {
+      return;
+    }
+
     isFollowLoading(true);
 
     final wasFollowing = isFollowing.value;
-    // Optimistic update: flip immediately for a snappy feel.
-    isFollowing(!wasFollowing);
-    followerCount.value += wasFollowing ? -1 : 1;
+
+    final oldFollowerCount = followerCount.value;
+
+    // ─────────────────────────────────────────
+    // OPTIMISTIC UI
+    // ─────────────────────────────────────────
+
+    isFollowing.value = !wasFollowing;
+
+    followerCount.value = wasFollowing
+        ? (followerCount.value - 1).clamp(0, 999999999)
+        : followerCount.value + 1;
 
     try {
       if (wasFollowing) {
@@ -83,24 +173,39 @@ class UserProfileController extends GetxController {
       } else {
         await _repo.followUser(userId);
       }
-    } catch (_) {
-      // Revert on failure.
-      isFollowing(wasFollowing);
-      followerCount.value += wasFollowing ? 1 : -1;
+    } catch (e) {
+      print('[USER_PROFILE] FOLLOW ERROR: $e');
+
+      // Rollback.
+      isFollowing.value = wasFollowing;
+
+      followerCount.value = oldFollowerCount;
     } finally {
       isFollowLoading(false);
     }
   }
 
-  /// Changes the active content tab.
-  void changeTab(ProfileTab tab) => selectedTab.value = tab;
+  // ─────────────────────────────────────────────
+  // TAB
+  // ─────────────────────────────────────────────
 
-  /// Opens the Followers/Following page for this user's profile.
+  void changeTab(ProfileTab tab) {
+    selectedTab.value = tab;
+  }
+
+  // ─────────────────────────────────────────────
+  // FOLLOWERS / FOLLOWING PAGE
+  // ─────────────────────────────────────────────
+
   void openFollowersFollowing(int initialTab) {
-    if (!Get.isRegistered<FollowersFollowingController>(tag: _ffTag)) {
-      Get.put(FollowersFollowingController(userId: userId), tag: _ffTag);
+    if (!Get.isRegistered<FollowersFollowingController>(tag: ffTag)) {
+      Get.put(FollowersFollowingController(userId: userId), tag: ffTag);
     }
-    Get.find<FollowersFollowingController>(tag: _ffTag).switchTab(initialTab);
+
+    final controller = Get.find<FollowersFollowingController>(tag: ffTag);
+
+    controller.switchTab(initialTab);
+
     Get.to(() => FollowersFollowingPage(initialTab: initialTab));
   }
 }

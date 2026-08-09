@@ -1,7 +1,7 @@
 import 'dart:io';
 import '../compression/image_compressor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../model/profile_model.dart';
+import 'package:public_pulse/model/profile_model.dart';
 import 'package:flutter/foundation.dart';
 
 /// Singleton repository for all profile-related Supabase operations.
