@@ -13,6 +13,8 @@ class HiveService {
 
     await Hive.openBox(HiveBoxes.cachedFollowing);
 
+    await Hive.openBox(HiveBoxes.cachedFollowersFollowing);
+
     await Hive.openBox(HiveBoxes.cachedUserProfile);
   }
 }
