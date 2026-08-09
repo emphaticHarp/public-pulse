@@ -40,7 +40,7 @@ class UserProfileRepository {
     final data = await _db
         .select(
           'user_id, username, display_name, bio, avatar_path, cover_path,'
-          ' created_at, updated_at, follower_count, following_count',
+          ' created_at, updated_at, follower_count, following_count, post_count',
         )
         .eq('user_id', userId)
         .single();

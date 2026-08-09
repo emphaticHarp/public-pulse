@@ -10,6 +10,7 @@ import '../../model/profile_model.dart';
 import '../../widget/profile/profile_widget.dart';
 import '../../view/setting/setting_page.dart';
 import 'edit_profile.dart';
+import '../../model/post_model.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -55,7 +56,9 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   ProfileHeaderImage(
                     coverImage: resolveProfileImage(url: controller.coverUrl),
-                    profileImage: resolveProfileImage(url: controller.avatarUrl),
+                    profileImage: resolveProfileImage(
+                      url: controller.avatarUrl,
+                    ),
                   ),
                   const SizedBox(height: 0),
                   Transform.translate(
@@ -150,7 +153,6 @@ class ProfilePage extends StatelessWidget {
                     () => _TabContent(
                       tab: controller.selectedTab.value,
                       photoPosts: controller.photoPosts,
-                      videoPosts: controller.videoPosts,
                       savedPosts: controller.savedPosts,
                     ),
                   ),
@@ -179,34 +181,54 @@ class ProfilePage extends StatelessWidget {
 
 class _TabContent extends StatelessWidget {
   final ProfileTab tab;
-  final List<String> photoPosts;
-  final List<String> videoPosts;
-  final List<String> savedPosts;
+  final List<PostModel> photoPosts;
+  final List<PostModel> savedPosts;
 
   const _TabContent({
     required this.tab,
     required this.photoPosts,
-    required this.videoPosts,
     required this.savedPosts,
   });
 
   @override
   Widget build(BuildContext context) {
-    final (urls, icon, emptyMessage) = switch (tab) {
-      ProfileTab.photos => (photoPosts, Icons.photo_outlined, 'No photos yet'),
-      ProfileTab.videos => (
-          videoPosts,
-          Icons.videocam_outlined,
-          'No videos yet',
-        ),
-      ProfileTab.saved => (
-          savedPosts,
-          Icons.bookmark_border,
-          'No saved posts yet',
-        ),
-    };
+    final List<PostModel> posts;
 
-    if (urls.isEmpty) {
+    switch (tab) {
+      case ProfileTab.photos:
+        posts = photoPosts;
+        break;
+
+      case ProfileTab.saved:
+        posts = savedPosts;
+        break;
+    }
+
+    final IconData icon;
+
+    switch (tab) {
+      case ProfileTab.photos:
+        icon = Icons.photo_outlined;
+        break;
+
+      case ProfileTab.saved:
+        icon = Icons.bookmark_border;
+        break;
+    }
+
+    final String emptyMessage;
+
+    switch (tab) {
+      case ProfileTab.photos:
+        emptyMessage = 'No photos yet';
+        break;
+
+      case ProfileTab.saved:
+        emptyMessage = 'No saved posts yet';
+        break;
+    }
+
+    if (posts.isEmpty) {
       return ProfileEmptyState(icon: icon, message: emptyMessage);
     }
 
@@ -219,8 +241,25 @@ class _TabContent extends StatelessWidget {
         crossAxisSpacing: 2,
         mainAxisSpacing: 2,
       ),
-      itemCount: urls.length,
-      itemBuilder: (context, i) => Image.network(urls[i], fit: BoxFit.cover),
+      itemCount: posts.length,
+      itemBuilder: (context, index) {
+        final post = posts[index];
+
+        // PostModel already contains resolved public URLs.
+        if (post.mediaUrls.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final imageUrl = post.mediaUrls.first;
+
+        return Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) {
+            return const SizedBox.shrink();
+          },
+        );
+      },
     );
   }
 }

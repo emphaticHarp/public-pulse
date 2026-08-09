@@ -251,6 +251,108 @@ class ProfileRepository {
     );
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // PROFILE POSTS
+  // ─────────────────────────────────────────────────────────────
+
+  Future<List<Map<String, dynamic>>> getUserPosts(String userId) async {
+    final profile = await _db.select('id').eq('user_id', userId).single();
+
+    final profileId = profile['id'] as String;
+
+    final posts = await Supabase.instance.client
+        .from('posts')
+        .select('''
+        id,
+        profile_id,
+        caption,
+        latitude,
+        longitude,
+        location_name,
+        visibility,
+        status,
+        like_count,
+        comment_count,
+        save_count,
+        share_count,
+        view_count,
+        created_at,
+        updated_at,
+        deleted_at,
+        post_media(
+          id,
+          post_id,
+          media_order,
+          media_type,
+          storage_path,
+          thumbnail_path,
+          width,
+          height,
+          duration_seconds,
+          file_size,
+          created_at
+        )
+      ''')
+        .eq('profile_id', profileId)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(posts);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // SAVED POSTS
+  // ─────────────────────────────────────────────────────────────
+
+  Future<List<Map<String, dynamic>>> getSavedPosts(String userId) async {
+    final profile = await _db.select('id').eq('user_id', userId).single();
+
+    final profileId = profile['id'] as String;
+
+    final saved = await Supabase.instance.client
+        .from('saved_posts')
+        .select('''
+        id,
+        profile_id,
+        post_id,
+        created_at,
+        posts(
+          id,
+          profile_id,
+          caption,
+          latitude,
+          longitude,
+          location_name,
+          visibility,
+          status,
+          like_count,
+          comment_count,
+          save_count,
+          share_count,
+          view_count,
+          created_at,
+          updated_at,
+          deleted_at,
+          post_media(
+            id,
+            post_id,
+            media_order,
+            media_type,
+            storage_path,
+            thumbnail_path,
+            width,
+            height,
+            duration_seconds,
+            file_size,
+            created_at
+          )
+        )
+      ''')
+        .eq('profile_id', profileId)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(saved);
+  }
+
   Future<List<ProfileModel>> searchUsers(String query) async {
     final data = await _db
         .select()
@@ -259,4 +361,7 @@ class ProfileRepository {
 
     return (data as List).map((e) => ProfileModel.fromJson(e)).toList();
   }
+
+
+
 }
