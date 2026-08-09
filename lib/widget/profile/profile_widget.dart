@@ -158,7 +158,6 @@ class ProfileTabSelector extends StatelessWidget {
 
   static const _labels = {
     ProfileTab.photos: 'Photos',
-    ProfileTab.videos: 'Videos',
     ProfileTab.saved: 'Saved',
   };
 

@@ -207,7 +207,6 @@ class _ProfileBody extends StatelessWidget {
               () => _TabContent(
                 tab: controller.selectedTab.value,
                 photoPosts: controller.photoPosts,
-                videoPosts: controller.videoPosts,
               ),
             ),
           ],
@@ -267,24 +266,16 @@ class _TabContent extends StatelessWidget {
   final ProfileTab tab;
 
   final List photoPosts;
-  final List videoPosts;
 
   const _TabContent({
     required this.tab,
     required this.photoPosts,
-    required this.videoPosts,
   });
 
   @override
   Widget build(BuildContext context) {
     final (urls, icon, emptyMessage) = switch (tab) {
       ProfileTab.photos => (photoPosts, Icons.photo_outlined, 'No photos yet'),
-
-      ProfileTab.videos => (
-        videoPosts,
-        Icons.videocam_outlined,
-        'No videos yet',
-      ),
 
       ProfileTab.saved => ([], Icons.lock_outline, 'Saved posts are private'),
     };

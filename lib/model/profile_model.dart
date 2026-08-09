@@ -1,5 +1,5 @@
 /// Tabs shown on the Profile Screen.
-enum ProfileTab { photos, videos, saved }
+enum ProfileTab { photos, saved }
 
 /// Represents a single row in the followers or following list.
 class FollowerModel {
@@ -52,6 +52,8 @@ class ProfileModel {
   // DB-computed counters — populated when the query includes these columns.
   final int? followerCount;
   final int? followingCount;
+  final int? postCount;
+
 
   const ProfileModel({
     required this.id,
@@ -64,6 +66,8 @@ class ProfileModel {
     this.updatedAt,
     this.followerCount,
     this.followingCount,
+    this.postCount,
+
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) => ProfileModel(
@@ -77,6 +81,7 @@ class ProfileModel {
     updatedAt: _parseDate(json['updated_at']),
     followerCount: (json['follower_count'] as num?)?.toInt(),
     followingCount: (json['following_count'] as num?)?.toInt(),
+    postCount: (json['post_count'] as num?)?.toInt(),
   );
 
   static DateTime? _parseDate(dynamic value) =>
@@ -93,6 +98,7 @@ class ProfileModel {
     'updated_at': updatedAt?.toIso8601String(),
     'follower_count': followerCount,
     'following_count': followingCount,
+    'post_count': postCount,
   };
 
   ProfileModel copyWith({
@@ -113,6 +119,7 @@ class ProfileModel {
     updatedAt: updatedAt ?? this.updatedAt,
     followerCount: followerCount,
     followingCount: followingCount,
+    postCount: postCount,
   );
 
   @override
@@ -127,6 +134,7 @@ class ProfileModel {
           coverPath == other.coverPath &&
           createdAt == other.createdAt &&
           updatedAt == other.updatedAt &&
+          postCount == other.postCount &&
           followerCount == other.followerCount &&
           followingCount == other.followingCount);
 
@@ -143,5 +151,6 @@ class ProfileModel {
     updatedAt,
     followerCount,
     followingCount,
+    postCount,
   );
 }

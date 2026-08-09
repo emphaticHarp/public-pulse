@@ -32,8 +32,8 @@ class PostRepository {
   /// The first call hits Supabase.
   /// All subsequent calls use the in-memory cached ID.
   Future<String?> getCurrentProfileId() async {
-  return await CurrentUserService.instance.getProfileId();
-}
+    return await CurrentUserService.instance.getProfileId();
+  }
 
   /// Call this when the authenticated user changes.
   void clearCurrentProfileIdCache() {
@@ -274,6 +274,100 @@ class PostRepository {
     } catch (e, stackTrace) {
       debugPrint('[ERROR] getMyPosts: $e');
 
+      debugPrintStack(stackTrace: stackTrace);
+
+      return [];
+    }
+  }
+
+  // ============================================================
+  // SAVED POSTS
+  // ============================================================
+
+  Future<List<PostModel>> getSavedPosts() async {
+    debugPrint('[REPO] getSavedPosts()');
+
+    try {
+      final currentProfileId = await getCurrentProfileId();
+
+      if (currentProfileId == null) {
+        return [];
+      }
+
+      final response = await _supabase
+          .from('saved_posts')
+          .select('''
+          post_id,
+
+          post:posts(
+            id,
+            profile_id,
+            caption,
+            location_name,
+            visibility,
+            status,
+            like_count,
+            comment_count,
+            share_count,
+            save_count,
+            view_count,
+            created_at,
+
+            profile:profiles(
+              username,
+              display_name,
+              avatar_path,
+              is_private
+            ),
+
+            media:post_media(
+              storage_path,
+              thumbnail_path,
+              media_type,
+              media_order
+            ),
+
+            my_like:post_likes!left(
+              id,
+              profile_id,
+              post_id
+            ),
+
+            my_save:saved_posts!left(
+              id,
+              profile_id,
+              post_id
+            )
+          )
+        ''')
+          .eq('profile_id', currentProfileId)
+          .order('created_at', ascending: false);
+
+      final posts = <PostModel>[];
+
+      for (final row in response) {
+        final post = row['post'];
+
+        if (post == null) {
+          continue;
+        }
+
+        if (post['status'] != 'ACTIVE') {
+          continue;
+        }
+
+        if (post['deleted_at'] != null) {
+          continue;
+        }
+
+        posts.add(PostModel.fromJson(post, currentProfileId));
+      }
+
+      debugPrint('[REPO] Saved posts loaded: ${posts.length}');
+
+      return posts;
+    } catch (e, stackTrace) {
+      debugPrint('[ERROR] getSavedPosts: $e');
       debugPrintStack(stackTrace: stackTrace);
 
       return [];

@@ -39,6 +39,8 @@ class UserProfileController extends GetxController {
 
   final isFollowLoading = false.obs;
 
+  
+
   // ─────────────────────────────────────────────
   // COUNTS
   // ─────────────────────────────────────────────
@@ -58,8 +60,6 @@ class UserProfileController extends GetxController {
   // ─────────────────────────────────────────────
 
   final photoPosts = <dynamic>[].obs;
-
-  final videoPosts = <dynamic>[].obs;
 
   // ─────────────────────────────────────────────
   // URL CACHE

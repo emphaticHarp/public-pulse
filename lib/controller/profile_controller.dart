@@ -4,10 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:public_pulse/core/repository/profile_repository.dart';
 import 'package:public_pulse/controller/followers_following_controller.dart';
 import 'package:public_pulse/view/profile/followers_following_page.dart';
-
 import 'package:public_pulse/core/cache/cache_manager.dart';
+import 'package:public_pulse/model/post_model.dart';
+import 'package:public_pulse/core/repository/post_repository.dart';
 
 class ProfileController extends GetxController {
+  final PostRepository _postRepo = PostRepository();
   static ProfileController get to => Get.find();
 
   @override
@@ -28,9 +30,11 @@ class ProfileController extends GetxController {
   final followingCount = 0.obs;
 
   //  wire to PostRepository once the Posts feature exists.
-  final photoPosts = <String>[].obs;
-  final videoPosts = <String>[].obs;
-  final savedPosts = <String>[].obs;
+  final photoPosts = <PostModel>[].obs;
+  final savedPosts = <PostModel>[].obs;
+
+  final isPostsLoading = false.obs;
+  final isSavedPostsLoading = false.obs;
 
   bool _profileLoaded = false;
 
@@ -40,8 +44,8 @@ class ProfileController extends GetxController {
     // --------------------------------------------------
     // 1. Load profile from Hive immediately
     // --------------------------------------------------
-    final cachedProfile = CacheManager.getCachedUserProfile();
 
+    final cachedProfile = CacheManager.getCachedUserProfile();
     if (cachedProfile != null) {
       debugPrint('[PROFILE] Loaded profile from Hive');
       debugPrint('[PROFILE] Cached user_id: ${cachedProfile.id}');
@@ -51,8 +55,10 @@ class ProfileController extends GetxController {
       followerCount.value = cachedProfile.followerCount ?? 0;
       followingCount.value = cachedProfile.followingCount ?? 0;
 
-      // Do NOT return here.
-      // Continue to Supabase so the profile ID and counts are verified.
+      postCount.value = cachedProfile.postCount ?? 0;
+
+      await loadMyPosts();
+      await loadSavedPosts();
     }
 
     // --------------------------------------------------
@@ -78,6 +84,7 @@ class ProfileController extends GetxController {
         updatedAt: fetchedProfile.updatedAt,
         followerCount: counts.followers,
         followingCount: counts.following,
+        postCount: fetchedProfile.postCount,
       );
 
       profile.value = profileWithCounts;
@@ -86,10 +93,12 @@ class ProfileController extends GetxController {
       followingCount.value = counts.following;
 
       await CacheManager.cacheUserProfile(profileWithCounts);
-
       _profileLoaded = true;
 
       debugPrint('[PROFILE] Profile fetched and cached');
+
+      await loadMyPosts();
+      await loadSavedPosts();
     } catch (e, stackTrace) {
       _profileLoaded = false;
 
@@ -138,6 +147,7 @@ class ProfileController extends GetxController {
         updatedAt: updatedProfile.updatedAt,
         followerCount: counts.followers,
         followingCount: counts.following,
+       postCount: updatedProfile.postCount,
       );
 
       // --------------------------------------------------
@@ -175,6 +185,47 @@ class ProfileController extends GetxController {
     selectedTab.value = tab;
   }
 
+  Future<void> loadMyPosts() async {
+    if (isPostsLoading.value) return;
+
+    isPostsLoading(true);
+
+    try {
+      final result = await _postRepo.getMyPosts();
+
+      photoPosts.assignAll(result);
+
+      // Profiles table is the source of truth for post count.
+      postCount.value = profile.value?.postCount ?? result.length;
+
+      debugPrint('[PROFILE POSTS] Loaded ${photoPosts.length} posts');
+    } catch (e, stackTrace) {
+      debugPrint('[PROFILE POSTS] Error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      isPostsLoading(false);
+    }
+  }
+
+  Future<void> loadSavedPosts() async {
+    if (isSavedPostsLoading.value) return;
+
+    isSavedPostsLoading(true);
+
+    try {
+      final result = await _postRepo.getSavedPosts();
+
+      savedPosts.assignAll(result);
+
+      debugPrint('[PROFILE SAVED] Loaded ${savedPosts.length} saved posts');
+    } catch (e, stackTrace) {
+      debugPrint('[PROFILE SAVED] Error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      isSavedPostsLoading(false);
+    }
+  }
+
   /// Path → URL conversion happens here so the UI never talks to Storage
   String? get avatarUrl => profile.value?.avatarPath != null
       ? _repo.resolveUrl(profile.value!.avatarPath!, bucket: 'avatars')
@@ -209,6 +260,7 @@ class ProfileController extends GetxController {
       updatedAt: updated.updatedAt,
       followerCount: old?.followerCount ?? followerCount.value,
       followingCount: old?.followingCount ?? followingCount.value,
+      postCount: old?.postCount ?? postCount.value,
     );
 
     // Update UI immediately.
