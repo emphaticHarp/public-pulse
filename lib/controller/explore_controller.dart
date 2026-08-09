@@ -5,6 +5,8 @@ import 'package:public_pulse/core/repository/profile_repository.dart';
 import 'package:public_pulse/model/profile_model.dart';
 import 'package:public_pulse/model/recent_search_model.dart';
 
+import 'package:public_pulse/view/profile/user_profile_page.dart';
+
 class ExploreController extends GetxController {
   final RxList<RecentSearchModel> recentSearches = <RecentSearchModel>[].obs;
 
@@ -43,8 +45,9 @@ class ExploreController extends GetxController {
       ),
     );
 
-    // TODO:
-    // Get.to(() => ProfilePage(userId: user.id));
+    //redirection to user profile page with the user id and binding the controller to the user id
+
+    Get.to(() => UserProfilePage(userId: user.id));
   }
 
   @override
@@ -57,15 +60,15 @@ class ExploreController extends GetxController {
     recentSearches.assignAll(RecentSearchCache.getSearches());
   }
 
- Future<void> addRecentSearch(RecentSearchModel profile) async {
-  await RecentSearchCache.addSearch(profile);
-  loadRecentSearches();
-}
+  Future<void> addRecentSearch(RecentSearchModel profile) async {
+    await RecentSearchCache.addSearch(profile);
+    loadRecentSearches();
+  }
 
-Future<void> removeRecentSearch(RecentSearchModel profile) async {
-  await RecentSearchCache.removeSearch(profile);
-  loadRecentSearches();
-}
+  Future<void> removeRecentSearch(RecentSearchModel profile) async {
+    await RecentSearchCache.removeSearch(profile);
+    loadRecentSearches();
+  }
 
   Future<void> clearRecentSearches() async {
     await RecentSearchCache.clearAll();
