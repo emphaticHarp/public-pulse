@@ -80,13 +80,23 @@ class PostModel {
     Map<String, dynamic> json,
     String? currentProfileId,
   ) {
-    final profile = json['profile'] ?? {};
+    final profile = json['profile'] is Map
+        ? Map<String, dynamic>.from(json['profile'])
+        : <String, dynamic>{};
 
-    final media = List<Map<String, dynamic>>.from(json['media'] ?? []);
+    final media = (json['media'] is List)
+        ? List<Map<String, dynamic>>.from(
+            (json['media'] as List).map((e) => Map<String, dynamic>.from(e)),
+          )
+        : <Map<String, dynamic>>[];
 
-    final liked = (json['my_like'] as List?)?.isNotEmpty ?? false;
-    final saved = (json['my_save'] as List?)?.isNotEmpty ?? false;
+    final liked = (json['my_like'] is List)
+        ? (json['my_like'] as List).isNotEmpty
+        : false;
 
+    final saved = (json['my_save'] is List)
+        ? (json['my_save'] as List).isNotEmpty
+        : false;
     return PostModel(
       id: json['id'],
       profileId: json['profile_id'],
@@ -96,15 +106,26 @@ class PostModel {
       profileImage: profile['avatar_path'],
 
       storagePaths: media
-          .map((item) => item['storage_path'] as String)
+          .map((item) => item['storage_path']?.toString() ?? '')
+          .where((path) => path.isNotEmpty)
+          .toList(),
+          
+
+      mediaUrls: media
+          .map((item) {
+            final path = item['storage_path']?.toString();
+
+            if (path == null || path.isEmpty) {
+              return '';
+            }
+
+            return Supabase.instance.client.storage
+                .from('posts-images')
+                .getPublicUrl(path);
+          })
+          .where((url) => url.isNotEmpty)
           .toList(),
 
-      mediaUrls: media.map((item) {
-        final path = item['storage_path'] as String;
-        return Supabase.instance.client.storage
-            .from('posts-images')
-            .getPublicUrl(path);
-      }).toList(),
 
       thumbnailUrls: const [],
 
@@ -114,14 +135,14 @@ class PostModel {
       location: json['location_name'],
 
       visibility: json['visibility'],
-      isPrivateAccount: profile['is_private'],
-     isOwner: currentProfileId == json['profile_id'],
+      isPrivateAccount: profile['is_private'] as bool? ?? false,
+      isOwner: currentProfileId == json['profile_id'],
 
-      likeCount: json['like_count'],
-      commentCount: json['comment_count'],
-      shareCount: json['share_count'],
-      saveCount: json['save_count'],
-      viewCount: json['view_count'],
+      likeCount: json['like_count'] as int? ?? 0,
+      commentCount: json['comment_count'] as int? ?? 0,
+      shareCount: json['share_count'] as int? ?? 0,
+      saveCount: json['save_count'] as int? ?? 0,
+      viewCount: json['view_count'] as int? ?? 0,
 
       isLiked: liked,
       isSaved: saved,

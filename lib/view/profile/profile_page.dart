@@ -267,14 +267,24 @@ class _TabContent extends StatelessWidget {
         final post = posts[index];
 
         if (post.mediaUrls.isEmpty) {
-          return const SizedBox.shrink();
+          return Container(
+            color: Colors.grey.shade200,
+            child: const Center(
+              child: Icon(Icons.image_not_supported_outlined),
+            ),
+          );
         }
 
         return Image.network(
           post.mediaUrls.first,
           fit: BoxFit.cover,
-        errorBuilder: (_, _, _) {
-            return const SizedBox.shrink();
+          errorBuilder: (context, error, stackTrace) {
+            debugPrint('[PROFILE IMAGE ERROR] ${post.mediaUrls.first}');
+
+            return Container(
+              color: Colors.grey.shade200,
+              child: const Center(child: Icon(Icons.broken_image_outlined)),
+            );
           },
         );
       },

@@ -201,6 +201,155 @@ class ProfileRepository {
     return data['id'] as String;
   }
 
+  Future<ProfileModel> getProfileByProfileId(String profileId) async {
+    debugPrint(
+      '[PROFILE_REPO] Loading profile by internal profile ID: $profileId',
+    );
+
+    final data = await _db.select().eq('id', profileId).single();
+
+    final profile = ProfileModel.fromJson(data);
+
+    final counts = await getFollowCountsByProfileId(profileId);
+
+    return ProfileModel(
+      id: profile.id,
+      username: profile.username,
+      displayName: profile.displayName,
+      bio: profile.bio,
+      avatarPath: profile.avatarPath,
+      coverPath: profile.coverPath,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+      followerCount: counts.followers,
+      followingCount: counts.following,
+      postCount: profile.postCount,
+      accountStatus: profile.accountStatus,
+      referCode: profile.referCode,
+    );
+  }
+
+  Future<({int followers, int following})> getFollowCountsByProfileId(
+    String profileId,
+  ) async {
+    final data = await _db
+        .select('follower_count, following_count')
+        .eq('id', profileId)
+        .single();
+
+    return (
+      followers: (data['follower_count'] as num?)?.toInt() ?? 0,
+      following: (data['following_count'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getUserPostsByProfileId(
+    String profileId,
+  ) async {
+    debugPrint('[PROFILE POSTS] Getting posts for profileId: $profileId');
+
+    // ----------------------------------------------------------
+    // 1. Get profile information
+    // ----------------------------------------------------------
+
+    final profileData = await _db
+        .select('id, user_id, username, display_name, avatar_path, is_private')
+        .eq('id', profileId)
+        .single();
+
+    debugPrint('[PROFILE POSTS] Profile = ${profileData['username']}');
+
+    // ----------------------------------------------------------
+    // 2. Get posts + media
+    // ----------------------------------------------------------
+
+    final posts = await Supabase.instance.client
+        .from('posts')
+        .select('''
+        id,
+        profile_id,
+        caption,
+        latitude,
+        longitude,
+        location_name,
+        visibility,
+        status,
+        like_count,
+        comment_count,
+        save_count,
+        share_count,
+        view_count,
+        created_at,
+        updated_at,
+        deleted_at,
+        post_media(
+          id,
+          post_id,
+          media_order,
+          media_type,
+          storage_path,
+          thumbnail_path,
+          width,
+          height,
+          duration_seconds,
+          file_size,
+          created_at
+        )
+      ''')
+        .eq('profile_id', profileId)
+        .order('created_at', ascending: false);
+
+    debugPrint('[PROFILE POSTS] Supabase returned ${posts.length} posts');
+
+    // ----------------------------------------------------------
+    // 3. Transform Supabase response
+    // ----------------------------------------------------------
+
+    final result = <Map<String, dynamic>>[];
+
+    for (final post in posts) {
+      final data = Map<String, dynamic>.from(post);
+
+      // --------------------------------------------------------
+      // Rename post_media -> media
+      // --------------------------------------------------------
+
+      final postMedia = data['post_media'];
+
+      data['media'] = postMedia is List ? postMedia : [];
+
+      // --------------------------------------------------------
+      // Add profile information
+      // --------------------------------------------------------
+
+      data['profile'] = {
+        'username': profileData['username'] ?? '',
+        'display_name': profileData['display_name'] ?? '',
+        'avatar_path': profileData['avatar_path'],
+        'is_private': profileData['is_private'] ?? false,
+      };
+
+      // --------------------------------------------------------
+      // User interaction
+      // --------------------------------------------------------
+
+      data['my_like'] = [];
+      data['my_save'] = [];
+
+      debugPrint(
+        '[PROFILE POSTS] '
+        'post=${data['id']} '
+        'media=${(data['media'] as List).length}',
+      );
+
+      result.add(data);
+    }
+
+    debugPrint('[PROFILE POSTS] Returning ${result.length} transformed posts');
+
+    return result;
+  }
+
   /// Returns a cursor-paginated list of accounts that [userId] is following.
   ///
   /// Pass [afterCursor] to advance; omit for page one.
@@ -281,9 +430,31 @@ class ProfileRepository {
   // ─────────────────────────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> getUserPosts(String userId) async {
-    final profile = await _db.select('id').eq('user_id', userId).single();
+    debugPrint('[PROFILE POSTS] Getting posts for user: $userId');
 
-    final profileId = profile['id'] as String;
+    // ----------------------------------------------------------
+    // 1. Get target profile
+    // ----------------------------------------------------------
+
+    final profileData = await _db
+        .select('''
+        id,
+        user_id,
+        username,
+        display_name,
+        avatar_path,
+        is_private
+      ''')
+        .eq('user_id', userId)
+        .single();
+
+    final profileId = profileData['id'] as String;
+
+    debugPrint('[PROFILE POSTS] profileId = $profileId');
+
+    // ----------------------------------------------------------
+    // 2. Get posts + media
+    // ----------------------------------------------------------
 
     final posts = await Supabase.instance.client
         .from('posts')
@@ -321,9 +492,58 @@ class ProfileRepository {
         .eq('profile_id', profileId)
         .order('created_at', ascending: false);
 
-    return List<Map<String, dynamic>>.from(posts);
-  }
+    debugPrint('[PROFILE POSTS] Supabase returned ${posts.length} posts');
 
+    for (final post in posts) {
+      debugPrint(
+        '[PROFILE RAW] '
+        'id=${post['id']} '
+        'post_media=${post['post_media']}',
+      );
+    }
+
+    // ----------------------------------------------------------
+    // 3. Convert to PostModel format
+    // ----------------------------------------------------------
+
+    final result = <Map<String, dynamic>>[];
+
+    for (final post in posts) {
+      final data = Map<String, dynamic>.from(post);
+
+      // Profile information expected by PostModel
+      data['profile'] = {
+        'username': profileData['username'] ?? '',
+        'display_name': profileData['display_name'] ?? '',
+        'avatar_path': profileData['avatar_path'],
+        'is_private': profileData['is_private'] ?? false,
+      };
+
+      // IMPORTANT:
+      // PostModel expects "media", not "post_media".
+      final postMedia = data['post_media'];
+
+      if (postMedia is List) {
+        data['media'] = postMedia;
+      } else {
+        data['media'] = [];
+      }
+
+      // Profile page doesn't need these.
+      data['my_like'] = [];
+      data['my_save'] = [];
+
+      debugPrint(
+        '[PROFILE POSTS] '
+        'post=${data['id']} '
+        'media=${(data['media'] as List).length}',
+      );
+
+      result.add(data);
+    }
+
+    return result;
+  }
 
   // ─────────────────────────────────────────────────────────────
   // SAVED POSTS

@@ -194,7 +194,7 @@ class ProfileController extends GetxController {
     isLoading.value = true;
 
     try {
-      final fetchedProfile = await _repo.getProfileByUserId(targetUserId);
+      final fetchedProfile = await _repo.getProfileByProfileId(targetUserId);
 
       _applyProfileToState(fetchedProfile);
 
@@ -251,7 +251,7 @@ class ProfileController extends GetxController {
       // ============================================================
 
       if (userId != null) {
-        final updatedProfile = await _repo.getProfileByUserId(userId!);
+        final updatedProfile = await _repo.getProfileByProfileId(userId!);
 
         profile.value = updatedProfile;
 
@@ -402,7 +402,7 @@ class ProfileController extends GetxController {
     isPostsLoading(true);
 
     try {
-      final result = await _repo.getUserPosts(userId);
+      final result = await _repo.getUserPostsByProfileId(userId);
 
       final currentProfileId = await CurrentUserService.instance.getProfileId();
 
@@ -411,6 +411,15 @@ class ProfileController extends GetxController {
           .toList();
 
       photoPosts.assignAll(posts);
+
+      for (final post in posts) {
+        debugPrint(
+          '[PROFILE POSTS DEBUG] '
+          'post=${post.id} '
+          'media=${post.mediaUrls.length} '
+          'urls=${post.mediaUrls}',
+        );
+      }
 
       debugPrint('[PROFILE POSTS] Loaded ${posts.length} posts for $userId');
     } catch (e, stackTrace) {
