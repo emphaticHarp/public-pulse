@@ -9,6 +9,7 @@ import 'package:public_pulse/core/repository/post_repository.dart';
 import 'package:public_pulse/core/cache/cache_manager.dart';
 import 'package:public_pulse/core/repository/follow_repository.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
+import 'package:public_pulse/controller/profile_controller.dart';
 
 class HomeController extends GetxController {
   // ============================================================
@@ -461,7 +462,10 @@ class HomeController extends GetxController {
   Future<void> toggleSave(PostModel post) async {
     final oldSaved = post.isSaved;
 
-    // Optimistic UI.
+    // ============================================================
+    // 1. OPTIMISTIC UI
+    // ============================================================
+
     post.isSaved = !oldSaved;
 
     posts.refresh();
@@ -472,10 +476,26 @@ class HomeController extends GetxController {
       hasMore: hasMore.value,
     );
 
+    // ============================================================
+    // 2. UPDATE PROFILE SAVED POSTS IMMEDIATELY
+    // ============================================================
+
+    if (Get.isRegistered<ProfileController>()) {
+      await ProfileController.to.onPostSaveChanged(post, saved: post.isSaved);
+    }
+
+    // ============================================================
+    // 3. UPDATE SUPABASE
+    // ============================================================
+
     final success = await _repository.toggleSave(
       postId: post.id,
       currentlySaved: oldSaved,
     );
+
+    // ============================================================
+    // 4. ROLLBACK IF SERVER FAILED
+    // ============================================================
 
     if (!success) {
       post.isSaved = oldSaved;
@@ -487,9 +507,13 @@ class HomeController extends GetxController {
         nextCursor: nextCursor,
         hasMore: hasMore.value,
       );
+
+      // Roll back Profile page too.
+      if (Get.isRegistered<ProfileController>()) {
+        await ProfileController.to.onPostSaveChanged(post, saved: oldSaved);
+      }
     }
   }
-
   // ============================================================
   // LOAD MORE
   // ============================================================

@@ -8,4 +8,10 @@ class HiveBoxes {
   static const cachedUserProfile =
       'cached_user_profile'; // for own post means for profile page
   static const cachedFollowersFollowing = 'cached_followers_following';
+
+  // ================= PROFILE POSTS =================
+
+  static const cachedMyPosts = 'cached_my_posts';
+
+  static const cachedSavedPosts = 'cached_saved_posts';
 }

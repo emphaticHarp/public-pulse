@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 
-import '../core/services/auth_service.dart';
-import '../core/cache/hive_boxes.dart';
-import '../core/cache/cache_manager.dart';
-import '../controller/profile_controller.dart';
-import '../view/auth/login_page.dart';
+import 'package:public_pulse/core/services/auth_service.dart';
+import 'package:public_pulse/core/cache/hive_boxes.dart';
+import 'package:public_pulse/core/cache/cache_manager.dart';
+import 'package:public_pulse/controller/profile_controller.dart';
+import 'package:public_pulse/view/auth/login_page.dart';
+import 'package:public_pulse/controller/home_controller.dart';
+import 'package:public_pulse/controller/notification_controller.dart';
 
 /// All business logic for the Settings Page.
 /// UI must never contain raw logic — only call these methods.
@@ -58,7 +60,8 @@ class SettingController extends GetxController {
       }
     } catch (_) {}
   }
-///setting theme
+
+  ///setting theme
   void showThemeDialog() {
     Get.dialog(
       AlertDialog(
@@ -223,39 +226,82 @@ class SettingController extends GetxController {
   /// 5. Navigates back to Login Screen
   Future<void> logout() async {
     if (isLoggingOut.value) return;
+
+    final confirmed = await _showDestructiveDialog(
+      Get.context!,
+      title: 'Logout',
+      message: 'Are you sure you want to logout from this device?',
+      actionLabel: 'Logout',
+    );
+
+    if (!confirmed) return;
+
     isLoggingOut.value = true;
+
     try {
-      debugPrint('[Settings] Starting logout sequence...');
+      debugPrint('[Settings] ===============================');
+      debugPrint('[Settings] LOGOUT START');
+      debugPrint('[Settings] ===============================');
 
-      // 1. Sign out from Supabase + Google
+      // ----------------------------------------------------------
+      // 1. Sign out from Supabase / Google
+      // ----------------------------------------------------------
+
       final authService = Get.find<AuthService>();
+
       await authService.signOut();
-      debugPrint('[Settings] Supabase sign-out complete');
 
-      // 2. Clear cached posts
-      await CacheManager.clearPostCache();
-      debugPrint('[Settings] Post cache cleared');
+      debugPrint('[Settings] Auth sign-out complete');
 
-      // 3. Clear profile cache
-      try {
-        final profileBox = Hive.box(HiveBoxes.cachedProfiles);
-        await profileBox.clear();
-        debugPrint('[Settings] Profile cache cleared');
-      } catch (e) {
-        debugPrint('[Settings] Profile cache clear error: $e');
-      }
+      // ----------------------------------------------------------
+      // 2. Clear ALL user-specific Hive cache
+      // ----------------------------------------------------------
 
-      // 4. Invalidate ProfileController in-memory state
+      await CacheManager.clearUserData();
+
+      // ----------------------------------------------------------
+      // 3. Reset ProfileController memory
+      // ----------------------------------------------------------
+
       if (Get.isRegistered<ProfileController>()) {
-        ProfileController.to.invalidateProfile();
-        debugPrint('[Settings] ProfileController state invalidated');
+        final profileController = Get.find<ProfileController>();
+
+        await profileController.invalidateProfile();
+
+        debugPrint('[Settings] ProfileController invalidated');
       }
 
-      // 5. Navigate to Login
+      // ----------------------------------------------------------
+      // 4. Remove user-specific controllers
+      // ----------------------------------------------------------
+
+      if (Get.isRegistered<HomeController>()) {
+        Get.delete<HomeController>(force: true);
+
+        debugPrint('[Settings] HomeController removed');
+      }
+
+      if (Get.isRegistered<NotificationController>()) {
+        Get.delete<NotificationController>(force: true);
+
+        debugPrint('[Settings] NotificationController removed');
+      }
+
+      // ----------------------------------------------------------
+      // 5. Go to Login and remove all previous routes
+      // ----------------------------------------------------------
+
       Get.offAll(() => LoginPage());
+
       debugPrint('[Settings] Navigated to LoginPage');
-    } catch (e) {
+
+      debugPrint('[Settings] ===============================');
+      debugPrint('[Settings] LOGOUT COMPLETE');
+      debugPrint('[Settings] ===============================');
+    } catch (e, stackTrace) {
       debugPrint('[Settings] Logout error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
       Get.snackbar(
         'Logout Failed',
         'Something went wrong. Please try again.',

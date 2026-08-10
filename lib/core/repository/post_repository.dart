@@ -284,6 +284,10 @@ class PostRepository {
   // SAVED POSTS
   // ============================================================
 
+  // ============================================================
+  // SAVED POSTS
+  // ============================================================
+
   Future<List<PostModel>> getSavedPosts() async {
     debugPrint('[REPO] getSavedPosts()');
 
@@ -291,13 +295,19 @@ class PostRepository {
       final currentProfileId = await getCurrentProfileId();
 
       if (currentProfileId == null) {
+        debugPrint('[REPO] No current profile ID');
         return [];
       }
+
+      debugPrint('[REPO] Loading saved posts for: $currentProfileId');
 
       final response = await _supabase
           .from('saved_posts')
           .select('''
+          id,
+          profile_id,
           post_id,
+          created_at,
 
           post:posts(
             id,
@@ -306,6 +316,7 @@ class PostRepository {
             location_name,
             visibility,
             status,
+            deleted_at,
             like_count,
             comment_count,
             share_count,
@@ -331,17 +342,13 @@ class PostRepository {
               id,
               profile_id,
               post_id
-            ),
-
-            my_save:saved_posts!left(
-              id,
-              profile_id,
-              post_id
             )
           )
         ''')
           .eq('profile_id', currentProfileId)
           .order('created_at', ascending: false);
+
+      debugPrint('[REPO] saved_posts rows returned: ${response.length}');
 
       final posts = <PostModel>[];
 
@@ -349,21 +356,34 @@ class PostRepository {
         final post = row['post'];
 
         if (post == null) {
+          debugPrint('[REPO] Saved row has no post');
           continue;
         }
 
         if (post['status'] != 'ACTIVE') {
+          debugPrint('[REPO] Skipping inactive post: ${post['id']}');
           continue;
         }
 
         if (post['deleted_at'] != null) {
+          debugPrint('[REPO] Skipping deleted post: ${post['id']}');
           continue;
         }
 
-        posts.add(PostModel.fromJson(post, currentProfileId));
+        try {
+          final postModel = PostModel.fromJson(
+            Map<String, dynamic>.from(post),
+            currentProfileId,
+          );
+
+          posts.add(postModel);
+        } catch (e, stackTrace) {
+          debugPrint('[REPO] Failed to convert saved post ${post['id']}: $e');
+          debugPrintStack(stackTrace: stackTrace);
+        }
       }
 
-      debugPrint('[REPO] Saved posts loaded: ${posts.length}');
+      debugPrint('[REPO] Saved posts loaded successfully: ${posts.length}');
 
       return posts;
     } catch (e, stackTrace) {
@@ -373,7 +393,6 @@ class PostRepository {
       return [];
     }
   }
-
   // ============================================================
   // NEW POSTS
   // ============================================================

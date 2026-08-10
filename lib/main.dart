@@ -14,6 +14,7 @@ import 'package:public_pulse/controller/notification_controller.dart';
 import 'package:public_pulse/controller/profile_controller.dart';
 import 'package:public_pulse/controller/login_controller.dart';
 import 'package:public_pulse/core/cache/hive_service.dart';
+import 'package:public_pulse/controller/setting_controller.dart';
 
 /// A simple HTTP client that logs every request and response status code.
 class LoggingHttpClient extends http.BaseClient {
@@ -52,10 +53,14 @@ Future<void> main() async {
   Get.put(AuthService(), permanent: true);
 
   Get.put(NetworkController());
-  Get.put(HomeController());
+  Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
   Get.lazyPut<LoginController>(() => LoginController(), fenix: true);
-  Get.lazyPut<NotificationController>(() => NotificationController(), fenix: true);
+  Get.lazyPut<NotificationController>(
+    () => NotificationController(),
+    fenix: true,
+  );
   Get.lazyPut<ProfileController>(() => ProfileController(), fenix: true);
+  Get.lazyPut<SettingController>(() => SettingController(), fenix: true);
   runApp(const PublicPulseApp());
 }
 

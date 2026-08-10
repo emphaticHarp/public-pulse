@@ -160,4 +160,217 @@ class CacheManager {
   static Future clearUserProfileCache() async {
     await _userProfileBox.clear();
   }
+
+  // ============================================================
+  // PROFILE POSTS CACHE
+  // ============================================================
+
+  static const Duration _profilePostsCacheDuration = Duration(days: 5);
+
+  // ------------------------------------------------------------
+  // MY POSTS
+  // ------------------------------------------------------------
+
+  static Box get _myPostsBox => Hive.box(HiveBoxes.cachedMyPosts);
+
+  static Future<void> cacheMyPosts(List<PostModel> posts) async {
+    final postsJson = posts.map((post) => post.toJson()).toList();
+
+    await _myPostsBox.put(CacheKeys.myPosts, postsJson);
+
+    await _myPostsBox.put(
+      CacheKeys.myPostsTimestamp,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+
+    debugPrint('[PROFILE CACHE] My posts cached: ${posts.length}');
+  }
+
+  static List<PostModel> getCachedMyPosts() {
+    final data = _myPostsBox.get(CacheKeys.myPosts);
+
+    if (data == null) {
+      debugPrint('[PROFILE CACHE] No cached my posts');
+      return [];
+    }
+
+    final timestamp = _myPostsBox.get(CacheKeys.myPostsTimestamp);
+
+    if (timestamp == null) {
+      debugPrint('[PROFILE CACHE] My posts timestamp missing');
+      return [];
+    }
+
+    final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
+
+    if (age > _profilePostsCacheDuration.inMilliseconds) {
+      debugPrint('[PROFILE CACHE] My posts cache expired');
+
+      clearMyPostsCache();
+
+      return [];
+    }
+
+    try {
+      final cachedList = data as List;
+
+      final posts = <PostModel>[];
+
+      for (final item in cachedList) {
+        try {
+          final postData = Map<String, dynamic>.from(item);
+
+          posts.add(PostModel.fromCache(postData));
+        } catch (e) {
+          debugPrint('[PROFILE CACHE] My post parse error: $e');
+        }
+      }
+
+      debugPrint('[PROFILE CACHE] Loaded ${posts.length} my posts');
+
+      return posts;
+    } catch (e) {
+      debugPrint('[PROFILE CACHE] Failed loading my posts: $e');
+
+      return [];
+    }
+  }
+
+  static Future<void> clearMyPostsCache() async {
+    await _myPostsBox.clear();
+
+    debugPrint('[PROFILE CACHE] My posts cache cleared');
+  }
+
+  // ------------------------------------------------------------
+  // SAVED POSTS
+  // ------------------------------------------------------------
+
+  static Box get _savedPostsBox => Hive.box(HiveBoxes.cachedSavedPosts);
+
+  static Future<void> cacheSavedPosts(List<PostModel> posts) async {
+    final postsJson = posts.map((post) => post.toJson()).toList();
+
+    await _savedPostsBox.put(CacheKeys.savedPosts, postsJson);
+
+    await _savedPostsBox.put(
+      CacheKeys.savedPostsTimestamp,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+
+    debugPrint('[PROFILE CACHE] Saved posts cached: ${posts.length}');
+  }
+
+  static List<PostModel> getCachedSavedPosts() {
+    final data = _savedPostsBox.get(CacheKeys.savedPosts);
+
+    if (data == null) {
+      debugPrint('[PROFILE CACHE] No cached saved posts');
+
+      return [];
+    }
+
+    final timestamp = _savedPostsBox.get(CacheKeys.savedPostsTimestamp);
+
+    if (timestamp == null) {
+      debugPrint('[PROFILE CACHE] Saved posts timestamp missing');
+
+      return [];
+    }
+
+    final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
+
+    if (age > _profilePostsCacheDuration.inMilliseconds) {
+      debugPrint('[PROFILE CACHE] Saved posts cache expired');
+
+      clearSavedPostsCache();
+
+      return [];
+    }
+
+    try {
+      final cachedList = data as List;
+
+      final posts = <PostModel>[];
+
+      for (final item in cachedList) {
+        try {
+          final postData = Map<String, dynamic>.from(item);
+
+          posts.add(PostModel.fromCache(postData));
+        } catch (e) {
+          debugPrint('[PROFILE CACHE] Saved post parse error: $e');
+        }
+      }
+
+      debugPrint('[PROFILE CACHE] Loaded ${posts.length} saved posts');
+
+      return posts;
+    } catch (e) {
+      debugPrint('[PROFILE CACHE] Failed loading saved posts: $e');
+
+      return [];
+    }
+  }
+
+  static Future<void> clearSavedPostsCache() async {
+    await _savedPostsBox.clear();
+
+    debugPrint('[PROFILE CACHE] Saved posts cache cleared');
+  }
+
+  // ------------------------------------------------------------
+  // CLEAR BOTH PROFILE POST CACHES
+  // ------------------------------------------------------------
+
+  static Future<void> clearProfilePostsCache() async {
+    await _myPostsBox.clear();
+    await _savedPostsBox.clear();
+
+    debugPrint('[PROFILE CACHE] My + saved posts caches cleared');
+  }
+
+  static Future<void> clearUserData() async {
+    debugPrint('[CACHE] ===============================');
+    debugPrint('[CACHE] CLEARING USER DATA');
+    debugPrint('[CACHE] ===============================');
+
+    // Home feed
+    await clearPostCache();
+
+    // User profile
+    await clearUserProfileCache();
+
+    // Following IDs
+    await clearFollowingCache();
+
+    // My posts
+    try {
+      await Hive.box(HiveBoxes.cachedMyPosts).clear();
+      debugPrint('[CACHE] My posts cleared');
+    } catch (e) {
+      debugPrint('[CACHE] My posts clear error: $e');
+    }
+
+    // Saved posts
+    try {
+      await Hive.box(HiveBoxes.cachedSavedPosts).clear();
+      debugPrint('[CACHE] Saved posts cleared');
+    } catch (e) {
+      debugPrint('[CACHE] Saved posts clear error: $e');
+    }
+
+    // Followers / Following
+    try {
+      await Hive.box(HiveBoxes.cachedFollowersFollowing).clear();
+
+      debugPrint('[CACHE] Followers/following cache cleared');
+    } catch (e) {
+      debugPrint('[CACHE] Followers/following clear error: $e');
+    }
+
+    debugPrint('[CACHE] ===============================');
+    debugPrint('[CACHE] USER DATA CLEARED');
+    debugPrint('[CACHE] ===============================');
+  }
 }
