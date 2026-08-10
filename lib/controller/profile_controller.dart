@@ -1,35 +1,62 @@
-import 'package:get/get.dart';
-import 'package:public_pulse/model/profile_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
+
+import 'package:public_pulse/model/profile_model.dart';
+import 'package:public_pulse/model/post_model.dart';
+
 import 'package:public_pulse/core/repository/profile_repository.dart';
+import 'package:public_pulse/core/repository/post_repository.dart';
+import 'package:public_pulse/core/cache/cache_manager.dart';
+
 import 'package:public_pulse/controller/followers_following_controller.dart';
 import 'package:public_pulse/view/profile/followers_following_page.dart';
-import 'package:public_pulse/core/cache/cache_manager.dart';
-import 'package:public_pulse/model/post_model.dart';
-import 'package:public_pulse/core/repository/post_repository.dart';
+import 'package:public_pulse/core/services/current_user_service.dart';
 
 class ProfileController extends GetxController {
+  ProfileController({this.userId});
+
+  final String? userId;
+
+  final ProfileRepository _repo = ProfileRepository.instance;
   final PostRepository _postRepo = PostRepository();
-  static ProfileController get to => Get.find();
+
+  /// This is only safe when the controller was registered without a tag.
+  /// For tagged controllers, prefer:
+  /// Get.find<ProfileController>(tag: ...)
+  static ProfileController get to {
+    return Get.find<ProfileController>();
+  }
+
+  bool get isMyProfile => userId == null;
+
+  String get controllerTag => userId ?? 'my_profile';
 
   @override
   void onInit() {
     super.onInit();
-    debugPrint("🔥 ProfileController Created");
+
+    debugPrint('🔥 ProfileController Created');
+    debugPrint('[PROFILE] userId = $userId');
+    debugPrint('[PROFILE] isMyProfile = $isMyProfile');
+
     ensureProfileLoaded();
   }
 
-  final ProfileRepository _repo = ProfileRepository.instance;
+  // ============================================================
+  // STATE
+  // ============================================================
 
   final profile = Rxn<ProfileModel>();
+
   final isLoading = false.obs;
   final errorMessage = ''.obs;
+
   final selectedTab = ProfileTab.photos.obs;
+
   final postCount = 0.obs;
   final followerCount = 0.obs;
   final followingCount = 0.obs;
 
-  //  wire to PostRepository once the Posts feature exists.
   final photoPosts = <PostModel>[].obs;
   final savedPosts = <PostModel>[].obs;
 
@@ -38,39 +65,54 @@ class ProfileController extends GetxController {
 
   bool _profileLoaded = false;
 
+  // ============================================================
+  // PROFILE LOAD
+  // ============================================================
+
   Future<void> ensureProfileLoaded() async {
     if (_profileLoaded) return;
 
-    // --------------------------------------------------
-    // 1. Load profile from Hive immediately
-    // --------------------------------------------------
+    errorMessage.value = '';
+
+    if (isMyProfile) {
+      await _loadMyProfile();
+    } else {
+      await _loadOtherProfile(userId!);
+    }
+  }
+
+  // ============================================================
+  // LOAD MY PROFILE
+  // ============================================================
+
+  Future<void> _loadMyProfile() async {
+    // ----------------------------------------------------------
+    // CACHE FIRST
+    // ----------------------------------------------------------
 
     final cachedProfile = CacheManager.getCachedUserProfile();
+
     if (cachedProfile != null) {
-      debugPrint('[PROFILE] Loaded profile from Hive');
-      debugPrint('[PROFILE] Cached user_id: ${cachedProfile.id}');
+      debugPrint('[PROFILE] Loaded own profile from Hive');
 
-      profile.value = cachedProfile;
+      _applyProfileToState(cachedProfile);
 
-      followerCount.value = cachedProfile.followerCount ?? 0;
-      followingCount.value = cachedProfile.followingCount ?? 0;
-      postCount.value = cachedProfile.postCount ?? 0;
-
-      // IMPORTANT
       _profileLoaded = true;
 
+      // Load cached/server posts in background.
       await loadMyPosts();
       await loadSavedPosts();
 
-      debugPrint('[PROFILE] Cache initialization complete');
+      debugPrint('[PROFILE] Own profile cache initialization complete');
 
       return;
     }
 
-    // --------------------------------------------------
-    // 2. No cache -> fetch from Supabase
-    // --------------------------------------------------
-    debugPrint('[PROFILE] No cache -> fetching from Supabase');
+    // ----------------------------------------------------------
+    // SUPABASE
+    // ----------------------------------------------------------
+
+    debugPrint('[PROFILE] No own profile cache -> Supabase');
 
     isLoading.value = true;
 
@@ -95,15 +137,13 @@ class ProfileController extends GetxController {
         referCode: fetchedProfile.referCode,
       );
 
-      profile.value = profileWithCounts;
-
-      followerCount.value = counts.followers;
-      followingCount.value = counts.following;
+      _applyProfileToState(profileWithCounts);
 
       await CacheManager.cacheUserProfile(profileWithCounts);
+
       _profileLoaded = true;
 
-      debugPrint('[PROFILE] Profile fetched and cached');
+      debugPrint('[PROFILE] Own profile fetched + cached');
 
       await loadMyPosts();
       await loadSavedPosts();
@@ -112,12 +152,86 @@ class ProfileController extends GetxController {
 
       errorMessage.value = 'Failed to load profile.';
 
-      debugPrint('[PROFILE] Load error: $e');
+      debugPrint('[PROFILE] Own profile load error: $e');
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
     }
   }
+
+  // ============================================================
+  // LOAD OTHER USER PROFILE
+  // ============================================================
+
+  Future<void> _loadOtherProfile(String targetUserId) async {
+    // ----------------------------------------------------------
+    // CACHE FIRST
+    // ----------------------------------------------------------
+
+    final cachedProfile = CacheManager.getCachedProfileByUserId(targetUserId);
+
+    if (cachedProfile != null) {
+      debugPrint('[PROFILE] Loaded other profile from cache: $targetUserId');
+
+      _applyProfileToState(cachedProfile);
+
+      _profileLoaded = true;
+
+      // Load latest posts.
+      await loadUserPosts(targetUserId);
+
+      debugPrint('[PROFILE] Other profile cache initialization complete');
+
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // SUPABASE
+    // ----------------------------------------------------------
+
+    debugPrint('[PROFILE] No cached other profile -> fetching $targetUserId');
+
+    isLoading.value = true;
+
+    try {
+      final fetchedProfile = await _repo.getProfileByUserId(targetUserId);
+
+      _applyProfileToState(fetchedProfile);
+
+      await CacheManager.cacheProfileByUserId(fetchedProfile);
+
+      _profileLoaded = true;
+
+      await loadUserPosts(targetUserId);
+
+      debugPrint('[PROFILE] Other profile fetched + cached: $targetUserId');
+    } catch (e, stackTrace) {
+      _profileLoaded = false;
+
+      errorMessage.value = 'Failed to load profile.';
+
+      debugPrint('[PROFILE] Other profile load error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ============================================================
+  // APPLY PROFILE TO MEMORY
+  // ============================================================
+
+  void _applyProfileToState(ProfileModel value) {
+    profile.value = value;
+
+    postCount.value = value.postCount ?? 0;
+    followerCount.value = value.followerCount ?? 0;
+    followingCount.value = value.followingCount ?? 0;
+  }
+
+  // ============================================================
+  // REFRESH
+  // ============================================================
 
   Future<void> refreshProfile() async {
     final currentProfile = profile.value;
@@ -127,26 +241,42 @@ class ProfileController extends GetxController {
       return;
     }
 
-    debugPrint('[PROFILE] Pull-to-refresh started');
+    debugPrint('[PROFILE] Pull-to-refresh started | userId=$userId');
 
     try {
       final uid = currentProfile.id;
 
-      // --------------------------------------------------
-      // 1. Fetch latest profile
-      // --------------------------------------------------
+      // ============================================================
+      // OTHER USER PROFILE
+      // ============================================================
+
+      if (userId != null) {
+        final updatedProfile = await _repo.getProfileByUserId(userId!);
+
+        profile.value = updatedProfile;
+
+        followerCount.value = updatedProfile.followerCount ?? 0;
+
+        followingCount.value = updatedProfile.followingCount ?? 0;
+
+        postCount.value = updatedProfile.postCount ?? 0;
+
+        await CacheManager.cacheProfileByUserId(updatedProfile);
+
+        await loadUserPosts(userId!);
+
+        debugPrint('[PROFILE] Other profile refreshed: $userId');
+
+        return;
+      }
+
+      // ============================================================
+      // MY PROFILE
+      // ============================================================
 
       final updatedProfile = await _repo.getProfile();
 
-      // --------------------------------------------------
-      // 2. Fetch latest follower/following counts
-      // --------------------------------------------------
-
       final counts = await _repo.getFollowCounts(uid);
-
-      // --------------------------------------------------
-      // 3. Create updated profile
-      // --------------------------------------------------
 
       final profileWithCounts = ProfileModel(
         id: updatedProfile.id,
@@ -164,35 +294,18 @@ class ProfileController extends GetxController {
         referCode: updatedProfile.referCode,
       );
 
-      // --------------------------------------------------
-      // 4. Update memory
-      // --------------------------------------------------
-
       profile.value = profileWithCounts;
 
       followerCount.value = counts.followers;
       followingCount.value = counts.following;
       postCount.value = updatedProfile.postCount ?? 0;
 
-      // --------------------------------------------------
-      // 5. Update Hive
-      // --------------------------------------------------
-
       await CacheManager.cacheUserProfile(profileWithCounts);
 
-      // --------------------------------------------------
-      // 6. IMPORTANT: Reload posts
-      // --------------------------------------------------
-
       await loadMyPosts();
-
-      // --------------------------------------------------
-      // 7. IMPORTANT: Reload saved posts
-      // --------------------------------------------------
-
       await loadSavedPosts();
 
-      debugPrint('[PROFILE] Refresh complete');
+      debugPrint('[PROFILE] My profile refreshed');
     } catch (e, stackTrace) {
       debugPrint('[PROFILE] Refresh failed: $e');
       debugPrintStack(stackTrace: stackTrace);
@@ -201,25 +314,45 @@ class ProfileController extends GetxController {
     }
   }
 
-  /// Resets in-memory cache so the next ensureProfileLoaded() re-fetches.
+  // ============================================================
+  // INVALIDATE PROFILE
+  // ============================================================
+
   Future<void> invalidateProfile() async {
     _profileLoaded = false;
 
-    await CacheManager.clearUserProfileCache();
+    if (isMyProfile) {
+      await CacheManager.clearUserProfileCache();
+    } else {
+      await CacheManager.clearCachedProfileByUserId(userId!);
+    }
 
-    debugPrint('[PROFILE CACHE] Invalidated');
+    profile.value = null;
+
+    photoPosts.clear();
+    savedPosts.clear();
+
+    debugPrint('[PROFILE CACHE] Invalidated | userId=$userId');
   }
+
+  // ============================================================
+  // TABS
+  // ============================================================
 
   void changeTab(ProfileTab tab) {
     selectedTab.value = tab;
   }
 
+  // ============================================================
+  // MY POSTS
+  // ============================================================
+
   Future<void> loadMyPosts() async {
     if (isPostsLoading.value) return;
 
-    // ============================================================
-    // 1. LOAD CACHE FIRST
-    // ============================================================
+    // ----------------------------------------------------------
+    // CACHE FIRST
+    // ----------------------------------------------------------
 
     final cachedPosts = CacheManager.getCachedMyPosts();
 
@@ -227,15 +360,16 @@ class ProfileController extends GetxController {
       photoPosts.assignAll(cachedPosts);
 
       debugPrint(
-        '[PROFILE POSTS] Loaded ${photoPosts.length} posts from cache',
+        '[PROFILE POSTS] Loaded '
+        '${photoPosts.length} posts from cache',
       );
     }
 
-    // ============================================================
-    // 2. FETCH SERVER DATA
-    // ============================================================
+    // ----------------------------------------------------------
+    // SERVER
+    // ----------------------------------------------------------
 
-    isPostsLoading(true);
+    isPostsLoading.value = true;
 
     try {
       final result = await _postRepo.getMyPosts();
@@ -244,28 +378,62 @@ class ProfileController extends GetxController {
 
       postCount.value = profile.value?.postCount ?? result.length;
 
-      // ==========================================================
-      // 3. UPDATE CACHE
-      // ==========================================================
-
       await CacheManager.cacheMyPosts(result);
 
-      debugPrint('[PROFILE POSTS] Server loaded ${photoPosts.length} posts');
+      debugPrint(
+        '[PROFILE POSTS] Server loaded '
+        '${photoPosts.length} posts',
+      );
     } catch (e, stackTrace) {
       debugPrint('[PROFILE POSTS] Error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      isPostsLoading.value = false;
+    }
+  }
 
+  // ============================================================
+  // OTHER USER POSTS
+  // ============================================================
+
+  Future<void> loadUserPosts(String userId) async {
+    if (isPostsLoading.value) return;
+
+    isPostsLoading(true);
+
+    try {
+      final result = await _repo.getUserPosts(userId);
+
+      final currentProfileId = await CurrentUserService.instance.getProfileId();
+
+      final posts = result
+          .map((data) => PostModel.fromJson(data, currentProfileId))
+          .toList();
+
+      photoPosts.assignAll(posts);
+
+      debugPrint('[PROFILE POSTS] Loaded ${posts.length} posts for $userId');
+    } catch (e, stackTrace) {
+      debugPrint('[PROFILE POSTS] Error loading user posts: $e');
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       isPostsLoading(false);
     }
   }
 
+  // ============================================================
+  // SAVED POSTS
+  // ONLY MY PROFILE
+  // ============================================================
+
   Future<void> loadSavedPosts() async {
+    if (!isMyProfile) return;
+
     if (isSavedPostsLoading.value) return;
 
-    // ============================================================
-    // 1. LOAD CACHE FIRST
-    // ============================================================
+    // ----------------------------------------------------------
+    // CACHE FIRST
+    // ----------------------------------------------------------
 
     final cachedPosts = CacheManager.getCachedSavedPosts();
 
@@ -274,24 +442,20 @@ class ProfileController extends GetxController {
 
       debugPrint(
         '[PROFILE SAVED] Loaded '
-        '${savedPosts.length} saved posts from cache',
+        '${savedPosts.length} posts from cache',
       );
     }
 
-    // ============================================================
-    // 2. FETCH SERVER DATA
-    // ============================================================
+    // ----------------------------------------------------------
+    // SERVER
+    // ----------------------------------------------------------
 
-    isSavedPostsLoading(true);
+    isSavedPostsLoading.value = true;
 
     try {
       final result = await _postRepo.getSavedPosts();
 
       savedPosts.assignAll(result);
-
-      // ==========================================================
-      // 3. UPDATE CACHE
-      // ==========================================================
 
       await CacheManager.cacheSavedPosts(result);
 
@@ -301,14 +465,19 @@ class ProfileController extends GetxController {
       );
     } catch (e, stackTrace) {
       debugPrint('[PROFILE SAVED] Error: $e');
-
       debugPrintStack(stackTrace: stackTrace);
     } finally {
-      isSavedPostsLoading(false);
+      isSavedPostsLoading.value = false;
     }
   }
 
+  // ============================================================
+  // SAVE / UNSAVE
+  // ============================================================
+
   Future<void> onPostSaveChanged(PostModel post, {required bool saved}) async {
+    if (!isMyProfile) return;
+
     if (saved) {
       final alreadyExists = savedPosts.any((item) => item.id == post.id);
 
@@ -325,30 +494,37 @@ class ProfileController extends GetxController {
 
     savedPosts.refresh();
 
-    // ==========================================================
-    // IMPORTANT:
-    // UPDATE SAVED POSTS CACHE IMMEDIATELY
-    // ==========================================================
-
     await CacheManager.cacheSavedPosts(savedPosts.toList());
-
-    debugPrint(
-      '[PROFILE SAVED] Cache updated '
-      '→ ${savedPosts.length} posts',
-    );
   }
 
-  /// Path → URL conversion happens here so the UI never talks to Storage
-  String? get avatarUrl => profile.value?.avatarPath != null
-      ? _repo.resolveUrl(profile.value!.avatarPath!, bucket: 'avatars')
-      : null;
+  // ============================================================
+  // IMAGE URLS
+  // ============================================================
 
-  String? get coverUrl => profile.value?.coverPath != null
-      ? _repo.resolveUrl(profile.value!.coverPath!, bucket: 'covers')
-      : null;
+  String? get avatarUrl {
+    final path = profile.value?.avatarPath;
 
-  /// Called by [EditProfileController] after a successful save so the
-  /// Profile screen refreshes automatically without a full reload.
+    if (path == null || path.isEmpty) {
+      return null;
+    }
+
+    return _repo.resolveUrl(path, bucket: 'avatars');
+  }
+
+  String? get coverUrl {
+    final path = profile.value?.coverPath;
+
+    if (path == null || path.isEmpty) {
+      return null;
+    }
+
+    return _repo.resolveUrl(path, bucket: 'covers');
+  }
+
+  // ============================================================
+  // APPLY EDITED OWN PROFILE
+  // ============================================================
+
   Future<void> applyUpdatedProfile(ProfileModel updated) async {
     final old = profile.value;
 
@@ -360,7 +536,6 @@ class ProfileController extends GetxController {
       _repo.invalidateUrl(old.coverPath!, bucket: 'covers');
     }
 
-    // Keep existing counters.
     final updatedWithCounts = ProfileModel(
       id: updated.id,
       username: updated.username,
@@ -373,61 +548,112 @@ class ProfileController extends GetxController {
       followerCount: old?.followerCount ?? followerCount.value,
       followingCount: old?.followingCount ?? followingCount.value,
       postCount: old?.postCount ?? postCount.value,
+      accountStatus: updated.accountStatus,
+      referCode: updated.referCode,
     );
 
-    // Update UI immediately.
-    profile.value = updatedWithCounts;
+    _applyProfileToState(updatedWithCounts);
 
-    // Update counters.
-    followerCount.value = updatedWithCounts.followerCount ?? 0;
-    followingCount.value = updatedWithCounts.followingCount ?? 0;
-
-    // Update Hive cache.
-    await CacheManager.cacheUserProfile(updatedWithCounts);
+    if (isMyProfile) {
+      await CacheManager.cacheUserProfile(updatedWithCounts);
+    } else {
+      await CacheManager.cacheProfileByUserId(updatedWithCounts);
+    }
 
     debugPrint('[PROFILE CACHE] Updated after profile edit');
   }
 
-  /// Navigates to the Followers/Following page with the given initial tab.
-  /// is viewed for the first time (or after an explicit invalidation).
+  // ============================================================
+  // FOLLOWERS / FOLLOWING
+  // ============================================================
+
   void openFollowersFollowing(int initialTab) {
     final currentProfile = profile.value;
+
     if (currentProfile == null) return;
 
     final uid = currentProfile.id;
+    final tag = 'ff_$uid';
 
-    debugPrint('[PROFILE] Opening Followers/Following');
-    debugPrint('[PROFILE] Profile user_id: $uid');
+    debugPrint(
+      '[PROFILE] Opening Followers/Following '
+      'uid=$uid tab=$initialTab',
+    );
 
-    if (!Get.isRegistered<FollowersFollowingController>()) {
-      Get.put(FollowersFollowingController(userId: uid));
-    }
-
-    final ffController = FollowersFollowingController.to;
-
-    ffController.switchTab(initialTab);
-
-    Get.to(() => FollowersFollowingPage(initialTab: initialTab));
+    Get.to(
+      () => FollowersFollowingPage(initialTab: initialTab, controllerTag: tag),
+      binding: BindingsBuilder(() {
+        Get.put(
+          FollowersFollowingController(userId: uid, initialTab: initialTab),
+          tag: tag,
+        );
+      }),
+    );
   }
 
-  /// Invalidates the followers/following cache (e.g. after a follow/unfollow
-  /// action) so the next visit re-fetches fresh data from Supabase.
+  // ============================================================
+  // INVALIDATE FOLLOWERS/FOLLOWING
+  // ============================================================
+
   void invalidateFollowersFollowing() {
-    if (Get.isRegistered<FollowersFollowingController>()) {
-      FollowersFollowingController.to.invalidateCache();
+    final currentProfile = profile.value;
+
+    if (currentProfile == null) return;
+
+    final tag = 'ff_${currentProfile.id}';
+
+    if (Get.isRegistered<FollowersFollowingController>(tag: tag)) {
+      Get.find<FollowersFollowingController>(tag: tag).invalidateCache();
     }
-    // Also refresh the counts shown on the profile page.
+
     _reloadCounts();
   }
 
-  /// Re-fetches only the follower/following counts (lightweight, single round-trip).
+  // ============================================================
+  // RELOAD COUNTS
+  // ============================================================
+
   Future<void> _reloadCounts() async {
     final uid = profile.value?.id;
+
     if (uid == null) return;
+
     try {
       final counts = await _repo.getFollowCounts(uid);
+
       followerCount.value = counts.followers;
       followingCount.value = counts.following;
-    } catch (_) {}
+
+      // Also update the profile object in memory.
+      final current = profile.value;
+
+      if (current != null) {
+        final updated = ProfileModel(
+          id: current.id,
+          username: current.username,
+          displayName: current.displayName,
+          bio: current.bio,
+          avatarPath: current.avatarPath,
+          coverPath: current.coverPath,
+          createdAt: current.createdAt,
+          updatedAt: current.updatedAt,
+          followerCount: counts.followers,
+          followingCount: counts.following,
+          postCount: current.postCount,
+          accountStatus: current.accountStatus,
+          referCode: current.referCode,
+        );
+
+        profile.value = updated;
+
+        if (isMyProfile) {
+          await CacheManager.cacheUserProfile(updated);
+        } else {
+          await CacheManager.cacheProfileByUserId(updated);
+        }
+      }
+    } catch (e) {
+      debugPrint('[PROFILE] Failed to reload follow counts: $e');
+    }
   }
 }

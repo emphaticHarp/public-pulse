@@ -13,12 +13,20 @@ import 'edit_profile.dart';
 import '../../model/post_model.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final String? userId;
+
+  const ProfilePage({super.key, this.userId});
 
   @override
   Widget build(BuildContext context) {
     debugPrint("📱 ProfilePage Build");
-    final controller = ProfileController.to;
+    final tag = userId ?? 'my_profile';
+
+    if (!Get.isRegistered<ProfileController>(tag: tag)) {
+      Get.put(ProfileController(userId: userId), tag: tag, permanent: false);
+    }
+
+    final controller = Get.find<ProfileController>(tag: tag);
 
     return Scaffold(
       backgroundColor: AppColors.surfaceDefault,
@@ -28,15 +36,17 @@ class ProfilePage extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            color: AppColors.textPrimary,
-            tooltip: 'Settings',
-            onPressed: _openSettings,
-          ),
-          const SizedBox(width: 4),
-        ],
+        actions: userId == null
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.settings_outlined),
+                  color: AppColors.textPrimary,
+                  tooltip: 'Settings',
+                  onPressed: _openSettings,
+                ),
+                const SizedBox(width: 4),
+              ]
+            : [],
       ),
       body: Obx(() {
         final profile = controller.profile.value;
@@ -133,11 +143,12 @@ class ProfilePage extends StatelessWidget {
                         else
                           const SizedBox(height: 20),
                         const SizedBox(height: 8),
-                        AppOutlinedButton(
-                          label: 'Edit Profile',
-                          icon: Icons.edit_outlined,
-                          onTap: () => _openEditProfile(),
-                        ),
+                        if (userId == null)
+                          AppOutlinedButton(
+                            label: 'Edit Profile',
+                            icon: Icons.edit_outlined,
+                            onTap: () => _openEditProfile(),
+                          ),
                       ],
                     ),
                   ),
@@ -262,7 +273,7 @@ class _TabContent extends StatelessWidget {
         return Image.network(
           post.mediaUrls.first,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) {
+        errorBuilder: (_, _, _) {
             return const SizedBox.shrink();
           },
         );

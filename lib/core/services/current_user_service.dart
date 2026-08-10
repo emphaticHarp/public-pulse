@@ -30,11 +30,11 @@ class CurrentUserService {
   try {
     final response = await _supabase
         .from('profiles')
-        .select('user_id')
+        .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
-    _profileId = response?['user_id'] as String?;
+    _profileId = response?['id'] as String?;
 
     debugPrint('[CURRENT USER] Profile user_id loaded: $_profileId');
 

@@ -3,6 +3,7 @@ import '../compression/image_compressor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/model/profile_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:public_pulse/model/post_model.dart';
 
 /// Singleton repository for all profile-related Supabase operations.
 ///
@@ -29,6 +30,30 @@ class ProfileRepository {
   Future<ProfileModel> getProfile() async {
     final data = await _db.select().eq('user_id', _uid).single();
     return ProfileModel.fromJson(data);
+  }
+
+  Future<ProfileModel> getProfileByUserId(String userId) async {
+    final data = await _db.select().eq('user_id', userId).single();
+
+    final profile = ProfileModel.fromJson(data);
+
+    final counts = await getFollowCounts(userId);
+
+    return ProfileModel(
+      id: profile.id,
+      username: profile.username,
+      displayName: profile.displayName,
+      bio: profile.bio,
+      avatarPath: profile.avatarPath,
+      coverPath: profile.coverPath,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+      followerCount: counts.followers,
+      followingCount: counts.following,
+      postCount: profile.postCount,
+      accountStatus: profile.accountStatus,
+      referCode: profile.referCode,
+    );
   }
 
   /// Returns `true` when [username] is not already taken by another account.
@@ -299,6 +324,7 @@ class ProfileRepository {
     return List<Map<String, dynamic>>.from(posts);
   }
 
+
   // ─────────────────────────────────────────────────────────────
   // SAVED POSTS
   // ─────────────────────────────────────────────────────────────
@@ -361,7 +387,4 @@ class ProfileRepository {
 
     return (data as List).map((e) => ProfileModel.fromJson(e)).toList();
   }
-
-
-
 }
