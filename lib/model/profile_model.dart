@@ -25,9 +25,13 @@ class FollowerModel {
     // Debug logging
     assert(() {
       print('[FF_MODEL] fromJson - input json keys: ${json.keys.toList()}');
-      print('[FF_MODEL] fromJson - profiles key exists: ${json.containsKey("profiles")}');
+      print(
+        '[FF_MODEL] fromJson - profiles key exists: ${json.containsKey("profiles")}',
+      );
       print('[FF_MODEL] fromJson - profile: $profile');
-      print('[FF_MODEL] fromJson - parsed: userId=$userId, username=$username, displayName=$displayName, avatarPath=$avatarPath');
+      print(
+        '[FF_MODEL] fromJson - parsed: userId=$userId, username=$username, displayName=$displayName, avatarPath=$avatarPath',
+      );
       return true;
     }());
 
@@ -53,7 +57,8 @@ class ProfileModel {
   final int? followerCount;
   final int? followingCount;
   final int? postCount;
-
+  final String? accountStatus;
+  final String? referCode;
 
   const ProfileModel({
     required this.id,
@@ -67,7 +72,8 @@ class ProfileModel {
     this.followerCount,
     this.followingCount,
     this.postCount,
-
+    this.accountStatus,
+    this.referCode,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) => ProfileModel(
@@ -82,6 +88,8 @@ class ProfileModel {
     followerCount: (json['follower_count'] as num?)?.toInt(),
     followingCount: (json['following_count'] as num?)?.toInt(),
     postCount: (json['post_count'] as num?)?.toInt(),
+    accountStatus: json['account_status']?.toString(),
+    referCode: json['refer_code']?.toString(),
   );
 
   static DateTime? _parseDate(dynamic value) =>
@@ -99,6 +107,8 @@ class ProfileModel {
     'follower_count': followerCount,
     'following_count': followingCount,
     'post_count': postCount,
+    'account_status': accountStatus,
+    'refer_code': referCode,
   };
 
   ProfileModel copyWith({
@@ -120,6 +130,8 @@ class ProfileModel {
     followerCount: followerCount,
     followingCount: followingCount,
     postCount: postCount,
+    accountStatus: accountStatus,
+    referCode: referCode,
   );
 
   @override
@@ -136,7 +148,9 @@ class ProfileModel {
           updatedAt == other.updatedAt &&
           postCount == other.postCount &&
           followerCount == other.followerCount &&
-          followingCount == other.followingCount);
+          followingCount == other.followingCount &&
+          accountStatus == other.accountStatus &&
+          referCode == other.referCode);
 
   /// Override hashCode to ensure that two ProfileModel instances with the same values are equal.
   @override
@@ -152,5 +166,7 @@ class ProfileModel {
     followerCount,
     followingCount,
     postCount,
+    accountStatus,
+    referCode,
   );
 }

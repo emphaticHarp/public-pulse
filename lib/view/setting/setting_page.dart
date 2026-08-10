@@ -21,16 +21,26 @@ class SettingPage extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: AppColors.primaryText, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.primaryText,
+            size: 20,
+          ),
           onPressed: () => Get.back(),
         ),
-        title: Text('Settings', style: AppTextStyles.settingsHeading.copyWith(color: AppColors.primaryText)),
+        title: Text(
+          'Settings',
+          style: AppTextStyles.settingsHeading.copyWith(
+            color: AppColors.primaryText,
+          ),
+        ),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
-            horizontal: 24, vertical: AppSpacing.md),
+          horizontal: 24,
+          vertical: AppSpacing.md,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -41,17 +51,23 @@ class SettingPage extends StatelessWidget {
                 SettingStatusItem(
                   icon: Icons.shield_outlined,
                   title: 'Account Status',
-                  subtitle: 'Your account is active',
-                  statusText: 'Active',
-                  statusColor: AppColors.success,
+                  subtitle: 'Current status of your account',
+                  statusText: controller.accountStatusText,
+                  statusColor: controller.accountStatusColor,
                   showDivider: true,
                 ),
                 SettingCopyItem(
-                  icon: Icons.card_giftcard_rounded,       ///changes
+                  icon: Icons.card_giftcard_rounded,
                   title: 'Referral Code',
-                  subtitle: 'Share code ',
-                  valueText: 'PP-8C11E0',
-                  onCopy: () => controller.copyReferralCode('PP-8C11E0'),
+                  subtitle: 'Share your referral code',
+                  valueText: controller.referralCode.isEmpty
+                      ? 'Not available'
+                      : controller.referralCode,
+                  onCopy: () {
+                    if (controller.referralCode.isNotEmpty) {
+                      controller.copyReferralCode(controller.referralCode);
+                    }
+                  },
                   showDivider: false,
                 ),
               ],

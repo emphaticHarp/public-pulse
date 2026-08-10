@@ -10,6 +10,7 @@ import 'package:public_pulse/controller/profile_controller.dart';
 import 'package:public_pulse/view/auth/login_page.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 
 /// All business logic for the Settings Page.
 /// UI must never contain raw logic — only call these methods.
@@ -26,6 +27,46 @@ class SettingController extends GetxController {
 
   /// Whether a destructive account action is in progress.
   final isAccountActionLoading = false.obs;
+
+  // for displaying account status and referral code in the settings page
+
+  String get accountStatus =>
+      ProfileController.to.profile.value?.accountStatus ?? 'unknown';
+
+  String get referralCode =>
+      ProfileController.to.profile.value?.referCode ?? '';
+
+  String get accountStatusText {
+    switch (accountStatus.toLowerCase()) {
+      case 'active':
+        return 'Active';
+      case 'inactive':
+        return 'Inactive';
+      case 'suspended':
+        return 'Suspended';
+      case 'banned':
+        return 'Banned';
+      case 'deleted':
+        return 'Deleted';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  Color get accountStatusColor {
+    switch (accountStatus.toLowerCase()) {
+      case 'active':
+        return AppColors.success;
+      case 'suspended':
+      case 'inactive':
+        return Colors.orange;
+      case 'banned':
+      case 'deleted':
+        return AppColors.danger;
+      default:
+        return AppColors.primaryText;
+    }
+  }
 
   // ── Theme ─────────────────────────────────────────────────────────────────
 

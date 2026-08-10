@@ -91,6 +91,8 @@ class ProfileController extends GetxController {
         followerCount: counts.followers,
         followingCount: counts.following,
         postCount: fetchedProfile.postCount,
+        accountStatus: fetchedProfile.accountStatus,
+        referCode: fetchedProfile.referCode,
       );
 
       profile.value = profileWithCounts;
@@ -158,6 +160,8 @@ class ProfileController extends GetxController {
         followerCount: counts.followers,
         followingCount: counts.following,
         postCount: updatedProfile.postCount,
+        accountStatus: updatedProfile.accountStatus,
+        referCode: updatedProfile.referCode,
       );
 
       // --------------------------------------------------
