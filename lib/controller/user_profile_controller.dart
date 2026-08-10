@@ -39,8 +39,6 @@ class UserProfileController extends GetxController {
 
   final isFollowLoading = false.obs;
 
-  
-
   // ─────────────────────────────────────────────
   // COUNTS
   // ─────────────────────────────────────────────
@@ -206,6 +204,9 @@ class UserProfileController extends GetxController {
 
     controller.switchTab(initialTab);
 
-    Get.to(() => FollowersFollowingPage(initialTab: initialTab));
+    Get.to(
+      () =>
+          FollowersFollowingPage(initialTab: initialTab, controllerTag: ffTag),
+    );
   }
 }

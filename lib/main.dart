@@ -53,9 +53,9 @@ Future<void> main() async {
 
   Get.put(NetworkController());
   Get.put(HomeController());
-  Get.lazyPut<LoginController>(() => LoginController());
-  Get.lazyPut<NotificationController>(() => NotificationController());
-  Get.lazyPut<ProfileController>(() => ProfileController());
+  Get.lazyPut<LoginController>(() => LoginController(), fenix: true);
+  Get.lazyPut<NotificationController>(() => NotificationController(), fenix: true);
+  Get.lazyPut<ProfileController>(() => ProfileController(), fenix: true);
   runApp(const PublicPulseApp());
 }
 
