@@ -54,11 +54,17 @@ class ProfileController extends GetxController {
 
       followerCount.value = cachedProfile.followerCount ?? 0;
       followingCount.value = cachedProfile.followingCount ?? 0;
-
       postCount.value = cachedProfile.postCount ?? 0;
+
+      // IMPORTANT
+      _profileLoaded = true;
 
       await loadMyPosts();
       await loadSavedPosts();
+
+      debugPrint('[PROFILE] Cache initialization complete');
+
+      return;
     }
 
     // --------------------------------------------------
@@ -115,6 +121,7 @@ class ProfileController extends GetxController {
     final currentProfile = profile.value;
 
     if (currentProfile == null) {
+      await ensureProfileLoaded();
       return;
     }
 
@@ -124,18 +131,21 @@ class ProfileController extends GetxController {
       final uid = currentProfile.id;
 
       // --------------------------------------------------
-      // Fetch latest profile
+      // 1. Fetch latest profile
       // --------------------------------------------------
+
       final updatedProfile = await _repo.getProfile();
 
       // --------------------------------------------------
-      // Fetch latest follower/following counts
+      // 2. Fetch latest follower/following counts
       // --------------------------------------------------
+
       final counts = await _repo.getFollowCounts(uid);
 
       // --------------------------------------------------
-      // Create updated model with counts
+      // 3. Create updated profile
       // --------------------------------------------------
+
       final profileWithCounts = ProfileModel(
         id: updatedProfile.id,
         username: updatedProfile.username,
@@ -147,28 +157,43 @@ class ProfileController extends GetxController {
         updatedAt: updatedProfile.updatedAt,
         followerCount: counts.followers,
         followingCount: counts.following,
-       postCount: updatedProfile.postCount,
+        postCount: updatedProfile.postCount,
       );
 
       // --------------------------------------------------
-      // Update memory
+      // 4. Update memory
       // --------------------------------------------------
+
       profile.value = profileWithCounts;
 
       followerCount.value = counts.followers;
       followingCount.value = counts.following;
+      postCount.value = updatedProfile.postCount ?? 0;
 
       // --------------------------------------------------
-      // Update Hive
+      // 5. Update Hive
       // --------------------------------------------------
+
       await CacheManager.cacheUserProfile(profileWithCounts);
 
-      debugPrint('[PROFILE] Refresh complete → Hive updated');
+      // --------------------------------------------------
+      // 6. IMPORTANT: Reload posts
+      // --------------------------------------------------
+
+      await loadMyPosts();
+
+      // --------------------------------------------------
+      // 7. IMPORTANT: Reload saved posts
+      // --------------------------------------------------
+
+      await loadSavedPosts();
+
+      debugPrint('[PROFILE] Refresh complete');
     } catch (e, stackTrace) {
       debugPrint('[PROFILE] Refresh failed: $e');
       debugPrintStack(stackTrace: stackTrace);
 
-      errorMessage('Failed to refresh profile.');
+      errorMessage.value = 'Failed to refresh profile.';
     }
   }
 
@@ -188,6 +213,24 @@ class ProfileController extends GetxController {
   Future<void> loadMyPosts() async {
     if (isPostsLoading.value) return;
 
+    // ============================================================
+    // 1. LOAD CACHE FIRST
+    // ============================================================
+
+    final cachedPosts = CacheManager.getCachedMyPosts();
+
+    if (cachedPosts.isNotEmpty) {
+      photoPosts.assignAll(cachedPosts);
+
+      debugPrint(
+        '[PROFILE POSTS] Loaded ${photoPosts.length} posts from cache',
+      );
+    }
+
+    // ============================================================
+    // 2. FETCH SERVER DATA
+    // ============================================================
+
     isPostsLoading(true);
 
     try {
@@ -195,12 +238,18 @@ class ProfileController extends GetxController {
 
       photoPosts.assignAll(result);
 
-      // Profiles table is the source of truth for post count.
       postCount.value = profile.value?.postCount ?? result.length;
 
-      debugPrint('[PROFILE POSTS] Loaded ${photoPosts.length} posts');
+      // ==========================================================
+      // 3. UPDATE CACHE
+      // ==========================================================
+
+      await CacheManager.cacheMyPosts(result);
+
+      debugPrint('[PROFILE POSTS] Server loaded ${photoPosts.length} posts');
     } catch (e, stackTrace) {
       debugPrint('[PROFILE POSTS] Error: $e');
+
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       isPostsLoading(false);
@@ -210,6 +259,25 @@ class ProfileController extends GetxController {
   Future<void> loadSavedPosts() async {
     if (isSavedPostsLoading.value) return;
 
+    // ============================================================
+    // 1. LOAD CACHE FIRST
+    // ============================================================
+
+    final cachedPosts = CacheManager.getCachedSavedPosts();
+
+    if (cachedPosts.isNotEmpty) {
+      savedPosts.assignAll(cachedPosts);
+
+      debugPrint(
+        '[PROFILE SAVED] Loaded '
+        '${savedPosts.length} saved posts from cache',
+      );
+    }
+
+    // ============================================================
+    // 2. FETCH SERVER DATA
+    // ============================================================
+
     isSavedPostsLoading(true);
 
     try {
@@ -217,13 +285,53 @@ class ProfileController extends GetxController {
 
       savedPosts.assignAll(result);
 
-      debugPrint('[PROFILE SAVED] Loaded ${savedPosts.length} saved posts');
+      // ==========================================================
+      // 3. UPDATE CACHE
+      // ==========================================================
+
+      await CacheManager.cacheSavedPosts(result);
+
+      debugPrint(
+        '[PROFILE SAVED] Server loaded '
+        '${savedPosts.length} saved posts',
+      );
     } catch (e, stackTrace) {
       debugPrint('[PROFILE SAVED] Error: $e');
+
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       isSavedPostsLoading(false);
     }
+  }
+
+  Future<void> onPostSaveChanged(PostModel post, {required bool saved}) async {
+    if (saved) {
+      final alreadyExists = savedPosts.any((item) => item.id == post.id);
+
+      if (!alreadyExists) {
+        savedPosts.insert(0, post);
+      }
+
+      debugPrint('[PROFILE SAVED] Added ${post.id}');
+    } else {
+      savedPosts.removeWhere((item) => item.id == post.id);
+
+      debugPrint('[PROFILE SAVED] Removed ${post.id}');
+    }
+
+    savedPosts.refresh();
+
+    // ==========================================================
+    // IMPORTANT:
+    // UPDATE SAVED POSTS CACHE IMMEDIATELY
+    // ==========================================================
+
+    await CacheManager.cacheSavedPosts(savedPosts.toList());
+
+    debugPrint(
+      '[PROFILE SAVED] Cache updated '
+      '→ ${savedPosts.length} posts',
+    );
   }
 
   /// Path → URL conversion happens here so the UI never talks to Storage

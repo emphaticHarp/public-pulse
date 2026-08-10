@@ -16,5 +16,8 @@ class HiveService {
     await Hive.openBox(HiveBoxes.cachedFollowersFollowing);
 
     await Hive.openBox(HiveBoxes.cachedUserProfile);
+
+    await Hive.openBox(HiveBoxes.cachedMyPosts);
+    await Hive.openBox(HiveBoxes.cachedSavedPosts);
   }
 }

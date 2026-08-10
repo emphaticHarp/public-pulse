@@ -12,7 +12,7 @@ class SettingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Ensuring the controller is registered. Assuming it is injected elsewhere.
-    final controller = Get.put(SettingController());
+    final controller = Get.find<SettingController>();
 
     return Scaffold(
       backgroundColor: AppColors.background,

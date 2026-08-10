@@ -154,6 +154,8 @@ class ProfilePage extends StatelessWidget {
                       tab: controller.selectedTab.value,
                       photoPosts: controller.photoPosts,
                       savedPosts: controller.savedPosts,
+                      isPostsLoading: controller.isPostsLoading.value,
+                      isSavedPostsLoading: controller.isSavedPostsLoading.value,
                     ),
                   ),
                 ],
@@ -184,53 +186,61 @@ class _TabContent extends StatelessWidget {
   final List<PostModel> photoPosts;
   final List<PostModel> savedPosts;
 
+  final bool isPostsLoading;
+  final bool isSavedPostsLoading;
+
   const _TabContent({
     required this.tab,
     required this.photoPosts,
     required this.savedPosts,
+    required this.isPostsLoading,
+    required this.isSavedPostsLoading,
   });
 
   @override
   Widget build(BuildContext context) {
-    final List<PostModel> posts;
+    final posts = switch (tab) {
+      ProfileTab.photos => photoPosts,
+      ProfileTab.saved => savedPosts,
+    };
 
-    switch (tab) {
-      case ProfileTab.photos:
-        posts = photoPosts;
-        break;
+    final loading = switch (tab) {
+      ProfileTab.photos => isPostsLoading,
+      ProfileTab.saved => isSavedPostsLoading,
+    };
 
-      case ProfileTab.saved:
-        posts = savedPosts;
-        break;
+    final icon = switch (tab) {
+      ProfileTab.photos => Icons.photo_outlined,
+      ProfileTab.saved => Icons.bookmark_border,
+    };
+
+    final emptyMessage = switch (tab) {
+      ProfileTab.photos => 'No photos yet',
+      ProfileTab.saved => 'No saved posts yet',
+    };
+
+    // --------------------------------------------------
+    // LOADING
+    // --------------------------------------------------
+
+    if (loading && posts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: CircularProgressIndicator(color: AppColors.brand)),
+      );
     }
 
-    final IconData icon;
+    // --------------------------------------------------
+    // EMPTY
+    // --------------------------------------------------
 
-    switch (tab) {
-      case ProfileTab.photos:
-        icon = Icons.photo_outlined;
-        break;
-
-      case ProfileTab.saved:
-        icon = Icons.bookmark_border;
-        break;
-    }
-
-    final String emptyMessage;
-
-    switch (tab) {
-      case ProfileTab.photos:
-        emptyMessage = 'No photos yet';
-        break;
-
-      case ProfileTab.saved:
-        emptyMessage = 'No saved posts yet';
-        break;
-    }
-
-    if (posts.isEmpty) {
+    if (!loading && posts.isEmpty) {
       return ProfileEmptyState(icon: icon, message: emptyMessage);
     }
+
+    // --------------------------------------------------
+    // POSTS
+    // --------------------------------------------------
 
     return GridView.builder(
       shrinkWrap: true,
@@ -245,15 +255,12 @@ class _TabContent extends StatelessWidget {
       itemBuilder: (context, index) {
         final post = posts[index];
 
-        // PostModel already contains resolved public URLs.
         if (post.mediaUrls.isEmpty) {
           return const SizedBox.shrink();
         }
 
-        final imageUrl = post.mediaUrls.first;
-
         return Image.network(
-          imageUrl,
+          post.mediaUrls.first,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) {
             return const SizedBox.shrink();
