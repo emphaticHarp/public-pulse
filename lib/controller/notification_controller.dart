@@ -1,43 +1,56 @@
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 import 'package:public_pulse/model/notification_model.dart';
 import 'package:public_pulse/core/repository/notification_repository.dart';
 
+
 class NotificationController extends GetxController {
-  /// Selected notification tab
+  // ==========================================================
+  // TAB
+  // ==========================================================
+
   final RxInt tabIndex = 0.obs;
 
-  /// New notifications
+  // ==========================================================
+  // NOTIFICATIONS
+  // ==========================================================
+
   final RxList<NotificationModel> newNotifications = <NotificationModel>[].obs;
 
-  /// Earlier notifications
   final RxList<NotificationModel> earlierNotifications =
       <NotificationModel>[].obs;
 
-  // Connects the controller to the notification repository.
-  final NotificationRepository _repository = NotificationRepository();
+  final List<NotificationModel> _allNotifications = <NotificationModel>[];
 
-  // Shows loading while notifications are being fetched.
+  // ==========================================================
+  // STATE
+  // ==========================================================
+
   final RxBool isLoading = false.obs;
 
-  // Stores all notifications before applying any filters.
-  final List<NotificationModel> _allNotifications = [];
-
-  // Indicates whether loading notifications failed.
   final RxString errorMessage = ''.obs;
 
-  // Returns true when there are no notifications to display.
+  final NotificationRepository _repository = NotificationRepository();
+
   bool get hasNoNotifications =>
       newNotifications.isEmpty && earlierNotifications.isEmpty;
+
+  // ==========================================================
+  // INIT
+  // ==========================================================
 
   @override
   void onInit() {
     super.onInit();
 
-    // Re-filters notifications whenever the selected tab changes.
-    ever(tabIndex, (_) => _applyFilter());
+    ever<int>(tabIndex, (_) => _applyFilter());
 
     fetchNotifications();
   }
+
+  // ==========================================================
+  // FETCH
+  // ==========================================================
 
   Future<void> fetchNotifications() async {
     try {
@@ -50,53 +63,100 @@ class NotificationController extends GetxController {
         ..clear()
         ..addAll(notifications);
 
+      // Always newest first.
+      _allNotifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
       _applyFilter();
     } catch (e) {
-      errorMessage.value = "Failed to load notifications";
+      errorMessage.value = 'Failed to load notifications';
     } finally {
       isLoading.value = false;
     }
   }
 
-  // Filters notifications based on the selected tab and groups them into New and Earlier.
+  // ==========================================================
+  // FILTER
+  // ==========================================================
+
   void _applyFilter() {
     final now = DateTime.now();
 
-    List<NotificationModel> filtered = _allNotifications;
+    // Start with ALL notifications.
+    List<NotificationModel> filtered = List<NotificationModel>.from(
+      _allNotifications,
+    );
 
     switch (tabIndex.value) {
       case 1: // Likes
-        filtered = filtered.where((n) {
-          return n.notificationType == 'LIKE';
-        }).toList();
+        filtered = filtered
+            .where(
+              (n) => n.notificationType.trim().toUpperCase() == 'POST_LIKE',
+            )
+            .toList();
         break;
 
       case 2: // Comments
-        filtered = filtered.where((n) {
-          return n.notificationType == 'COMMENT';
-        }).toList();
+        filtered = filtered
+            .where(
+              (n) => n.notificationType.trim().toUpperCase() == 'POST_COMMENT',
+            )
+            .toList();
         break;
 
       case 3: // Follows
-        filtered = filtered.where((n) {
-          return n.notificationType == 'FOLLOW';
-        }).toList();
+        filtered = filtered
+            .where(
+              (n) => n.notificationType.trim().toUpperCase() == 'POST_FOLLOW',
+            )
+            .toList();
         break;
 
-      default:
+      default: // All
         break;
     }
 
-    newNotifications.assignAll(
-      filtered.where((n) {
-        return now.difference(n.createdAt).inHours < 24;
-      }).toList(),
-    );
+    // Sort newest -> oldest.
+    filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-    earlierNotifications.assignAll(
-      filtered.where((n) {
-        return now.difference(n.createdAt).inHours >= 24;
-      }).toList(),
-    );
+    // New = less than 24 hours old.
+    final newItems = filtered.where((n) {
+      return now.difference(n.createdAt).inHours < 24;
+    }).toList();
+
+    // Earlier = 24 hours or older.
+    final earlierItems = filtered.where((n) {
+      return now.difference(n.createdAt).inHours >= 24;
+    }).toList();
+
+    newNotifications.assignAll(newItems);
+    earlierNotifications.assignAll(earlierItems);
+  }
+
+  // ==========================================================
+  // REFRESH
+  // ==========================================================
+
+  Future<void> refreshNotifications() async {
+    await fetchNotifications();
+  }
+
+  Future<void> followBack(String actorProfileId) async {
+    try {
+      await _repository.followBack(actorProfileId);
+
+      debugPrint('[NOTIFICATION] Follow back successful: $actorProfileId');
+
+      await fetchNotifications();
+    } catch (e, stackTrace) {
+      debugPrint('[NOTIFICATION] Follow back failed: $e');
+
+      debugPrintStack(stackTrace: stackTrace);
+
+      Get.snackbar(
+        'Follow failed',
+        'Unable to follow this user. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 }

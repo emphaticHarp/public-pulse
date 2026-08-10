@@ -1,18 +1,3 @@
-// ## Table `notifications`
-
-// ### Columns
-
-// | Name | Type | Constraints |
-// |------|------|-------------|
-// | `id` | `uuid` | Primary |
-// | `recipient_profile_id` | `uuid` |  |
-// | `actor_profile_id` | `uuid` |  |
-// | `notification_type` | `notification_type` |  |
-// | `post_id` | `uuid` |  Nullable |
-// | `comment_id` | `uuid` |  Nullable |
-// | `is_read` | `bool` |  |
-// | `created_at` | `timestamptz` |  |
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationModel {
@@ -35,6 +20,7 @@ class NotificationModel {
   final String action;
   final String timeAgo;
   final String? postImageUrl;
+  final String? commentText;
 
   NotificationModel({
     required this.id,
@@ -45,79 +31,146 @@ class NotificationModel {
     this.commentId,
     required this.isRead,
     required this.createdAt,
-
     required this.avatarUrl,
     required this.name,
     required this.action,
     required this.timeAgo,
     this.postImageUrl,
+    this.commentText,
   });
 
-  /// Converts a notification row from Supabase into a NotificationModel for the UI.
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
-    final actor = json['actor'] ?? {};
-    final post = json['post'] ?? {};
-    final media = (post['media'] as List?) ?? [];
+    // ==========================================================
+    // ACTOR
+    // ==========================================================
+
+    final actor = json['actor'] is Map
+        ? Map<String, dynamic>.from(json['actor'])
+        : <String, dynamic>{};
+
+    // ==========================================================
+    // POST
+    // ==========================================================
+
+    final post = json['post'] is Map
+        ? Map<String, dynamic>.from(json['post'])
+        : <String, dynamic>{};
+
+    final media = post['media'] is List
+        ? List<dynamic>.from(post['media'])
+        : <dynamic>[];
 
     String? postImageUrl;
 
     if (media.isNotEmpty) {
       final firstMedia = media.first;
-      final String storagePath = firstMedia['storage_path'];
-      final String mediaType = firstMedia['media_type'];
 
-      postImageUrl = Supabase.instance.client.storage
-          .from('posts-images')
-          .getPublicUrl(storagePath);
+      if (firstMedia is Map) {
+        final storagePath = firstMedia['storage_path'];
+
+        if (storagePath != null && storagePath.toString().isNotEmpty) {
+          postImageUrl = Supabase.instance.client.storage
+              .from('posts-images')
+              .getPublicUrl(storagePath.toString());
+        }
+      }
     }
 
-    final String? avatarPath = actor['avatar_path'];
+    // ==========================================================
+    // AVATAR
+    // ==========================================================
 
-    final avatarUrl = avatarPath == null
-        ? ''
-        : Supabase.instance.client.storage
-              .from('profile-images')
-              .getPublicUrl(avatarPath);
+    final avatarPath = actor['avatar_path'];
+
+    String avatarUrl = '';
+
+    if (avatarPath != null && avatarPath.toString().isNotEmpty) {
+      avatarUrl = Supabase.instance.client.storage
+          .from('avatars')
+          .getPublicUrl(avatarPath.toString());
+    }
+
+    // ==========================================================
+    // COMMENT TEXT
+    // ==========================================================
+
+    final commentText = json['comment_text']?.toString();
+
+    // ==========================================================
+    // CREATED AT
+    // ==========================================================
+
+    final createdAt = DateTime.parse(json['created_at'].toString());
+
+    // ==========================================================
+    // NAME
+    // ==========================================================
+
+    final name = (actor['display_name']?.toString().trim().isNotEmpty ?? false)
+        ? actor['display_name'].toString()
+        : (actor['username']?.toString() ?? 'Unknown');
+
+    // ==========================================================
+    // NOTIFICATION TYPE
+    // ==========================================================
+
+    final type = json['notification_type'].toString();
 
     return NotificationModel(
-      id: json['id'],
-      recipientProfileId: json['recipient_profile_id'],
-      actorProfileId: json['actor_profile_id'],
-      notificationType: json['notification_type'],
-      postId: json['post_id'],
-      commentId: json['comment_id'],
-      isRead: json['is_read'],
-      createdAt: DateTime.parse(json['created_at']),
+      id: json['id'].toString(),
+      recipientProfileId: json['recipient_profile_id'].toString(),
+      actorProfileId: json['actor_profile_id'].toString(),
+
+      notificationType: type,
+
+      postId: json['post_id']?.toString(),
+      commentId: json['comment_id']?.toString(),
+
+      isRead: json['is_read'] as bool? ?? false,
+
+      createdAt: createdAt,
 
       avatarUrl: avatarUrl,
 
-      name: actor['display_name'] ?? actor['username'] ?? 'Unknown',
+      name: name,
 
-      action: _notificationText(json['notification_type']),
+      action: _notificationText(type),
 
-      timeAgo: _timeAgo(DateTime.parse(json['created_at'])),
+      timeAgo: _timeAgo(createdAt),
 
       postImageUrl: postImageUrl,
+
+      commentText: commentText,
     );
   }
 
-  /// Converts notification type into user-friendly text.
+  // ============================================================
+  // NOTIFICATION TEXT
+  // ============================================================
+
   static String _notificationText(String type) {
-    switch (type) {
-      case 'LIKE':
+    switch (type.trim().toUpperCase()) {
+      case 'POST_LIKE':
         return 'liked your post';
-      case 'COMMENT':
+
+      case 'POST_COMMENT':
         return 'commented on your post';
-      case 'FOLLOW':
+
+      case 'POST_FOLLOW':
         return 'started following you';
-      case 'MENTION':
+
+      case 'POST_MENTION':
         return 'mentioned you';
+
       default:
         return 'interacted with you';
     }
   }
 
-  /// Converts DateTime into "2m", "3h", "Yesterday", etc.
+  // ============================================================
+  // TIME
+  // ============================================================
+
   static String _timeAgo(DateTime date) {
     final difference = DateTime.now().difference(date);
 

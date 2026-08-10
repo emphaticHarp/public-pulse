@@ -261,7 +261,7 @@ class NotificationPage extends StatelessWidget {
     required bool isLast,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16), // py-4
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         border: isLast
             ? null
@@ -272,8 +272,11 @@ class NotificationPage extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ======================================================
+          // AVATAR
+          // ======================================================
           ClipRRect(
-            borderRadius: BorderRadius.circular(28), // rounded-full (56/2)
+            borderRadius: BorderRadius.circular(28),
             child: item.avatarUrl.isEmpty
                 ? Container(
                     width: 56,
@@ -289,82 +292,143 @@ class NotificationPage extends StatelessWidget {
                     width: 56,
                     height: 56,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: 56,
-                      height: 56,
-                      decoration: const BoxDecoration(
-                        color: AppColors.gray100,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        color: AppColors.gray400,
-                        size: 28,
-                      ),
-                    ),
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 56,
+                        height: 56,
+                        decoration: const BoxDecoration(
+                          color: AppColors.gray100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          color: AppColors.gray400,
+                          size: 28,
+                        ),
+                      );
+                    },
                   ),
           ),
-          const SizedBox(width: 12), // gap-3
+
+          const SizedBox(width: 12),
+
+          // ======================================================
+          // TEXT
+          // ======================================================
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: AppTextStyles.notificationText.copyWith(
-                        color: AppColors.textPrimary,
-                        height: 1.1,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: item.name,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        TextSpan(text: ' ${item.action}'),
-                      ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    style: AppTextStyles.notificationText.copyWith(
+                      color: AppColors.textPrimary,
+                      height: 1.1,
                     ),
+                    children: [
+                      TextSpan(
+                        text: item.name,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      TextSpan(text: ' ${item.action}'),
+                    ],
                   ),
-                  const SizedBox(height: 4),
+                ),
+
+                // ------------------------------------------------
+                // COMMENT TEXT
+                // ------------------------------------------------
+               if (item.notificationType.trim().toUpperCase() == 'POST_COMMENT' &&
+                    item.commentText != null &&
+                    item.commentText!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 6),
                   Text(
-                    item.timeAgo,
+                    item.commentText!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.notificationTime.copyWith(
-                      color: AppColors.slate400,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
-              ),
+
+                const SizedBox(height: 5),
+
+                Text(
+                  item.timeAgo,
+                  style: AppTextStyles.notificationTime.copyWith(
+                    color: AppColors.slate400,
+                  ),
+                ),
+
+                // ------------------------------------------------
+                // FOLLOW BACK
+                // ------------------------------------------------
+              if (item.notificationType.trim().toUpperCase() == 'POST_FOLLOW') ...[
+                  const SizedBox(height: 10),
+
+                  SizedBox(
+                    height: 34,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        controller.followBack(item.actorProfileId);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.brand,
+                        side: const BorderSide(color: AppColors.brand),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                      ),
+                      child: const Text(
+                        'Follow Back',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
+
+          // ======================================================
+          // POST IMAGE
+          // ======================================================
           if (item.postImageUrl != null && item.postImageUrl!.isNotEmpty)
             ClipRRect(
-              borderRadius: BorderRadius.circular(8), // rounded-custom
+              borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 item.postImageUrl!,
                 width: 56,
                 height: 56,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.gray100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.broken_image,
-                    color: AppColors.gray400,
-                    size: 24,
-                  ),
-                ),
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: AppColors.gray100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.broken_image,
+                      color: AppColors.gray400,
+                      size: 24,
+                    ),
+                  );
+                },
               ),
             )
           else
-            const SizedBox(width: 56), // w-14 shrink-0 spacer
+            const SizedBox(width: 56),
         ],
       ),
     );
   }
+
+ 
 }
