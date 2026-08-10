@@ -4,7 +4,7 @@ import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
-
+import 'package:public_pulse/view/profile/profile_page.dart';
 import 'package:public_pulse/widget/post/follow_button.dart';
 
 class PostHeader extends StatelessWidget {
@@ -43,11 +43,18 @@ class PostHeader extends StatelessWidget {
                 Expanded(
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundImage: NetworkImage(profileImage),
-                        onBackgroundImageError: (error, stackTrace) {},
-                        backgroundColor: AppColors.gray100,
+                      GestureDetector(
+                        onTap: () {
+                          if (isOwner) return;
+
+                          Get.to(() => ProfilePage(userId: authorId));
+                        },
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundImage: NetworkImage(profileImage),
+                          onBackgroundImageError: (error, stackTrace) {},
+                          backgroundColor: AppColors.gray100,
+                        ),
                       ),
 
                       const SizedBox(width: 12),
@@ -59,11 +66,20 @@ class PostHeader extends StatelessWidget {
                             Row(
                               children: [
                                 Expanded(
-                                  child: Text(
-                                    username,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (isOwner) return;
+
+                                      Get.to(
+                                        () => ProfilePage(userId: authorId),
+                                      );
+                                    },
+                                    child: Text(
+                                      username,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -96,8 +112,6 @@ class PostHeader extends StatelessWidget {
                           ],
                         ),
                       ),
-
-                    
                     ],
                   ),
                 ),
