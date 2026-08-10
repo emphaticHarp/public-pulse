@@ -132,11 +132,18 @@ class CacheManager {
     await _followingBox.delete(CacheKeys.followingIds);
   }
 
-  // ================= USER PROFILE CACHE =================
+  // ============================================================
+  // USER PROFILE CACHE
+  // ============================================================
 
   static Box get _userProfileBox => Hive.box(HiveBoxes.cachedUserProfile);
 
-  static Future cacheUserProfile(ProfileModel profile) async {
+  // Cache for OTHER users' profiles.
+  static Box get _profileBox => Hive.box(HiveBoxes.cachedProfiles);
+
+  static const Duration _profileCacheDuration = Duration(days: 5);
+
+  static Future<void> cacheUserProfile(ProfileModel profile) async {
     await _userProfileBox.put(CacheKeys.userProfile, profile.toJson());
 
     await _userProfileBox.put(
@@ -144,20 +151,44 @@ class CacheManager {
       DateTime.now().millisecondsSinceEpoch,
     );
 
-    debugPrint("[PROFILE CACHE] Saved");
+    debugPrint('[PROFILE CACHE] Own profile saved');
   }
 
   static ProfileModel? getCachedUserProfile() {
     final data = _userProfileBox.get(CacheKeys.userProfile);
 
-    if (data == null) return null;
+    if (data == null) {
+      return null;
+    }
 
-    debugPrint("[PROFILE CACHE] Loaded");
+    try {
+      final timestamp = _userProfileBox.get(CacheKeys.userProfileTimestamp);
 
-    return ProfileModel.fromJson(Map<String, dynamic>.from(data));
+      if (timestamp == null) {
+        return null;
+      }
+
+      final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
+
+      if (age > _profileCacheDuration.inMilliseconds) {
+        debugPrint('[PROFILE CACHE] Own profile expired');
+
+        clearUserProfileCache();
+
+        return null;
+      }
+
+      debugPrint('[PROFILE CACHE] Loaded own profile');
+
+      return ProfileModel.fromJson(Map<String, dynamic>.from(data));
+    } catch (e) {
+      debugPrint('[PROFILE CACHE] Failed to read own profile: $e');
+
+      return null;
+    }
   }
 
-  static Future clearUserProfileCache() async {
+  static Future<void> clearUserProfileCache() async {
     await _userProfileBox.clear();
   }
 
@@ -372,5 +403,84 @@ class CacheManager {
     debugPrint('[CACHE] ===============================');
     debugPrint('[CACHE] USER DATA CLEARED');
     debugPrint('[CACHE] ===============================');
+  }
+
+  // ============================================================
+  // OTHER USER PROFILE CACHE
+  // ============================================================
+
+  static String _profileCacheKey(String userId) {
+    return 'profile_$userId';
+  }
+
+  static String _profileTimestampKey(String userId) {
+    return 'profile_${userId}_timestamp';
+  }
+
+  static ProfileModel? getCachedProfileByUserId(String userId) {
+    final key = _profileCacheKey(userId);
+
+    final data = _profileBox.get(key);
+
+    if (data == null) {
+      debugPrint('[PROFILE CACHE] No cached profile: $userId');
+
+      return null;
+    }
+
+    final timestamp = _profileBox.get(_profileTimestampKey(userId));
+
+    if (timestamp == null) {
+      debugPrint('[PROFILE CACHE] Missing timestamp: $userId');
+
+      _profileBox.delete(key);
+
+      return null;
+    }
+
+    final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
+
+    if (age > _profileCacheDuration.inMilliseconds) {
+      debugPrint('[PROFILE CACHE] Other profile expired: $userId');
+
+      clearCachedProfileByUserId(userId);
+
+      return null;
+    }
+
+    try {
+      return ProfileModel.fromJson(Map<String, dynamic>.from(data));
+    } catch (e) {
+      debugPrint('[PROFILE CACHE] Failed to parse $userId: $e');
+
+      return null;
+    }
+  }
+
+  static Future<void> cacheProfileByUserId(ProfileModel profile) async {
+    final userId = profile.id;
+
+    await _profileBox.put(_profileCacheKey(userId), profile.toJson());
+
+    await _profileBox.put(
+      _profileTimestampKey(userId),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+
+    debugPrint('[PROFILE CACHE] Cached other profile: $userId');
+  }
+
+  static Future<void> clearCachedProfileByUserId(String userId) async {
+    await _profileBox.delete(_profileCacheKey(userId));
+
+    await _profileBox.delete(_profileTimestampKey(userId));
+
+    debugPrint('[PROFILE CACHE] Cleared profile: $userId');
+  }
+
+  static Future<void> clearAllCachedProfiles() async {
+    await _profileBox.clear();
+
+    debugPrint('[PROFILE CACHE] All other profiles cleared');
   }
 }

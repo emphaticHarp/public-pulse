@@ -13,7 +13,9 @@ class FollowersFollowingController extends GetxController {
 
   final String userId;
 
-  FollowersFollowingController({required this.userId});
+  FollowersFollowingController({required this.userId, int initialTab = 0}) {
+    selectedTab.value = initialTab;
+  }
 
   // ─────────────────────────────────────────────
   // TAB
@@ -52,7 +54,12 @@ class FollowersFollowingController extends GetxController {
     print('[FF_DEBUG] Controller initialized');
     print('[FF_DEBUG] userId: $userId');
 
-    loadFollowers();
+    // Load the tab that was actually requested.
+    if (selectedTab.value == 0) {
+      loadFollowers();
+    } else {
+      loadFollowing();
+    }
   }
 
   // ─────────────────────────────────────────────

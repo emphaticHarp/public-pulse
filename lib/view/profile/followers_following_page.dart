@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../controller/followers_following_controller.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_font.dart';
-import '../../widget/profile/user_list_tile.dart';
+import 'package:public_pulse/controller/followers_following_controller.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
+import 'package:public_pulse/core/theme/app_font.dart';
+import 'package:public_pulse/widget/profile/user_list_tile.dart';
+import 'package:public_pulse/view/profile/profile_page.dart';
 
 class FollowersFollowingPage extends StatelessWidget {
   final int initialTab;
@@ -164,7 +165,12 @@ class _UserList extends StatelessWidget {
           },
 
           itemBuilder: (context, index) {
-            return UserListTile(user: list[index]);
+            return UserListTile(
+              user: list[index],
+              onTap: () {
+                Get.to(() => ProfilePage(userId: list[index].userId));
+              },
+            );
           },
         ),
       );
