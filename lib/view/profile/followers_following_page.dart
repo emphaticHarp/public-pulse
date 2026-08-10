@@ -8,12 +8,19 @@ import '../../widget/profile/user_list_tile.dart';
 
 class FollowersFollowingPage extends StatelessWidget {
   final int initialTab;
+  final String? controllerTag;
 
-  const FollowersFollowingPage({super.key, this.initialTab = 0});
+  const FollowersFollowingPage({
+    super.key,
+    this.initialTab = 0,
+    this.controllerTag,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<FollowersFollowingController>();
+    final controller = Get.find<FollowersFollowingController>(
+      tag: controllerTag,
+    );
 
     return DefaultTabController(
       length: 2,
@@ -47,13 +54,14 @@ class FollowersFollowingPage extends StatelessWidget {
               isLoading: controller.isLoadingFollowers,
               users: controller.followers,
               emptyMessage: 'No followers yet',
+              controllerTag: controllerTag,
             ),
-
             // FOLLOWING
             _UserList(
               isLoading: controller.isLoadingFollowing,
               users: controller.following,
               emptyMessage: 'Not following anyone yet',
+              controllerTag: controllerTag,
             ),
           ],
         ),
@@ -104,11 +112,13 @@ class _UserList extends StatelessWidget {
   final RxBool isLoading;
   final RxList users;
   final String emptyMessage;
+  final String? controllerTag;
 
   const _UserList({
     required this.isLoading,
     required this.users,
     required this.emptyMessage,
+    this.controllerTag,
   });
 
   @override
@@ -140,7 +150,9 @@ class _UserList extends StatelessWidget {
       return RefreshIndicator(
         color: AppColors.brand,
         onRefresh: () async {
-          await FollowersFollowingController.to.refreshList();
+          await Get.find<FollowersFollowingController>(
+            tag: controllerTag,
+          ).refreshList();
         },
         child: ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
