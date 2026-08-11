@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:public_pulse/model/pending_media.dart';
 
 import 'package:public_pulse/model/post_model.dart';
 import 'package:public_pulse/core/repository/post_repository.dart';
@@ -119,17 +120,24 @@ class HomeController extends GetxController {
   Future<void> _initializeHome() async {
     debugPrint('[HOME] ===== INITIALIZATION START =====');
 
+    // 1. Show cached feed immediately.
     loadCachedPosts();
 
-    await loadPosts();
+    // 2. Only fetch first page if cache is empty.
+    if (posts.isEmpty) {
+      await loadPosts();
+    }
 
+    // 3. These can run independently.
     loadMyPosts();
     loadFollowingIds();
 
+    // 4. Check for new posts every 2 minutes.
     _startNewPostChecker();
 
     debugPrint('[HOME] ===== INITIALIZATION COMPLETE =====');
   }
+
   // ============================================================
   // SCROLL / PAGINATION
   // ============================================================
@@ -260,8 +268,8 @@ class HomeController extends GetxController {
   // MANUAL REFRESH
   // ============================================================
 
-  Future<void> refreshFeed() async {
-    if (isLoading.value) return;
+  Future<bool> refreshFeed() async {
+    if (isLoading.value) return false;
 
     debugPrint('[HOME] ===============================');
     debugPrint('[HOME] MANUAL REFRESH');
@@ -273,12 +281,10 @@ class HomeController extends GetxController {
       final page = await _repository.getInitialPosts(limit: 10);
 
       nextCursor = page.nextCursor;
-
       hasMore.value = page.hasMore;
 
       _logPostSource('[SUPABASE] Manual refresh', page.posts);
 
-      // Server is the source of truth.
       posts.assignAll(page.posts);
 
       _previouslyLoadedPostIds
@@ -286,7 +292,6 @@ class HomeController extends GetxController {
         ..addAll(page.posts.map((post) => post.id));
 
       pendingPosts.clear();
-
       newPostCount.value = 0;
 
       await CacheManager.cachePosts(
@@ -295,13 +300,14 @@ class HomeController extends GetxController {
         hasMore: hasMore.value,
       );
 
-      debugPrint(
-        '[HOME] Refresh complete '
-        '→ ${posts.length} posts',
-      );
+      debugPrint('[HOME] Refresh complete → ${posts.length} posts');
+
+      return true;
     } catch (e, stackTrace) {
       debugPrint('[HOME] refreshFeed error: $e');
       debugPrintStack(stackTrace: stackTrace);
+
+      return false;
     } finally {
       isLoading.value = false;
     }
@@ -758,6 +764,81 @@ class HomeController extends GetxController {
     return _carouselPageControllers[postId]!;
   }
 
+  String addUploadingPost({
+    required List<PendingMedia> mediaSnapshot,
+    required String? caption,
+    required String? location,
+    required String visibility,
+  }) {
+    final tempPostId = 'uploading_${DateTime.now().millisecondsSinceEpoch}';
+
+    final tempPost = PostModel(
+      id: tempPostId,
+
+      profileId: '',
+      username: 'You',
+      displayName: 'You',
+      profileImage: null,
+
+      caption: caption,
+      location: location,
+
+      visibility: visibility,
+      isPrivateAccount: false,
+      isOwner: true,
+
+      storagePaths: const [],
+      mediaUrls: const [],
+      thumbnailUrls: const [],
+      isCarousel: mediaSnapshot.length > 1,
+
+      likeCount: 0,
+      commentCount: 0,
+      shareCount: 0,
+      saveCount: 0,
+      viewCount: 0,
+
+      isLiked: false,
+      isSaved: false,
+
+      localMediaPaths: mediaSnapshot
+          .map((media) => media.originalPath)
+          .toList(),
+
+      isUploading: true,
+      uploadFailed: false,
+
+      createdAt: DateTime.now(),
+    );
+
+    posts.insert(0, tempPost);
+    posts.refresh();
+
+    debugPrint('[HOME] Temporary uploading post added: $tempPostId');
+
+    return tempPostId;
+  }
+
+  void removeUploadingPost(String tempPostId) {
+    posts.removeWhere((post) => post.id == tempPostId);
+
+    posts.refresh();
+
+    debugPrint('[HOME] Temporary uploading post removed: $tempPostId');
+  }
+
+  void markUploadingPostFailed(String tempPostId) {
+    final index = posts.indexWhere((post) => post.id == tempPostId);
+
+    if (index == -1) return;
+
+    posts[index].isUploading = false;
+    posts[index].uploadFailed = true;
+
+    posts.refresh();
+
+    debugPrint('[HOME] Upload failed: $tempPostId');
+  }
   // ============================================================
   // CLOSE
   // ============================================================

@@ -18,6 +18,13 @@ class PostModel {
   final String visibility;
   final bool isPrivateAccount;
   final bool isOwner;
+  bool isUploading;
+
+  /// Local temporary media path used while uploading.
+  final List<String> localMediaPaths;
+
+  /// True when uploading failed.
+  bool uploadFailed;
 
   // Media
   final List<String> storagePaths;
@@ -54,6 +61,11 @@ class PostModel {
     required this.visibility,
     required this.isPrivateAccount,
     required this.isOwner,
+
+    //for uploading
+    this.isUploading = false,
+    this.localMediaPaths = const [],
+    this.uploadFailed = false,
 
     // Required media fields
     required this.storagePaths,
@@ -109,7 +121,6 @@ class PostModel {
           .map((item) => item['storage_path']?.toString() ?? '')
           .where((path) => path.isNotEmpty)
           .toList(),
-          
 
       mediaUrls: media
           .map((item) {
@@ -126,7 +137,6 @@ class PostModel {
           .where((url) => url.isNotEmpty)
           .toList(),
 
-
       thumbnailUrls: const [],
 
       isCarousel: media.length > 1,
@@ -137,6 +147,8 @@ class PostModel {
       visibility: json['visibility'],
       isPrivateAccount: profile['is_private'] as bool? ?? false,
       isOwner: currentProfileId == json['profile_id'],
+
+      isUploading: false,
 
       likeCount: json['like_count'] as int? ?? 0,
       commentCount: json['comment_count'] as int? ?? 0,
@@ -169,6 +181,10 @@ class PostModel {
       'thumbnail_urls': thumbnailUrls,
       'is_carousel': isCarousel,
 
+      'is_uploading': isUploading,
+      'local_media_paths': localMediaPaths,
+      'upload_failed': uploadFailed,
+
       'like_count': likeCount,
       'comment_count': commentCount,
       'share_count': shareCount,
@@ -192,10 +208,14 @@ class PostModel {
       visibility: json['visibility'],
       isPrivateAccount: json['is_private_account'],
       isOwner: json['is_owner'] ?? false,
-      storagePaths: List<String>.from(json['storage_paths'] ?? []),
-      mediaUrls: List<String>.from(json['media_urls'] ?? []),
-      thumbnailUrls: List<String>.from(json['thumbnail_urls'] ?? []),
+      storagePaths: List<String>.from(json['storage_paths'] ?? const []),
+      mediaUrls: List<String>.from(json['media_urls'] ?? const []),
+      thumbnailUrls: List<String>.from(json['thumbnail_urls'] ?? const []),
       isCarousel: json['is_carousel'],
+
+      localMediaPaths: List<String>.from(json['local_media_paths'] ?? []),
+      isUploading: json['is_uploading'] ?? false,
+      uploadFailed: json['upload_failed'] ?? false,
 
       likeCount: json['like_count'],
       commentCount: json['comment_count'],

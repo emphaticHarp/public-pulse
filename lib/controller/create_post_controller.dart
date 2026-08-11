@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 import 'package:public_pulse/core/services/permission_service.dart';
-import 'package:public_pulse/controller/upload_progress_controller.dart';
-import 'package:public_pulse/view/upload/upload_progress_page.dart';
 import 'package:public_pulse/core/repository/create_post_repository.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/core/compression/image_compressor.dart';
@@ -100,284 +98,280 @@ class CreatePostController extends GetxController {
 
   // Upload post
   void uploadPost() {
-    debugPrint('🚀 [CreatePostController] ==============================');
     debugPrint('🚀 [CreatePostController] uploadPost() STARTED');
-    debugPrint('🚀 [CreatePostController] ==============================');
-    debugPrint('📎 Media count: ${pendingMedia.length}');
-    debugPrint('📝 Caption: "${caption.value}"');
-    debugPrint('📍 Location: "${location.value}"');
-    debugPrint('👁️ Visibility: "${visibility.value}"');
-    debugPrint('📎 Media URLs:');
-    for (int i = 0; i < pendingMedia.length; i++) {
-      final file = File(pendingMedia[i].originalPath);
-      final exists = file.existsSync();
-      final size = exists ? file.lengthSync() : -1;
-      debugPrint(
-        '   [$i] ${pendingMedia[i].originalPath} (exists: $exists, size: $size bytes)',
-      );
-    }
 
     if (pendingMedia.isEmpty) {
-      debugPrint(
-        '🔴 [CreatePostController] uploadPost() ABORTED - No media selected',
-      );
+      debugPrint('🔴 No media selected');
+      return;
+    }
+
+    if (isUploading.value) {
+      debugPrint('🟡 Upload already running');
       return;
     }
 
     isUploading.value = true;
-    debugPrint('🟢 [CreatePostController] isUploading set to true');
 
-    // Register the upload progress controller and navigate
-    debugPrint(
-      '📦 [CreatePostController] Registering UploadProgressController...',
+    // ============================================================
+    // SNAPSHOT EVERYTHING
+    // ============================================================
+
+    final mediaSnapshot = List<PendingMedia>.from(pendingMedia);
+
+    final captionSnapshot = caption.value.trim().isEmpty
+        ? null
+        : caption.value.trim();
+
+    final locationSnapshot = location.value.trim().isEmpty
+        ? null
+        : location.value.trim();
+
+    final visibilitySnapshot = visibility.value;
+
+    // ============================================================
+    // GET HOME CONTROLLER BEFORE LEAVING PAGE
+    // ============================================================
+
+    final homeController = Get.find<HomeController>();
+
+    // ============================================================
+    // CREATE TEMPORARY POST
+    // ============================================================
+
+    final tempPostId = homeController.addUploadingPost(
+      mediaSnapshot: mediaSnapshot,
+      caption: captionSnapshot,
+      location: locationSnapshot,
+      visibility: visibilitySnapshot,
     );
-    final uploadCtrl = Get.put(UploadProgressController());
-    debugPrint('🟢 [CreatePostController] UploadProgressController registered');
 
-    uploadCtrl.startUpload();
-    debugPrint('🟢 [CreatePostController] uploadCtrl.startUpload() called');
+    debugPrint('🟢 Temporary uploading post created: $tempPostId');
 
-    debugPrint('🧭 [CreatePostController] Navigating to UploadProgressPage...');
-    Get.to(() => const UploadProgressPage());
+    // ============================================================
+    // LEAVE CREATE POST PAGE
+    // ============================================================
 
-    _uploadMedia(uploadCtrl);
+    Get.offAll(() => MainPage());
+
+    // ============================================================
+    // BACKGROUND UPLOAD
+    // ============================================================
+
+    Future(() async {
+      try {
+        await _uploadMediaInBackground(
+          mediaSnapshot: mediaSnapshot,
+          caption: captionSnapshot,
+          location: locationSnapshot,
+          visibility: visibilitySnapshot,
+          tempPostId: tempPostId,
+          homeController: homeController,
+        );
+
+        debugPrint('🟢 Background upload completed');
+      } catch (e, stackTrace) {
+        debugPrint('🔴 Background upload failed: $e');
+
+        debugPrintStack(stackTrace: stackTrace);
+
+        // Keep the temporary post.
+        // Change it into FAILED state.
+        homeController.markUploadingPostFailed(tempPostId);
+
+        CustomAlert.show(
+          title: 'Upload Failed',
+          message: 'Could not upload your post. Please try again.',
+          icon: Icons.cloud_off,
+          color: Colors.red,
+        );
+      }
+    });
   }
 
-  Future<void> _uploadMedia(UploadProgressController uploadCtrl) async {
-    debugPrint('📤 [_uploadMedia] ==============================');
-    debugPrint('📤 [_uploadMedia] _uploadMedia() STARTED');
-    debugPrint('📤 [_uploadMedia] ==============================');
+  Future<void> _uploadMediaInBackground({
+    required List<PendingMedia> mediaSnapshot,
+    required String? caption,
+    required String? location,
+    required String visibility,
+    required String tempPostId,
+    required HomeController homeController,
+  }) async {
+    debugPrint('📤 [BackgroundUpload] STARTED');
+
+    final List<Map<String, String>> mediaItems = [];
+
+    final List<Map<String, dynamic>> mediaFileRefs = [];
+
+    final totalFiles = mediaSnapshot.length;
+
+    // ============================================================
+    // 1. COMPRESS + UPLOAD MEDIA
+    // ============================================================
+
+    for (int i = 0; i < totalFiles; i++) {
+      final originalPath = mediaSnapshot[i].originalPath;
+
+      final originalFile = File(originalPath);
+
+      if (!originalFile.existsSync()) {
+        throw Exception('File does not exist: $originalPath');
+      }
+
+      debugPrint(
+        '🗜️ [BackgroundUpload] '
+        'Compressing ${i + 1}/$totalFiles',
+      );
+
+      File uploadFile = originalFile;
+
+      final compressedFile = await imageCompressor.compressImage(originalPath);
+
+      if (compressedFile != null) {
+        uploadFile = compressedFile;
+
+        debugPrint(
+          '🗜️ Compression successful: '
+          '${compressedFile.lengthSync()} bytes',
+        );
+      } else {
+        debugPrint(
+          '🟡 Compression returned null. '
+          'Using original file.',
+        );
+      }
+
+      final originalName = uploadFile.path.split(RegExp(r'[/\\]')).last;
+
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$originalName';
+
+      debugPrint(
+        '☁️ [BackgroundUpload] '
+        'Uploading $fileName',
+      );
+
+      final storagePath = await repository.uploadImage(
+        imageFile: uploadFile,
+        fileName: fileName,
+        bucket: CreatePostRepository.imageBucket,
+        onProgress: (sent, total) {
+          if (total <= 0) return;
+
+          final percent = ((sent / total) * 100).toInt();
+
+          if (percent % 10 == 0) {
+            debugPrint(
+              '☁️ [BackgroundUpload] '
+              'Image ${i + 1}/$totalFiles: $percent%',
+            );
+          }
+        },
+      );
+
+      debugPrint(
+        '🟢 [BackgroundUpload] '
+        'Storage upload completed: $storagePath',
+      );
+
+      mediaItems.add({'storage_path': storagePath, 'media_type': 'IMAGE'});
+
+      mediaFileRefs.add({
+        'originalPath': originalPath,
+        'compressedFile': uploadFile,
+      });
+    }
+
+    // ============================================================
+    // 2. GET PROFILE
+    // ============================================================
+
+    final profileId = await repository.getCurrentProfileId();
+
+    if (profileId == null) {
+      throw Exception('No profile found for current user.');
+    }
+
+    // ============================================================
+    // 3. CREATE POST
+    // ============================================================
+
+    debugPrint('💾 [BackgroundUpload] Creating post...');
+
+    final postResult = await repository.createPost(
+      profileId: profileId,
+      caption: caption,
+      location: location,
+      visibility: visibility,
+      mediaItems: mediaItems,
+    );
+
+    final postId = postResult['post_id'] as String;
+
+    final mediaIds = postResult['media_ids'] as List<String>;
+
+    debugPrint(
+      '🟢 [BackgroundUpload] '
+      'Post created: $postId',
+    );
+
+    // ============================================================
+    // 4. METADATA
+    // ============================================================
 
     try {
-      final List<Map<String, String>> mediaItems = [];
-      final List<Map<String, dynamic>> mediaFileRefs =
-          []; // tracks original path + compressed File per item, in order
-      final uploadStartTime = DateTime.now();
-      final totalFiles = pendingMedia.length;
-      debugPrint('📤 [_uploadMedia] Total files to upload: $totalFiles');
+      final List<Map<String, dynamic>> metadataRows = [];
 
-      for (int i = 0; i < totalFiles; i++) {
-        debugPrint(
-          '📤 [_uploadMedia] --- Processing file ${i + 1} of $totalFiles ---',
-        );
-        final filePath = pendingMedia[i].originalPath;
-        final file = File(filePath);
-        debugPrint('📤 [_uploadMedia] File path: $filePath');
+      for (int i = 0; i < mediaFileRefs.length; i++) {
+        final ref = mediaFileRefs[i];
 
-        // Check if file exists
-        if (!file.existsSync()) {
-          debugPrint('🔴 [_uploadMedia] FILE DOES NOT EXIST: $filePath');
-          throw Exception("File does not exist: $filePath");
-        }
-        final fileSize = file.lengthSync();
-        debugPrint(
-          '📤 [_uploadMedia] File size: $fileSize bytes (${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB)',
+        final metadata = await MediaMetadataExtractor.extractImageMetadata(
+          originalPath: ref['originalPath'] as String,
+          compressedFile: ref['compressedFile'] as File,
+          mediaId: mediaIds[i],
         );
 
-        final bucket = CreatePostRepository.imageBucket;
-        debugPrint('📤 [_uploadMedia] Target bucket: $bucket');
-
-        File uploadFile = file;
-        uploadCtrl.updateStep(UploadStep.compressing);
-        uploadCtrl.updateCurrentFile("Compressing ${i + 1} of $totalFiles");
-        debugPrint('🗜️ [_uploadMedia] Compressing image: $filePath');
-        final compressedFile = await imageCompressor.compressImage(filePath);
-        if (compressedFile != null) {
-          uploadFile = compressedFile;
-          final compressedSize = compressedFile.lengthSync();
-          debugPrint(
-            '🗜️ [_uploadMedia] Compressed size: $compressedSize bytes (was $fileSize bytes)',
-          );
-        } else {
-          debugPrint(
-            '🟡 [_uploadMedia] Compression returned null, using original file',
-          );
-        }
-
-        uploadCtrl.updateStep(UploadStep.uploading);
-        uploadCtrl.updateCurrentFile("Uploading ${i + 1} of $totalFiles");
-        debugPrint(
-          '📤 [_uploadMedia] Updated UI: "Uploading ${i + 1} of $totalFiles"',
-        );
-
-        final originalName = uploadFile.path.split(RegExp(r'[/\\]')).last;
-        final fileName =
-            "${DateTime.now().millisecondsSinceEpoch}_$originalName";
-        debugPrint('📤 [_uploadMedia] Original name: $originalName');
-        debugPrint('📤 [_uploadMedia] Generated fileName: $fileName');
-
-        debugPrint('📤 [_uploadMedia] Calling repository.uploadImage()...');
-        final storagePath = await repository.uploadImage(
-          imageFile: uploadFile,
-          fileName: fileName,
-          bucket: bucket,
-          onProgress: (sent, total) {
-            final fileProgress = sent / total;
-            final overallProgress = (i + fileProgress) / totalFiles;
-            uploadCtrl.updateProgress(overallProgress);
-
-            final uploadedMB = (sent / 1024 / 1024).toStringAsFixed(2);
-            final totalMB = (total / 1024 / 1024).toStringAsFixed(2);
-
-            final elapsedSeconds =
-                DateTime.now().difference(uploadStartTime).inMilliseconds /
-                1000;
-
-            if (elapsedSeconds <= 0) return;
-            final speed = (sent / 1024 / 1024) / elapsedSeconds;
-            final speedText = "${speed.toStringAsFixed(2)} MB/s";
-            final remainingBytes = total - sent;
-            final remainingSeconds = remainingBytes / (speed * 1024 * 1024);
-            final remainingText = "${remainingSeconds.toStringAsFixed(0)} sec";
-
-            uploadCtrl.updateUploadStats(
-              uploaded: "$uploadedMB MB / $totalMB MB",
-              speed: speedText,
-              timeLeft: remainingText,
-            );
-
-            // Log progress periodically (every 5%)
-            final percent = (overallProgress * 100).toInt();
-            if (percent % 5 == 0) {
-              debugPrint(
-                '📊 [Upload Progress] File ${i + 1}/$totalFiles: $percent% - $speedText - $uploadedMB/$totalMB MB',
-              );
-            }
-          },
-        );
-
-        debugPrint('🟢 [_uploadMedia] File ${i + 1} uploaded successfully!');
-        debugPrint('🟢 [_uploadMedia] Storage path: $storagePath');
-
-        mediaItems.add({'storage_path': storagePath, 'media_type': 'IMAGE'});
-        debugPrint(
-          '🟢 [_uploadMedia] Media item added: {storage_path: $storagePath, media_type: IMAGE}',
-        );
-
-        mediaFileRefs.add({
-          'originalPath': filePath,
-          'compressedFile': uploadFile,
-        });
+        metadataRows.add(metadata);
       }
 
-      // Save the post to the database now that all media is uploaded
-      debugPrint('💾 [_uploadMedia] ==============================');
-      debugPrint(
-        '💾 [_uploadMedia] All media uploaded! Now saving post to database...',
-      );
-      debugPrint('💾 [_uploadMedia] Total media items: ${mediaItems.length}');
-      for (int i = 0; i < mediaItems.length; i++) {
-        debugPrint('💾 [_uploadMedia] Media [$i]: ${mediaItems[i]}');
+      if (metadataRows.isNotEmpty) {
+        await repository.insertMediaMetadata(metadataRows);
+
+        debugPrint('🟢 [BackgroundUpload] Metadata saved');
       }
-
-      uploadCtrl.updateStep(UploadStep.saving);
-      uploadCtrl.updateCurrentFile("Saving post...");
-
-      debugPrint('🔍 [_uploadMedia] Fetching current profile ID...');
-      final profileId = await repository.getCurrentProfileId();
-      if (profileId == null) {
-        debugPrint('🔴 [_uploadMedia] NO PROFILE FOUND for current user!');
-        throw Exception("No profile found for current user.");
-      }
-      debugPrint('🟢 [_uploadMedia] Profile ID: $profileId');
-
-      debugPrint('💾 [_uploadMedia] Calling repository.createPost()...');
-      debugPrint('💾 [_uploadMedia]   profileId: $profileId');
+    } catch (e) {
+      // Metadata failure should NOT delete the post.
       debugPrint(
-        '💾 [_uploadMedia]   caption: ${caption.value.isEmpty ? "null" : caption.value}',
+        '🟡 [BackgroundUpload] '
+        'Metadata failed: $e',
       );
-      debugPrint(
-        '💾 [_uploadMedia]   location: ${location.value.isEmpty ? "null" : location.value}',
-      );
-      debugPrint('💾 [_uploadMedia]   visibility: ${visibility.value}');
-      debugPrint('💾 [_uploadMedia]   mediaItems count: ${mediaItems.length}');
-
-      final postResult = await repository.createPost(
-        profileId: profileId,
-        caption: caption.value.isEmpty ? null : caption.value,
-        location: location.value.isEmpty ? null : location.value,
-        visibility: visibility.value,
-        mediaItems: mediaItems,
-      );
-
-      final postId = postResult['post_id'] as String;
-      final mediaIds = postResult['media_ids'] as List<String>;
-
-      debugPrint('🟢 [_uploadMedia] ==============================');
-      debugPrint('🟢 [_uploadMedia] POST CREATED SUCCESSFULLY!');
-      debugPrint('🟢 [_uploadMedia] Post ID: $postId');
-      debugPrint('🟢 [_uploadMedia] Media IDs: $mediaIds');
-      debugPrint('🟢 [_uploadMedia] ==============================');
-
-      // Extract & save metadata for each image — best-effort, never blocks post creation
-      try {
-        uploadCtrl.updateStep(UploadStep.metadata);
-        uploadCtrl.updateCurrentFile("Saving metadata...");
-        final List<Map<String, dynamic>> metadataRows = [];
-
-        for (int i = 0; i < mediaFileRefs.length; i++) {
-          final ref = mediaFileRefs[i];
-          final mediaId = mediaIds[i];
-          final originalPath = ref['originalPath'] as String;
-          final compressedFile = ref['compressedFile'] as File;
-
-          debugPrint(
-            '📊 [_uploadMedia] Extracting metadata for mediaId=$mediaId',
-          );
-          final metadata = await MediaMetadataExtractor.extractImageMetadata(
-            originalPath: originalPath,
-            compressedFile: compressedFile,
-            mediaId:
-                mediaId, //--------------- review needed ------------------------
-          );
-          metadataRows.add(metadata);
-          debugPrint('📊 [_uploadMedia] Metadata extracted: $metadata');
-        }
-
-        if (metadataRows.isNotEmpty) {
-          await repository.insertMediaMetadata(metadataRows);
-          debugPrint(
-            '🟢 [_uploadMedia] Metadata saved for ${metadataRows.length} item(s)',
-          );
-        }
-      } catch (e) {
-        // Metadata is supplementary — never fail the whole post over this
-        debugPrint(
-          '🟡 [_uploadMedia] Metadata extraction/save failed (non-fatal): $e',
-        );
-      }
-
-      uploadCtrl.updateStep(UploadStep.completed);
-      uploadCtrl.completeUpload();
-      debugPrint('🟢 [_uploadMedia] uploadCtrl.completeUpload() called');
-
-      debugPrint('⏳ [_uploadMedia] Waiting 1 second before navigation...');
-      await Future.delayed(const Duration(seconds: 1));
-
-      debugPrint(
-        '🧭 [_uploadMedia] Finding HomeController and refreshing posts...',
-      );
-      final homeController = Get.find<HomeController>();
-      homeController.currentIndex.value = 0;
-      await homeController.refreshFeed();
-      debugPrint('🟢 [_uploadMedia] Posts reloaded');
-
-      debugPrint('🧭 [_uploadMedia] Navigating to MainPage...');
-      Get.offAll(() => MainPage());
-      debugPrint(
-        '🟢 [_uploadMedia] Navigation complete. Post creation flow finished!',
-      );
-    } catch (e, stackTrace) {
-      debugPrint('🔴 [_uploadMedia] ==============================');
-      debugPrint('🔴 [_uploadMedia] ERROR in _uploadMedia!');
-      debugPrint('🔴 [_uploadMedia] Error: $e');
-      debugPrint('🔴 [_uploadMedia] Error type: ${e.runtimeType}');
-      debugPrint('🔴 [_uploadMedia] Stack trace:');
-      debugPrint('$stackTrace');
-      debugPrint('🔴 [_uploadMedia] ==============================');
-      uploadCtrl.failUpload(e.toString());
-      debugPrint('🔴 [_uploadMedia] uploadCtrl.failUpload() called with: $e');
     }
+
+    // ============================================================
+    // 5. REFRESH HOME
+    // ============================================================
+
+    final refreshed = await homeController.refreshFeed();
+
+    if (!refreshed) {
+      throw Exception(
+        'Post uploaded successfully, '
+        'but feed refresh failed.',
+      );
+    }
+
+    debugPrint('🟢 [BackgroundUpload] Home feed refreshed');
+
+    // ============================================================
+    // 6. SUCCESS
+    // ============================================================
+
+    homeController.removeUploadingPost(tempPostId);
+
+    debugPrint(
+      '🟢 [BackgroundUpload] '
+      'Temporary uploading post removed',
+    );
+
+    debugPrint('🟢 [BackgroundUpload] Finished successfully');
   }
 
   // Add location
