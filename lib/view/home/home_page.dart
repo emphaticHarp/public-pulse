@@ -155,6 +155,10 @@ class HomePage extends StatelessWidget {
                               : null,
                           imageUrls: post.mediaUrls,
                           postId: post.id,
+
+                          isUploading: post.isUploading,
+                          localMediaPaths: post.localMediaPaths,
+
                           likeIcon: post.isLiked
                               ? Icons.favorite
                               : Icons.favorite_border,
