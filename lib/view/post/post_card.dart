@@ -76,6 +76,16 @@ class PostCard extends StatelessWidget {
     required this.caption,
   });
 
+  String? get displayLocation {
+    final value = location?.trim();
+
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+
+    return value.split(',').first.trim();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -88,7 +98,7 @@ class PostCard extends StatelessWidget {
             username: username,
             authorId: authorId,
             authorUserId: authorUserId,
-            location: location,
+            location: displayLocation,
             postId: postId,
             isOwner: isOwner,
           ),

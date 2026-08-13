@@ -63,11 +63,10 @@ dependencies:
   cached_network_image: ^3.4.1
   uuid: ^4.6.0
   url_launcher: ^6.3.2
+  geocoding: ^4.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -75,8 +74,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-
-
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -92,75 +90,80 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/images/
-    - .env
+  - assets/images/
+  - .env
 
   fonts:
-    - family: Poppins
-      fonts:
-        - asset: assets/font/Poppins-Thin.ttf
-          weight: 100
+  - family: Poppins
+    fonts:
+    - asset: assets/font/Poppins-Thin.ttf
+      weight: 100
 
-        - asset: assets/font/Poppins-ThinItalic.ttf
-          weight: 100
-          style: italic
+    - asset: assets/font/Poppins-ThinItalic.ttf
+      weight: 100
+      style: italic
 
-        - asset: assets/font/Poppins-ExtraLight.ttf
-          weight: 200
+    - asset: assets/font/Poppins-ExtraLight.ttf
+      weight: 200
 
-        - asset: assets/font/Poppins-ExtraLightItalic.ttf
-          weight: 200
-          style: italic
+    - asset: assets/font/Poppins-ExtraLightItalic.ttf
+      weight: 200
+      style: italic
 
-        - asset: assets/font/Poppins-Light.ttf
-          weight: 300
+    - asset: assets/font/Poppins-Light.ttf
+      weight: 300
 
-        - asset: assets/font/Poppins-LightItalic.ttf
-          weight: 300
-          style: italic
+    - asset: assets/font/Poppins-LightItalic.ttf
+      weight: 300
+      style: italic
 
-        - asset: assets/font/Poppins-Regular.ttf
-          weight: 400
+    - asset: assets/font/Poppins-Regular.ttf
+      weight: 400
 
-        - asset: assets/font/Poppins-Italic.ttf
-          weight: 400
-          style: italic
+    - asset: assets/font/Poppins-Italic.ttf
+      weight: 400
+      style: italic
 
-        - asset: assets/font/Poppins-Medium.ttf
-          weight: 500
+    - asset: assets/font/Poppins-Medium.ttf
+      weight: 500
 
-        - asset: assets/font/Poppins-MediumItalic.ttf
-          weight: 500
-          style: italic
+    - asset: assets/font/Poppins-MediumItalic.ttf
+      weight: 500
+      style: italic
 
-        - asset: assets/font/Poppins-SemiBold.ttf
-          weight: 600
+    - asset: assets/font/Poppins-SemiBold.ttf
+      weight: 600
 
-        - asset: assets/font/Poppins-SemiBoldItalic.ttf
-          weight: 600
-          style: italic
+    - asset: assets/font/Poppins-SemiBoldItalic.ttf
+      weight: 600
+      style: italic
 
-        - asset: assets/font/Poppins-Bold.ttf
-          weight: 700
+    - asset: assets/font/Poppins-Bold.ttf
+      weight: 700
 
-        - asset: assets/font/Poppins-BoldItalic.ttf
-          weight: 700
-          style: italic
+    - asset: assets/font/Poppins-BoldItalic.ttf
+      weight: 700
+      style: italic
 
-        - asset: assets/font/Poppins-ExtraBold.ttf
-          weight: 800
+    - asset: assets/font/Poppins-ExtraBold.ttf
+      weight: 800
 
-        - asset: assets/font/Poppins-ExtraBoldItalic.ttf
-          weight: 800
-          style: italic
+    - asset: assets/font/Poppins-ExtraBoldItalic.ttf
+      weight: 800
+      style: italic
 
-        - asset: assets/font/Poppins-Black.ttf
-          weight: 900
+    - asset: assets/font/Poppins-Black.ttf
+      weight: 900
 
-        - asset: assets/font/Poppins-BlackItalic.ttf
-          weight: 900
-          style: italic
+    - asset: assets/font/Poppins-BlackItalic.ttf
+      weight: 900
+      style: italic
 
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/log.webp"
+  min_sdk_android: 21
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

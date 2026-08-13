@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/controller/create_post_controller.dart';
+import 'package:public_pulse/widget/create_post/location_section.dart';
 
 /// Builds an image widget that handles both local file paths and network URLs.
 Widget _buildMediaImage(String path, BoxFit fit) {
@@ -44,51 +45,51 @@ class CreatePostPage extends StatelessWidget {
     debugPrint('🟢 [CreatePostPage] CreatePostController found via Get.find');
 
     return PopScope(
-  onPopInvokedWithResult: (didPop, result) {
-    if (didPop) {
-      Get.delete<CreatePostController>();
-    }
-  },
-child: Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 448), // max-w-md
-            child: Column(
-              children: [
-                const _Header(),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 110),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _MediaCarousel(controller: controller),
-                            const _InfoBanner(),
-                            _CaptionSection(controller: controller),
-                            _LocationSection(controller: controller),
-                            _VisibilitySection(controller: controller),
-                          ],
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          Get.delete<CreatePostController>();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 448), // max-w-md
+              child: Column(
+                children: [
+                  const _Header(),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        SingleChildScrollView(
+                          padding: const EdgeInsets.only(bottom: 110),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _MediaCarousel(controller: controller),
+                              const _InfoBanner(),
+                              _CaptionSection(controller: controller),
+                              CreatePostLocationSection(controller: controller),
+                              _VisibilitySection(controller: controller),
+                            ],
+                          ),
                         ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: _UploadFooter(controller: controller),
-                      ),
-                    ],
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: _UploadFooter(controller: controller),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 }
@@ -295,7 +296,10 @@ class _MediaCarousel extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: _buildMediaImage(media[index].originalPath, BoxFit.cover),
+                      child: _buildMediaImage(
+                        media[index].originalPath,
+                        BoxFit.cover,
+                      ),
                     ),
                   ),
                 );
@@ -420,14 +424,11 @@ class _MediaPreviewCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
-                ),                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.image,
-                        color: Colors.white,
-                        size: 14,
-                      ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.image, color: Colors.white, size: 14),
                     const SizedBox(width: 5),
                     Text(
                       '$currentIndex/$totalCount',
@@ -588,86 +589,10 @@ class _CaptionSection extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Location section
-// ---------------------------------------------------------------------------
-class _LocationSection extends StatelessWidget {
-  const _LocationSection({required this.controller});
-
-  final CreatePostController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-         
-          const SizedBox(height: 12),
-          Material(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: controller.addLocation,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.gray100),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          color: AppColors.createPostRed600,
-                          size: 16,
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          'Add Location',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.createPostRed600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Icon(
-                      Icons.chevron_right,
-                      color: AppColors.gray400,
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Visibility section
 // ---------------------------------------------------------------------------
 class _VisibilitySection extends StatelessWidget {
-  const _VisibilitySection({
-    required this.controller,
-  });
+  const _VisibilitySection({required this.controller});
 
   final CreatePostController controller;
 
@@ -680,11 +605,7 @@ class _VisibilitySection extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(
-                Icons.public,
-                color: AppColors.createPostRed600,
-                size: 16,
-              ),
+              Icon(Icons.public, color: AppColors.createPostRed600, size: 16),
               SizedBox(width: 8),
               Text(
                 "Who can see this?",
@@ -712,9 +633,7 @@ class _VisibilitySection extends StatelessWidget {
                     groupValue: controller.visibility.value,
                     activeColor: AppColors.createPostRed600,
                     title: const Text("Public"),
-                    subtitle: const Text(
-                      "Everyone can view this post",
-                    ),
+                    subtitle: const Text("Everyone can view this post"),
                     onChanged: (v) {
                       controller.visibility.value = v!;
                     },
@@ -725,9 +644,7 @@ class _VisibilitySection extends StatelessWidget {
                     groupValue: controller.visibility.value,
                     activeColor: AppColors.createPostRed600,
                     title: const Text("Followers Only"),
-                    subtitle: const Text(
-                      "Only your followers can view this",
-                    ),
+                    subtitle: const Text("Only your followers can view this"),
                     onChanged: (v) {
                       controller.visibility.value = v!;
                     },
@@ -762,13 +679,19 @@ class _UploadFooter extends StatelessWidget {
         () => SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: controller.pendingMedia.isEmpty ||
-                    controller.isUploading.value
+            onPressed:
+                controller.pendingMedia.isEmpty || controller.isUploading.value
                 ? null
                 : () {
-                    debugPrint('🖼️ [CreatePostPage] Upload Post button pressed');
-                    debugPrint('🖼️ [CreatePostPage] Media count: ${controller.pendingMedia.length}');
-                    debugPrint('🖼️ [CreatePostPage] Is uploading: ${controller.isUploading.value}');
+                    debugPrint(
+                      '🖼️ [CreatePostPage] Upload Post button pressed',
+                    );
+                    debugPrint(
+                      '🖼️ [CreatePostPage] Media count: ${controller.pendingMedia.length}',
+                    );
+                    debugPrint(
+                      '🖼️ [CreatePostPage] Is uploading: ${controller.isUploading.value}',
+                    );
                     controller.uploadPost();
                   },
             style:
@@ -803,10 +726,7 @@ class _UploadFooter extends StatelessWidget {
                   SizedBox(width: 8),
                   Text(
                     'Upload Post',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ],
               );
