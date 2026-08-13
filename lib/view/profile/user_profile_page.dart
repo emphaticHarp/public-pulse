@@ -7,6 +7,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_font.dart';
 
 import '../../widget/profile/profile_widget.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+import '../../core/cache/image_cache_key.dart';
 
 class UserProfilePage extends StatelessWidget {
   final String userId;
@@ -276,7 +279,33 @@ class _TabContent extends StatelessWidget {
         mainAxisSpacing: 2,
       ),
       itemBuilder: (context, index) {
-        return Image.network(photoPosts[index], fit: BoxFit.cover);
+        final imageUrl = photoPosts[index];
+
+        return CachedNetworkImage(
+          imageUrl: imageUrl,
+
+          cacheKey: supabaseStorageCacheKey(imageUrl),
+
+          fit: BoxFit.cover,
+
+          fadeInDuration: Duration.zero,
+          fadeOutDuration: Duration.zero,
+
+          placeholder: (context, url) {
+            return Container(color: AppColors.surfaceDefault);
+          },
+
+          errorWidget: (context, url, error) {
+            return Container(
+              color: AppColors.surfaceDefault,
+
+              child: const Icon(
+                Icons.broken_image_outlined,
+                color: AppColors.textSecondary,
+              ),
+            );
+          },
+        );
       },
     );
   }
