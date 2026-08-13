@@ -257,6 +257,8 @@ class SettingController extends GetxController {
     );
   }
 
+  
+
   // ── Logout ────────────────────────────────────────────────────────────────
 
   /// Full logout sequence:
@@ -315,11 +317,12 @@ class SettingController extends GetxController {
       // ----------------------------------------------------------
       // 4. Remove user-specific controllers
       // ----------------------------------------------------------
-
       if (Get.isRegistered<HomeController>()) {
-        Get.delete<HomeController>(force: true);
+        final homeController = Get.find<HomeController>();
 
-        debugPrint('[Settings] HomeController removed');
+        homeController.resetForLogout();
+
+        debugPrint('[Settings] HomeController reset');
       }
 
       if (Get.isRegistered<NotificationController>()) {

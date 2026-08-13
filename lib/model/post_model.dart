@@ -5,6 +5,7 @@ class PostModel {
 
   // Profile
   final String profileId;
+  final String authorUserId;
   final String username;
   final String displayName;
   final String? profileImage;
@@ -49,6 +50,7 @@ class PostModel {
   PostModel({
     required this.id,
     required this.profileId,
+    this.authorUserId = '',
     required this.username,
     required this.displayName,
 
@@ -112,7 +114,7 @@ class PostModel {
     return PostModel(
       id: json['id'],
       profileId: json['profile_id'],
-
+      authorUserId: profile['user_id']?.toString() ?? '',
       username: profile['username'] ?? '',
       displayName: profile['display_name'] ?? '',
       profileImage: profile['avatar_path'],
@@ -169,6 +171,7 @@ class PostModel {
       'id': id,
       'profile_id': profileId,
       'username': username,
+      'author_user_id': authorUserId,
       'display_name': displayName,
       'profile_image': profileImage,
       'caption': caption,
@@ -208,6 +211,7 @@ class PostModel {
       visibility: json['visibility'],
       isPrivateAccount: json['is_private_account'],
       isOwner: json['is_owner'] ?? false,
+      authorUserId: json['author_user_id']?.toString() ?? '',
       storagePaths: List<String>.from(json['storage_paths'] ?? const []),
       mediaUrls: List<String>.from(json['media_urls'] ?? const []),
       thumbnailUrls: List<String>.from(json['thumbnail_urls'] ?? const []),

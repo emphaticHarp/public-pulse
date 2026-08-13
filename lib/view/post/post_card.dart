@@ -10,6 +10,7 @@ class PostCard extends StatelessWidget {
   final String profileImage;
   final String username;
   final String authorId;
+  final String authorUserId;
   final String? location;
 
   final bool isCarousel;
@@ -43,6 +44,7 @@ class PostCard extends StatelessWidget {
     super.key,
     required this.profileImage,
     required this.username,
+    required this.authorUserId,
     required this.authorId,
     this.location,
 
@@ -85,6 +87,7 @@ class PostCard extends StatelessWidget {
             profileImage: profileImage,
             username: username,
             authorId: authorId,
+            authorUserId: authorUserId,
             location: location,
             postId: postId,
             isOwner: isOwner,

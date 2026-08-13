@@ -3,7 +3,7 @@ import 'package:public_pulse/model/profile_model.dart';
 import 'hive_boxes.dart';
 
 class FollowersFollowingCacheService {
-  static const Duration cacheDuration = Duration(days: 5);
+  static const Duration cacheDuration = Duration(minutes: 15);
 
   Box get _box => Hive.box(HiveBoxes.cachedFollowersFollowing);
 
@@ -16,8 +16,11 @@ class FollowersFollowingCacheService {
     required List<FollowerModel> followers,
     required List<FollowerModel> following,
   }) async {
+    final now = DateTime.now().toIso8601String();
+
     await _box.put(profileId, {
-      'cachedAt': DateTime.now().toIso8601String(),
+      'followersCachedAt': now,
+      'followingCachedAt': now,
 
       'followers': followers.map((user) {
         return {
@@ -39,9 +42,9 @@ class FollowersFollowingCacheService {
     });
   }
 
-  Future updateFollowers({
+  Future<void> updateFollowers({
     required String profileId,
-    required List followers,
+    required List<FollowerModel> followers,
   }) async {
     final existing = _box.get(profileId);
 
@@ -52,7 +55,9 @@ class FollowersFollowingCacheService {
     final existingFollowing = (existingMap['following'] as List?) ?? [];
 
     await _box.put(profileId, {
-      'cachedAt': DateTime.now().toIso8601String(),
+      'followersCachedAt': DateTime.now().toIso8601String(),
+
+      'followingCachedAt': existingMap['followingCachedAt'],
 
       'followers': followers.map((user) {
         return {
@@ -67,9 +72,9 @@ class FollowersFollowingCacheService {
     });
   }
 
-  Future updateFollowing({
+  Future<void> updateFollowing({
     required String profileId,
-    required List following,
+    required List<FollowerModel> following,
   }) async {
     final existing = _box.get(profileId);
 
@@ -80,7 +85,9 @@ class FollowersFollowingCacheService {
     final existingFollowers = (existingMap['followers'] as List?) ?? [];
 
     await _box.put(profileId, {
-      'cachedAt': DateTime.now().toIso8601String(),
+      'followersCachedAt': existingMap['followersCachedAt'],
+
+      'followingCachedAt': DateTime.now().toIso8601String(),
 
       'followers': existingFollowers,
 
@@ -106,47 +113,78 @@ class FollowersFollowingCacheService {
       return null;
     }
 
-    final map = Map<String, dynamic>.from(data);
+    try {
+      final map = Map<String, dynamic>.from(data);
 
-    final cachedAt = DateTime.tryParse(map['cachedAt']?.toString() ?? '');
+      final followersCachedAt = DateTime.tryParse(
+        map['followersCachedAt']?.toString() ?? '',
+      );
 
-    if (cachedAt == null) {
+      final followingCachedAt = DateTime.tryParse(
+        map['followingCachedAt']?.toString() ?? '',
+      );
+
+      final now = DateTime.now();
+
+      // =========================================================
+      // FOLLOWERS
+      // =========================================================
+
+      List<FollowerModel> followers = [];
+
+      final followersValid =
+          followersCachedAt != null &&
+          now.difference(followersCachedAt) < cacheDuration;
+
+      if (followersValid) {
+        followers = ((map['followers'] as List?) ?? []).map((item) {
+          final user = Map<String, dynamic>.from(item);
+
+          return FollowerModel(
+            userId: user['userId']?.toString() ?? '',
+            username: user['username']?.toString() ?? '',
+            displayName: user['displayName']?.toString(),
+            avatarPath: user['avatarPath']?.toString(),
+          );
+        }).toList();
+      }
+
+      // =========================================================
+      // FOLLOWING
+      // =========================================================
+
+      List<FollowerModel> following = [];
+
+      final followingValid =
+          followingCachedAt != null &&
+          now.difference(followingCachedAt) < cacheDuration;
+
+      if (followingValid) {
+        following = ((map['following'] as List?) ?? []).map((item) {
+          final user = Map<String, dynamic>.from(item);
+
+          return FollowerModel(
+            userId: user['userId']?.toString() ?? '',
+            username: user['username']?.toString() ?? '',
+            displayName: user['displayName']?.toString(),
+            avatarPath: user['avatarPath']?.toString(),
+          );
+        }).toList();
+      }
+
+      if (!followersValid && !followingValid) {
+        _box.delete(profileId);
+        return null;
+      }
+
+      return {'followers': followers, 'following': following};
+    } catch (e) {
+      print('[FF_CACHE] Cache read error: $e');
+
       _box.delete(profileId);
+
       return null;
     }
-
-    // ─────────────────────────────────────────
-    // 5 DAY TTL
-    // ─────────────────────────────────────────
-
-    if (DateTime.now().difference(cachedAt) >= cacheDuration) {
-      _box.delete(profileId);
-      return null;
-    }
-
-    final followers = ((map['followers'] as List?) ?? [])
-        .map(
-          (item) => FollowerModel(
-            userId: item['userId'] as String,
-            username: item['username'] as String? ?? '',
-            displayName: item['displayName'] as String?,
-            avatarPath: item['avatarPath'] as String?,
-          ),
-        )
-        .toList();
-
-    final following = ((map['following'] as List?) ?? [])
-        .map(
-          (item) => FollowerModel(
-            userId: item['userId'] as String,
-            username: item['username'] as String? ?? '',
-            displayName: item['displayName'] as String?,
-            avatarPath: item['avatarPath'] as String?,
-          ),
-        )
-        .toList();
-
-    return {'followers': followers, 'following': following};
   }
 
   // ─────────────────────────────────────────────

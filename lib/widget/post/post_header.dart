@@ -4,13 +4,14 @@ import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
-import 'package:public_pulse/view/profile/profile_page.dart';
 import 'package:public_pulse/widget/post/follow_button.dart';
+import 'package:public_pulse/view/profile/user_profile_page.dart';
 
 class PostHeader extends StatelessWidget {
   final String profileImage;
   final String username;
   final String authorId;
+  final String authorUserId;
   final String? location;
   final String postId;
   final bool isOwner;
@@ -21,6 +22,7 @@ class PostHeader extends StatelessWidget {
     required this.profileImage,
     required this.username,
     required this.authorId,
+    required this.authorUserId,
     this.location,
     required this.postId,
     required this.isOwner,
@@ -47,7 +49,14 @@ class PostHeader extends StatelessWidget {
                         onTap: () {
                           if (isOwner) return;
 
-                          Get.to(() => ProfilePage(userId: authorId));
+                          if (authorUserId.isEmpty) {
+                            debugPrint(
+                              '[POST_HEADER] authorUserId is empty. Cannot open profile.',
+                            );
+                            return;
+                          }
+
+                          Get.to(() => UserProfilePage(userId: authorUserId));
                         },
                         child: CircleAvatar(
                           radius: 20,
@@ -71,7 +80,9 @@ class PostHeader extends StatelessWidget {
                                       if (isOwner) return;
 
                                       Get.to(
-                                        () => ProfilePage(userId: authorId),
+                                        () => UserProfilePage(
+                                          userId: authorUserId,
+                                        ),
                                       );
                                     },
                                     child: Text(

@@ -53,7 +53,7 @@ Future<void> main() async {
   Get.put(AuthService(), permanent: true);
 
   Get.put(NetworkController());
-  Get.lazyPut<HomeController>(() => HomeController(), fenix: true);
+  Get.put<HomeController>(HomeController(), permanent: true);// permanent true bcz keeps the controller alive for the app session.
   Get.lazyPut<LoginController>(() => LoginController(), fenix: true);
   Get.lazyPut<NotificationController>(
     () => NotificationController(),
