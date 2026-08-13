@@ -22,6 +22,15 @@ class UserProfileRepository {
 
   final _auth = Supabase.instance.client.auth;
 
+  /// Cache profile-id lookups.
+  ///
+  /// Key   = profiles.user_id / auth user ID
+  /// Value = Future of profiles.id
+  ///
+  /// Using Future here also prevents duplicate requests when
+  /// multiple methods ask for the same profile ID simultaneously.
+  final Map<String, Future<String>> _profileIdCache = {};
+
   String get _uid => _auth.currentUser!.id;
 
   // ─────────────────────────────────────────────
@@ -29,10 +38,26 @@ class UserProfileRepository {
   // ─────────────────────────────────────────────
 
   /// Gets the internal profile.id from auth user_id.
-  Future<String> _getProfileIdFromUserId(String userId) async {
-    final data = await _db.select('id').eq('user_id', userId).single();
+  Future<String> _getProfileIdFromUserId(String userId) {
+    return _profileIdCache.putIfAbsent(userId, () async {
+      try {
+        final data = await _db.select('id').eq('user_id', userId).single();
 
-    return data['id'] as String;
+        final profileId = data['id'] as String;
+
+        print(
+          '[USER_PROFILE_REPO] Profile ID fetched: '
+          '$userId -> $profileId',
+        );
+
+        return profileId;
+      } catch (e) {
+        // Do not permanently cache a failed request.
+        _profileIdCache.remove(userId);
+
+        rethrow;
+      }
+    });
   }
 
   /// Fetches the target user's public profile.

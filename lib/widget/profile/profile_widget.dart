@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_font.dart';
 import '../../model/profile_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+import '../../core/cache/image_cache_key.dart';
 
 /// Shared by [AppOutlinedButton] and [AppPrimaryButton] so the padding and
 /// corner radius are defined once instead of repeated per button.
@@ -12,8 +15,17 @@ final _buttonShape = RoundedRectangleBorder(
 );
 
 ImageProvider? resolveProfileImage({File? file, String? url}) {
-  if (file != null) return FileImage(file);
-  if (url != null && url.isNotEmpty) return NetworkImage(url);
+  if (file != null) {
+    return FileImage(file);
+  }
+
+  if (url != null && url.isNotEmpty) {
+    return CachedNetworkImageProvider(
+      url,
+      cacheKey: supabaseStorageCacheKey(url),
+    );
+  }
+
   return null;
 }
 
@@ -92,7 +104,9 @@ class ProfileHeaderImage extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: coverImage ?? const AssetImage('assets/images/cover_placeholder.png'),
+              image:
+                  coverImage ??
+                  const AssetImage('assets/images/cover_placeholder.png'),
               fit: BoxFit.cover,
             ),
           ),

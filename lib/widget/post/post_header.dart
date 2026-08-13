@@ -7,6 +7,9 @@ import 'package:public_pulse/widget/local/app_alert.dart';
 import 'package:public_pulse/widget/post/follow_button.dart';
 import 'package:public_pulse/view/profile/user_profile_page.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:public_pulse/core/cache/image_cache_key.dart';
+
 class PostHeader extends StatelessWidget {
   final String profileImage;
   final String username;
@@ -60,9 +63,24 @@ class PostHeader extends StatelessWidget {
                         },
                         child: CircleAvatar(
                           radius: 20,
-                          backgroundImage: NetworkImage(profileImage),
-                          onBackgroundImageError: (error, stackTrace) {},
                           backgroundColor: AppColors.gray100,
+
+                          backgroundImage: profileImage.isNotEmpty
+                              ? CachedNetworkImageProvider(
+                                  profileImage,
+                                  cacheKey: supabaseStorageCacheKey(
+                                    profileImage,
+                                  ),
+                                )
+                              : null,
+
+                          child: profileImage.isEmpty
+                              ? const Icon(
+                                  Icons.person,
+                                  color: AppColors.gray400,
+                                  size: 20,
+                                )
+                              : null,
                         ),
                       ),
 
@@ -78,6 +96,13 @@ class PostHeader extends StatelessWidget {
                                   child: GestureDetector(
                                     onTap: () {
                                       if (isOwner) return;
+
+                                      if (authorUserId.isEmpty) {
+                                        debugPrint(
+                                          '[POST_HEADER] authorUserId is empty. Cannot open profile.',
+                                        );
+                                        return;
+                                      }
 
                                       Get.to(
                                         () => UserProfilePage(
