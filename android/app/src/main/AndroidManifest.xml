@@ -24,7 +24,7 @@
 
 
     <application
-        android:label="public_pulse"
+        android:label="Public Pulse"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -17,7 +17,12 @@ class MainPage extends StatelessWidget {
 
   /// Home is created immediately.
   /// Other pages are created only when opened for the first time.
-  final List<Widget?> pages = [HomePage(), null, null, null];
+  final List<Widget?> pages = [
+    HomePage(),
+    null,
+    null,
+    null,
+  ];
 
   Widget _getPage(int index) {
     if (pages[index] != null) {
@@ -51,22 +56,46 @@ class MainPage extends StatelessWidget {
       // Create the selected page only when it is first opened.
       _getPage(index);
 
-      return Scaffold(
-        body: IndexedStack(
-          index: index,
-          children: pages
-              .map((page) => page ?? const SizedBox.shrink())
-              .toList(),
-        ),
-        bottomNavigationBar: AppBottomNavBar(
-          currentIndex: index,
-          onTap: (newIndex) {
-            if (newIndex == index) return;
+      return PopScope(
+        canPop: index == 0,
 
-            controller.currentIndex.value = newIndex;
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) {
+            return;
+          }
 
-            debugPrint('[MAIN] Tab changed: $index → $newIndex');
-          },
+          if (controller.currentIndex.value != 0) {
+            debugPrint(
+              '[MAIN] Back pressed: '
+              '${controller.currentIndex.value} → 0',
+            );
+
+            controller.currentIndex.value = 0;
+          }
+        },
+
+        child: Scaffold(
+          body: IndexedStack(
+            index: index,
+            children: pages
+                .map(
+                  (page) => page ?? const SizedBox.shrink(),
+                )
+                .toList(),
+          ),
+
+          bottomNavigationBar: AppBottomNavBar(
+            currentIndex: index,
+            onTap: (newIndex) {
+              if (newIndex == index) return;
+
+              controller.currentIndex.value = newIndex;
+
+              debugPrint(
+                '[MAIN] Tab changed: $index → $newIndex',
+              );
+            },
+          ),
         ),
       );
     });

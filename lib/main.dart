@@ -37,9 +37,14 @@ Future<void> main() async {
 
   final url = dotenv.env['SUPABASE_URL'];
   final key = dotenv.env['SUPABASE_PUBLISHABLE_KEY'];
+  final geoapifyKey = dotenv.env['GEOAPIFY_API_KEY'];
 
   if (url == null || key == null) {
     throw Exception('Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY in .env');
+  }
+
+  if (geoapifyKey == null || geoapifyKey.trim().isEmpty) {
+    throw Exception('Missing GEOAPIFY_API_KEY in .env');
   }
 
   await Supabase.initialize(
@@ -53,7 +58,10 @@ Future<void> main() async {
   Get.put(AuthService(), permanent: true);
 
   Get.put(NetworkController());
-  Get.put<HomeController>(HomeController(), permanent: true);// permanent true bcz keeps the controller alive for the app session.
+  Get.put<HomeController>(
+    HomeController(),
+    permanent: true,
+  ); // permanent true bcz keeps the controller alive for the app session.
   Get.lazyPut<LoginController>(() => LoginController(), fenix: true);
   Get.lazyPut<NotificationController>(
     () => NotificationController(),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,8 @@ import 'package:public_pulse/core/compression/image_compressor.dart';
 import 'package:public_pulse/core/compression/metadata/media_metadata.dart';
 import 'package:public_pulse/model/pending_media.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
+import 'package:public_pulse/core/services/location_service.dart';
+import 'package:public_pulse/model/location_suggestion.dart';
 
 class CreatePostController extends GetxController {
   final ImagePicker picker = ImagePicker();
@@ -31,8 +34,28 @@ class CreatePostController extends GetxController {
   // Media items pending upload (images only)
   final RxList<PendingMedia> pendingMedia = <PendingMedia>[].obs;
 
-  // Location
+  // ============================================================
+  // LOCATION
+  // ============================================================
+
   final RxString location = ''.obs;
+
+  // Short location name shown in UI
+  final RxString locationDisplayName = ''.obs;
+
+  final LocationService locationService = LocationService();
+
+  final TextEditingController locationSearchController =
+      TextEditingController();
+
+  final RxList<LocationSuggestion> locationSuggestions =
+      <LocationSuggestion>[].obs;
+
+  final RxBool isSearchingLocation = false.obs;
+
+  final RxBool isGettingCurrentLocation = false.obs;
+
+  Timer? _locationSearchDebounce;
 
   // Upload state
   final RxBool isUploading = false.obs;
@@ -52,8 +75,13 @@ class CreatePostController extends GetxController {
   @override
   void onClose() {
     debugPrint('🔴 [CreatePostController] onClose called');
+
+    _locationSearchDebounce?.cancel();
+
+    locationSearchController.dispose();
     captionController.dispose();
     pageController.dispose();
+
     super.onClose();
   }
 
@@ -374,16 +402,174 @@ class CreatePostController extends GetxController {
     debugPrint('🟢 [BackgroundUpload] Finished successfully');
   }
 
-  // Add location
-  void addLocation() {
-    debugPrint('📍 [CreatePostController] addLocation() called');
-    // Implement location picker
-    CustomAlert.show(
-      title: 'Location',
-      message: 'Location picker coming soon!',
-      icon: Icons.location_on_outlined,
-      color: Colors.blue,
+  // ============================================================
+  // LOCATION SEARCH
+  // ============================================================
+
+  void onLocationSearchChanged(String value) {
+    _locationSearchDebounce?.cancel();
+
+    final query = value.trim();
+
+    debugPrint('🔎 [CreatePostController] Location query: $query');
+
+    if (query.length < 2) {
+      locationSuggestions.clear();
+      isSearchingLocation.value = false;
+      return;
+    }
+
+    isSearchingLocation.value = true;
+
+    // Wait until user stops typing for 500ms
+    // before calling Geoapify.
+    _locationSearchDebounce = Timer(const Duration(milliseconds: 500), () {
+      _searchLocations(query);
+    });
+  }
+
+  // ============================================================
+  // SEARCH GEOAPIFY
+  // ============================================================
+
+  Future<void> _searchLocations(String query) async {
+    try {
+      debugPrint('🔎 [CreatePostController] Searching location: $query');
+
+      final results = await locationService.searchLocations(query);
+
+      // Prevent old API responses from replacing
+      // results for a newer search.
+      final currentQuery = locationSearchController.text.trim();
+
+      if (currentQuery != query) {
+        debugPrint(
+          '🟡 [CreatePostController] '
+          'Ignoring outdated location result',
+        );
+
+        return;
+      }
+
+      locationSuggestions.assignAll(results);
+
+      debugPrint(
+        '🟢 [CreatePostController] '
+        '${results.length} locations found',
+      );
+    } catch (e) {
+      debugPrint(
+        '🔴 [CreatePostController] '
+        'Location search failed: $e',
+      );
+
+      locationSuggestions.clear();
+    } finally {
+      if (locationSearchController.text.trim() == query) {
+        isSearchingLocation.value = false;
+      }
+    }
+  }
+
+  // ============================================================
+  // USE CURRENT LOCATION
+  // ============================================================
+
+  Future<void> useCurrentLocation() async {
+    if (isGettingCurrentLocation.value) {
+      return;
+    }
+
+    isGettingCurrentLocation.value = true;
+
+    try {
+      debugPrint(
+        '📍 [CreatePostController] '
+        'Getting current location...',
+      );
+
+      final selected = await locationService.getCurrentLocation();
+
+      selectLocation(selected);
+    } catch (e) {
+      debugPrint(
+        '🔴 [CreatePostController] '
+        'Current location failed: $e',
+      );
+
+      final message = e.toString().replaceFirst('Exception: ', '');
+
+      CustomAlert.show(
+        title: 'Location Error',
+        message: message,
+        icon: Icons.location_off_outlined,
+        color: Colors.orange,
+      );
+    } finally {
+      isGettingCurrentLocation.value = false;
+    }
+  }
+
+  // ============================================================
+  // SELECT LOCATION
+  // ============================================================
+
+  void selectLocation(LocationSuggestion selected) {
+    debugPrint(
+      '📍 [CreatePostController] '
+      'Selected location name: ${selected.name}',
     );
+
+    debugPrint(
+      '📍 [CreatePostController] '
+      'Selected full address: ${selected.formattedAddress}',
+    );
+
+    // Full address → database
+    location.value = selected.formattedAddress;
+
+    // Short name → UI
+    locationDisplayName.value = selected.name;
+
+    _locationSearchDebounce?.cancel();
+
+    locationSuggestions.clear();
+
+    locationSearchController.clear();
+
+    if (Get.isBottomSheetOpen == true) {
+      Get.back();
+    }
+  }
+
+  // ============================================================
+  // CLEAR SELECTED LOCATION
+  // ============================================================
+
+  void clearLocation() {
+    debugPrint('📍 [CreatePostController] Location cleared');
+
+    location.value = '';
+    locationDisplayName.value = '';
+  }
+
+  // ============================================================
+  // RESET LOCATION PICKER
+  // ============================================================
+
+  void resetLocationPicker() {
+    debugPrint(
+      '📍 [CreatePostController] '
+      'Resetting location picker',
+    );
+
+    _locationSearchDebounce?.cancel();
+
+    locationSearchController.clear();
+
+    locationSuggestions.clear();
+
+    isSearchingLocation.value = false;
   }
 
   // Show permission error
