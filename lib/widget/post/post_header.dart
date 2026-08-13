@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
@@ -9,6 +9,7 @@ import 'package:public_pulse/view/profile/user_profile_page.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:public_pulse/core/cache/image_cache_key.dart';
+import 'package:public_pulse/view/profile/profile_page.dart';
 
 class PostHeader extends StatelessWidget {
   final String profileImage;
@@ -34,6 +35,9 @@ class PostHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+
+    final isMyPost = currentUserId != null && authorUserId == currentUserId;
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(
@@ -50,8 +54,12 @@ class PostHeader extends StatelessWidget {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          if (isOwner) return;
-
+                          // My own post → open my profile page.
+                          if (isMyPost) {
+                            Get.to(() => const ProfilePage());
+                            return;
+                          }
+                          // Other user's post → open their public profile.
                           if (authorUserId.isEmpty) {
                             debugPrint(
                               '[POST_HEADER] authorUserId is empty. Cannot open profile.',
@@ -95,8 +103,13 @@ class PostHeader extends StatelessWidget {
                                 Expanded(
                                   child: GestureDetector(
                                     onTap: () {
-                                      if (isOwner) return;
+                                      // My own post → open my profile.
+                                      if (isMyPost) {
+                                        Get.to(() => const ProfilePage());
+                                        return;
+                                      }
 
+                                      // Other user's post → open their profile.
                                       if (authorUserId.isEmpty) {
                                         debugPrint(
                                           '[POST_HEADER] authorUserId is empty. Cannot open profile.',
@@ -122,7 +135,7 @@ class PostHeader extends StatelessWidget {
 
                                 FollowButton(
                                   profileId: authorId,
-                                  isOwner: isOwner,
+                                  isOwner: isMyPost,
                                 ),
                               ],
                             ),

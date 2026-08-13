@@ -7,6 +7,8 @@ import 'package:public_pulse/core/theme/app_font.dart';
 import 'package:public_pulse/model/profile_model.dart';
 import 'package:public_pulse/widget/profile/user_list_tile.dart';
 import 'package:public_pulse/view/profile/user_profile_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:public_pulse/view/profile/profile_page.dart';
 
 class FollowersFollowingPage extends StatelessWidget {
   final int initialTab;
@@ -206,10 +208,19 @@ class _UserList extends StatelessWidget {
               onTap: () {
                 if (user.userId.isEmpty) {
                   print('[FF_DEBUG] Cannot open profile: userId empty');
-
                   return;
                 }
 
+                final currentUserId =
+                    Supabase.instance.client.auth.currentUser?.id;
+
+                // If this row is my own account → open my normal ProfilePage
+                if (currentUserId != null && user.userId == currentUserId) {
+                  Get.to(() => const ProfilePage());
+                  return;
+                }
+
+                // Otherwise open other user's public profile
                 Get.to(() => UserProfilePage(userId: user.userId));
               },
             );
