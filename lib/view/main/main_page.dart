@@ -34,7 +34,7 @@ class MainPage extends StatelessWidget {
         break;
 
       case 3:
-        pages[3] =  ProfilePage();
+        pages[3] = ProfilePage();
         break;
     }
 

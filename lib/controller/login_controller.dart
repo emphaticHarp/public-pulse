@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:public_pulse/core/services/auth_service.dart';
 import 'package:public_pulse/widget/login/login_code_page.dart';
 import 'package:public_pulse/view/main/main_page.dart';
+import 'package:public_pulse/controller/home_controller.dart';
 
 class LoginController extends GetxController {
   final RxBool isGoogleLoading = false.obs;
@@ -28,14 +29,6 @@ class LoginController extends GetxController {
         _isCheckingUser.value = true;
 
         try {
-          // var profile = await _authService.getCurrentProfile();
-
-          // if (profile == null) {
-          //   debugPrint("Profile missing. Recreating profile...");
-
-          //   profile = await _authService.createProfile();
-          // }
-
           final profile = await _authService.getCurrentProfile();
 
           if (profile == null) {
@@ -51,6 +44,10 @@ class LoginController extends GetxController {
 
           switch (status) {
             case "active":
+              final homeController = Get.find<HomeController>();
+
+              await homeController.initializeForUser();
+
               Get.offAll(() => MainPage());
               break;
 

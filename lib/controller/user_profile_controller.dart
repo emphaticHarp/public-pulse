@@ -57,7 +57,7 @@ class UserProfileController extends GetxController {
   // MEDIA
   // ─────────────────────────────────────────────
 
-  final photoPosts = <dynamic>[].obs;
+  final photoPosts = <String>[].obs;
 
   // ─────────────────────────────────────────────
   // URL CACHE
@@ -92,12 +92,16 @@ class UserProfileController extends GetxController {
 
       final followsMeFuture = _repo.isFollowedBy(userId);
 
+      final postsFuture = _repo.getUserPostImages(userId);
+
       // Run all requests in parallel.
       final loadedProfile = await profileFuture;
 
       final following = await followingFuture;
 
       final followedByMe = await followsMeFuture;
+
+      final loadedPosts = await postsFuture;
 
       // Resolve URLs once.
       avatarUrl = loadedProfile.avatarPath != null
@@ -109,6 +113,8 @@ class UserProfileController extends GetxController {
           : null;
 
       profile.value = loadedProfile;
+
+      photoPosts.assignAll(loadedPosts);
 
       followerCount.value = loadedProfile.followerCount ?? 0;
 

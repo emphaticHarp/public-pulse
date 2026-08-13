@@ -48,6 +48,73 @@ class UserProfileRepository {
     return ProfileModel.fromJson(data);
   }
 
+  Future<List<String>> getUserPostImages(String userId) async {
+    // Convert auth user_id -> internal profiles.id
+    final profileId = await _getProfileIdFromUserId(userId);
+
+    final rows = await Supabase.instance.client
+        .from('posts')
+        .select('''
+        id,
+        created_at,
+        post_media(
+          storage_path,
+          thumbnail_path,
+          media_type,
+          media_order
+        )
+      ''')
+        .eq('profile_id', profileId)
+        .eq('status', 'ACTIVE')
+        .filter('deleted_at', 'is', null)
+        .order('created_at', ascending: false);
+
+    final urls = <String>[];
+
+    for (final row in rows) {
+      final mediaRaw = row['post_media'];
+
+      print('[USER_POSTS] post=${row['id']} media=$mediaRaw');
+
+      if (mediaRaw is! List || mediaRaw.isEmpty) {
+        continue;
+      }
+
+      final media = mediaRaw.map((e) => Map<String, dynamic>.from(e)).toList();
+
+      media.sort((a, b) {
+        final aOrder = (a['media_order'] as num?)?.toInt() ?? 0;
+        final bOrder = (b['media_order'] as num?)?.toInt() ?? 0;
+
+        return aOrder.compareTo(bOrder);
+      });
+
+      // One thumbnail/image per post.
+      for (final item in media) {
+        final path = item['storage_path']?.toString();
+        final type = item['media_type']?.toString().toLowerCase();
+
+        if (path == null || path.isEmpty) {
+          continue;
+        }
+
+        if (type != null && !type.contains('image')) {
+          continue;
+        }
+
+        final url = Supabase.instance.client.storage
+            .from('posts-images')
+            .getPublicUrl(path);
+
+        urls.add(url);
+
+        break;
+      }
+    }
+
+    return urls;
+  }
+
   // ─────────────────────────────────────────────
   // URL
   // ─────────────────────────────────────────────

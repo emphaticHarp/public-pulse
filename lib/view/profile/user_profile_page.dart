@@ -6,8 +6,6 @@ import '../../controller/user_profile_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_font.dart';
 
-import '../../model/profile_model.dart';
-
 import '../../widget/profile/profile_widget.dart';
 
 class UserProfilePage extends StatelessWidget {
@@ -91,7 +89,10 @@ class _ProfileBody extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
 
                     children: [
-                      ProfileStatColumn(count: 0, label: 'Posts'),
+                      ProfileStatColumn(
+                        count: profile.postCount ?? 0,
+                        label: 'Posts',
+                      ),
 
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
@@ -191,24 +192,12 @@ class _ProfileBody extends StatelessWidget {
             // ─────────────────────────────────
             // TABS
             // ─────────────────────────────────
-            Obx(
-              () => ProfileTabSelector(
-                selected: controller.selectedTab.value,
-                onChanged: controller.changeTab,
-              ),
-            ),
-
             const Divider(height: 1, color: AppColors.divider),
 
             // ─────────────────────────────────
             // CONTENT
             // ─────────────────────────────────
-            Obx(
-              () => _TabContent(
-                tab: controller.selectedTab.value,
-                photoPosts: controller.photoPosts,
-              ),
-            ),
+            Obx(() => _TabContent(photoPosts: controller.photoPosts.toList())),
           ],
         ),
       ),
@@ -263,44 +252,31 @@ class _ActionButtons extends StatelessWidget {
 // ─────────────────────────────────────────────
 
 class _TabContent extends StatelessWidget {
-  final ProfileTab tab;
+  final List<String> photoPosts;
 
-  final List photoPosts;
-
-  const _TabContent({
-    required this.tab,
-    required this.photoPosts,
-  });
+  const _TabContent({required this.photoPosts});
 
   @override
   Widget build(BuildContext context) {
-    final (urls, icon, emptyMessage) = switch (tab) {
-      ProfileTab.photos => (photoPosts, Icons.photo_outlined, 'No photos yet'),
-
-      ProfileTab.saved => ([], Icons.lock_outline, 'Saved posts are private'),
-    };
-
-    if (urls.isEmpty) {
-      return ProfileEmptyState(icon: icon, message: emptyMessage);
+    if (photoPosts.isEmpty) {
+      return const ProfileEmptyState(
+        icon: Icons.photo_outlined,
+        message: 'No posts yet',
+      );
     }
 
     return GridView.builder(
       shrinkWrap: true,
-
       physics: const NeverScrollableScrollPhysics(),
-
       padding: const EdgeInsets.all(2),
-
+      itemCount: photoPosts.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 2,
         mainAxisSpacing: 2,
       ),
-
-      itemCount: urls.length,
-
       itemBuilder: (context, index) {
-        return Image.network(urls[index], fit: BoxFit.cover);
+        return Image.network(photoPosts[index], fit: BoxFit.cover);
       },
     );
   }

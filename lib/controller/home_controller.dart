@@ -57,8 +57,6 @@ class HomeController extends GetxController {
 
   final RxInt newPostCount = 0.obs;
 
-  Timer? _newPostTimer;
-
   // ============================================================
   // CAROUSEL
   // ============================================================
@@ -90,6 +88,8 @@ class HomeController extends GetxController {
 
   final Set<String> _previouslyLoadedPostIds = {};
 
+  bool _homeInitialized = false;
+
   // ============================================================
   // INIT
   // ============================================================
@@ -110,32 +110,64 @@ class HomeController extends GetxController {
 
     scrollController.addListener(_onScroll);
 
-    _initializeHome();
+    initializeForUser();
+  }
+
+  void resetForLogout() {
+    debugPrint('[HOME] Resetting HomeController for logout');
+
+    currentIndex.value = 0;
+
+    posts.clear();
+    myPosts.clear();
+    followingIds.clear();
+
+    pendingPosts.clear();
+    newPostCount.value = 0;
+
+    nextCursor = null;
+    hasMore.value = true;
+
+    carouselIndexes.clear();
+    carouselScrollFractions.clear();
+
+    _previouslyLoadedPostIds.clear();
+
+    isLoading.value = false;
+    isLoadingMore.value = false;
+
+    debugPrint('[HOME] HomeController reset complete');
   }
 
   // ============================================================
   // HOME INITIALIZATION
   // ============================================================
 
-  Future<void> _initializeHome() async {
-    debugPrint('[HOME] ===== INITIALIZATION START =====');
+  Future<void> initializeForUser() async {
+    debugPrint('[HOME] ===== INITIALIZING FOR CURRENT USER =====');
 
-    // 1. Show cached feed immediately.
-    loadCachedPosts();
+    isLoading.value = true;
 
-    // 2. Only fetch first page if cache is empty.
-    if (posts.isEmpty) {
-      await loadPosts();
+    try {
+      loadCachedPosts();
+
+      if (posts.isEmpty) {
+        await loadPosts();
+      }
+
+      await Future.wait([loadMyPosts(), loadFollowingIds()]);
+
+      debugPrint('[HOME] ===== USER INITIALIZATION COMPLETE =====');
+    } catch (e, stackTrace) {
+      debugPrint('[HOME] initializeForUser error: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      isLoading.value = false;
     }
+  }
 
-    // 3. These can run independently.
-    loadMyPosts();
-    loadFollowingIds();
-
-    // 4. Check for new posts every 2 minutes.
-    _startNewPostChecker();
-
-    debugPrint('[HOME] ===== INITIALIZATION COMPLETE =====');
+  Future<void> _initializeHome() async {
+    await initializeForUser();
   }
 
   // ============================================================
@@ -572,80 +604,6 @@ class HomeController extends GetxController {
   // NEW POST CHECKER
   // ============================================================
 
-  void _startNewPostChecker() {
-    if (_newPostTimer != null) {
-      return;
-    }
-
-    debugPrint('[HOME] Starting new-post checker');
-
-    _newPostTimer = Timer.periodic(const Duration(minutes: 2), (_) async {
-      // --------------------------------------------------------
-      // IMPORTANT:
-      // MainPage uses IndexedStack.
-      //
-      // 0 = Home
-      // 1 = Explore
-      // 2 = Notification
-      // 3 = Profile
-      //
-      // Therefore Get.currentRoute MUST NOT be used here.
-      // --------------------------------------------------------
-
-      if (currentIndex.value != 0) {
-        debugPrint(
-          '[HOME] New-post check skipped '
-          'because Home tab is not active',
-        );
-        return;
-      }
-
-      await _checkForNewPosts();
-    });
-  }
-
-  Future<void> _checkForNewPosts() async {
-    try {
-      if (currentIndex.value != 0) return;
-
-      if (isLoading.value) return;
-
-      if (isLoadingMore.value) return;
-
-      if (posts.isEmpty) return;
-
-      final latestCreatedAt = posts.first.createdAt.toIso8601String();
-
-      final newPosts = await _repository.getNewPosts(
-        latestCreatedAt: latestCreatedAt,
-      );
-
-      if (newPosts.isEmpty) {
-        return;
-      }
-
-      final existingPendingIds = pendingPosts.map((post) => post.id).toSet();
-
-      for (final post in newPosts) {
-        if (!existingPendingIds.contains(post.id) &&
-            !posts.any((e) => e.id == post.id)) {
-          pendingPosts.add(post);
-          existingPendingIds.add(post.id);
-        }
-      }
-
-      newPostCount.value = pendingPosts.length;
-
-      debugPrint(
-        '[HOME] New posts found '
-        '→ ${pendingPosts.length} pending',
-      );
-    } catch (e, stackTrace) {
-      debugPrint('[HOME] New post checker error: $e');
-      debugPrintStack(stackTrace: stackTrace);
-    }
-  }
-
   // ============================================================
   // SINGLE POST COMMENT COUNT
   // ============================================================
@@ -749,7 +707,7 @@ class HomeController extends GetxController {
 
         final currentPage = page;
 
-        final intPage = currentPage.round();
+        final intPage = currentPage.floor();
 
         final fraction = currentPage - intPage;
 
@@ -846,9 +804,6 @@ class HomeController extends GetxController {
   @override
   void onClose() {
     debugPrint('[HOME] HomeController disposed');
-
-    _newPostTimer?.cancel();
-    _newPostTimer = null;
 
     scrollController.removeListener(_onScroll);
     scrollController.dispose();

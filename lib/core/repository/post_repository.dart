@@ -66,12 +66,13 @@ class PostRepository {
                 view_count,
                 created_at,
 
-                profile:profiles(
-                  username,
-                  display_name,
-                  avatar_path,
-                  is_private
-                ),
+            profile:profiles(
+  user_id,
+  username,
+  display_name,
+  avatar_path,
+  is_private
+),
 
                 media:post_media(
                   storage_path,
@@ -152,12 +153,13 @@ class PostRepository {
                 view_count,
                 created_at,
 
-                profile:profiles(
-                  username,
-                  display_name,
-                  avatar_path,
-                  is_private
-                ),
+            profile:profiles(
+  user_id,
+  username,
+  display_name,
+  avatar_path,
+  is_private
+),
 
                 media:post_media(
                   storage_path,
@@ -237,13 +239,13 @@ class PostRepository {
                 view_count,
                 created_at,
 
-                profile:profiles(
-                  username,
-                  display_name,
-                  avatar_path,
-                  is_private
-                ),
-
+             profile:profiles(
+  user_id,
+  username,
+  display_name,
+  avatar_path,
+  is_private
+),
                 media:post_media(
                   storage_path,
                   thumbnail_path,
@@ -325,6 +327,7 @@ class PostRepository {
             created_at,
 
             profile:profiles(
+              user_id,
               username,
               display_name,
               avatar_path,
@@ -416,12 +419,13 @@ class PostRepository {
                 view_count,
                 created_at,
 
-                profile:profiles(
-                  username,
-                  display_name,
-                  avatar_path,
-                  is_private
-                ),
+            profile:profiles(
+  user_id,
+  username,
+  display_name,
+  avatar_path,
+  is_private
+),
 
                 media:post_media(
                   storage_path,
