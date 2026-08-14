@@ -155,6 +155,7 @@ class HomePage extends StatelessWidget {
                               ? post.mediaUrls.first
                               : null,
                           imageUrls: post.mediaUrls,
+                          mediaAspectRatios: post.mediaAspectRatios,
                           postId: post.id,
 
                           isUploading: post.isUploading,

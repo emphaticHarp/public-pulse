@@ -46,6 +46,9 @@ class PostModel {
   // Time
   final DateTime createdAt;
 
+  //aspect ratio
+  final List<double> mediaAspectRatios;
+
   // Constructor
   PostModel({
     required this.id,
@@ -88,10 +91,9 @@ class PostModel {
 
     // Required date
     required this.createdAt,
+
+    required this.mediaAspectRatios,
   });
-
-
-  
 
   factory PostModel.fromJson(
     Map<String, dynamic> json,
@@ -114,6 +116,28 @@ class PostModel {
     final saved = (json['my_save'] is List)
         ? (json['my_save'] as List).isNotEmpty
         : false;
+
+    // ============================================================
+    // MEDIA ASPECT RATIOS
+    // ============================================================
+
+    final mediaAspectRatios = media
+        .where((item) {
+          final path = item['storage_path']?.toString();
+          return path != null && path.isNotEmpty;
+        })
+        .map((item) {
+          final width = (item['width'] as num?)?.toDouble();
+          final height = (item['height'] as num?)?.toDouble();
+
+          if (width == null || height == null || width <= 0 || height <= 0) {
+            return 4 / 5;
+          }
+
+          return width / height;
+        })
+        .toList();
+
     return PostModel(
       id: json['id'],
       profileId: json['profile_id'],
@@ -145,6 +169,7 @@ class PostModel {
       thumbnailUrls: const [],
 
       isCarousel: media.length > 1,
+      mediaAspectRatios: mediaAspectRatios,
 
       caption: json['caption'],
       location: json['location_name'],
@@ -186,7 +211,7 @@ class PostModel {
       'media_urls': mediaUrls,
       'thumbnail_urls': thumbnailUrls,
       'is_carousel': isCarousel,
-
+      'media_aspect_ratios': mediaAspectRatios,
       'is_uploading': isUploading,
       'local_media_paths': localMediaPaths,
       'upload_failed': uploadFailed,
@@ -219,6 +244,12 @@ class PostModel {
       mediaUrls: List<String>.from(json['media_urls'] ?? const []),
       thumbnailUrls: List<String>.from(json['thumbnail_urls'] ?? const []),
       isCarousel: json['is_carousel'],
+
+      mediaAspectRatios: List<double>.from(
+        (json['media_aspect_ratios'] ?? const []).map(
+          (e) => (e as num).toDouble(),
+        ),
+      ),
 
       localMediaPaths: List<String>.from(json['local_media_paths'] ?? []),
       isUploading: json['is_uploading'] ?? false,

@@ -83,7 +83,9 @@ void clearCurrentProfileIdCache() {
             storage_path,
             thumbnail_path,
             media_type,
-            media_order
+            media_order,
+            width,
+            height
           ),
 
           my_like:post_likes!left(
@@ -174,7 +176,9 @@ void clearCurrentProfileIdCache() {
             storage_path,
             thumbnail_path,
             media_type,
-            media_order
+            media_order,
+            width,
+            height
           ),
 
           my_like:post_likes!left(
@@ -262,7 +266,9 @@ void clearCurrentProfileIdCache() {
             storage_path,
             thumbnail_path,
             media_type,
-            media_order
+            media_order,
+            width,
+            height
           ),
 
           my_like:post_likes!left(
@@ -352,7 +358,9 @@ void clearCurrentProfileIdCache() {
               storage_path,
               thumbnail_path,
               media_type,
-              media_order
+              media_order,
+              width,
+              height
             ),
 
             my_like:post_likes!left(
@@ -451,7 +459,9 @@ void clearCurrentProfileIdCache() {
             storage_path,
             thumbnail_path,
             media_type,
-            media_order
+            media_order,
+            width,
+            height
           ),
 
           my_like:post_likes!left(
