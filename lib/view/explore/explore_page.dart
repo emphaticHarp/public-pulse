@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/controller/explore_controller.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
-import 'package:public_pulse/view/profile/user_profile_page.dart';
 
 class ExplorePage extends StatelessWidget {
   ExplorePage({super.key});
@@ -78,13 +77,9 @@ class ExplorePage extends StatelessWidget {
                             controller.removeRecentSearch(profile);
                           },
                         ),
-                       onTap: () {
-  Get.to(
-    () => UserProfilePage(
-      userId: profile.userId,
-    ),
-  );
-},
+                        onTap: () {
+                          controller.openRecentProfile(profile);
+                        },
                       );
                     },
                   );

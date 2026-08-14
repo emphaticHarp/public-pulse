@@ -22,9 +22,7 @@ class PostRepository {
   // CURRENT PROFILE ID CACHE
   // ============================================================
 
-  String? _cachedProfileId;
 
-  Future<String?>? _profileIdRequest;
 
   /// Gets the current user's profile ID.
   ///
@@ -36,12 +34,13 @@ class PostRepository {
   }
 
   /// Call this when the authenticated user changes.
-  void clearCurrentProfileIdCache() {
-    _cachedProfileId = null;
-    _profileIdRequest = null;
+void clearCurrentProfileIdCache() {
+  CurrentUserService.instance.clear();
 
-    debugPrint('[PROFILE-ID] Cache cleared');
-  }
+  debugPrint(
+    '[PROFILE-ID] Current user profile cache cleared',
+  );
+}
 
   // ============================================================
   // INITIAL POSTS
@@ -51,59 +50,63 @@ class PostRepository {
     debugPrint('[REPO] getInitialPosts()');
 
     try {
+      final currentProfileId = await getCurrentProfileId();
+
+      if (currentProfileId == null) {
+        return PostPage(posts: [], nextCursor: null, hasMore: false);
+      }
+
       final response = await _supabase
           .from('posts')
           .select('''
-                id,
-                profile_id,
-                caption,
-                location_name,
-                visibility,
-                like_count,
-                comment_count,
-                share_count,
-                save_count,
-                view_count,
-                created_at,
+          id,
+          profile_id,
+          caption,
+          location_name,
+          visibility,
+          like_count,
+          comment_count,
+          share_count,
+          save_count,
+          view_count,
+          created_at,
 
-            profile:profiles(
-  user_id,
-  username,
-  display_name,
-  avatar_path,
-  is_private
-),
+          profile:profiles(
+            user_id,
+            username,
+            display_name,
+            avatar_path,
+            is_private
+          ),
 
-                media:post_media(
-                  storage_path,
-                  thumbnail_path,
-                  media_type,
-                  media_order
-                ),
+          media:post_media(
+            storage_path,
+            thumbnail_path,
+            media_type,
+            media_order
+          ),
 
-                my_like:post_likes!left(
-                  id,
-                  profile_id,
-                  post_id
-                ),
+          my_like:post_likes!left(
+            id,
+            profile_id,
+            post_id
+          ),
 
-                my_save:saved_posts!left(
-                  id,
-                  profile_id,
-                  post_id
-                )
-                ''')
+          my_save:saved_posts!left(
+            id,
+            profile_id,
+            post_id
+          )
+        ''')
           .eq('status', 'ACTIVE')
           .filter('deleted_at', 'is', null)
+          // ✅ CURRENT USER ONLY
+          .eq('my_like.profile_id', currentProfileId)
+          .eq('my_save.profile_id', currentProfileId)
           .order('created_at', ascending: false)
           .limit(limit);
 
-      debugPrint(
-        '[REPO] Initial response: '
-        '${response.length}',
-      );
-
-      final currentProfileId = await getCurrentProfileId();
+      debugPrint('[REPO] Initial response: ${response.length}');
 
       final posts = response
           .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
@@ -138,55 +141,63 @@ class PostRepository {
     debugPrint('[REPO] getMorePosts()');
 
     try {
+      final currentProfileId = await getCurrentProfileId();
+
+      if (currentProfileId == null) {
+        return PostPage(posts: [], nextCursor: null, hasMore: false);
+      }
+
       final response = await _supabase
           .from('posts')
           .select('''
-                id,
-                profile_id,
-                caption,
-                location_name,
-                visibility,
-                like_count,
-                comment_count,
-                share_count,
-                save_count,
-                view_count,
-                created_at,
+          id,
+          profile_id,
+          caption,
+          location_name,
+          visibility,
+          like_count,
+          comment_count,
+          share_count,
+          save_count,
+          view_count,
+          created_at,
 
-            profile:profiles(
-  user_id,
-  username,
-  display_name,
-  avatar_path,
-  is_private
-),
+          profile:profiles(
+            user_id,
+            username,
+            display_name,
+            avatar_path,
+            is_private
+          ),
 
-                media:post_media(
-                  storage_path,
-                  thumbnail_path,
-                  media_type,
-                  media_order
-                ),
+          media:post_media(
+            storage_path,
+            thumbnail_path,
+            media_type,
+            media_order
+          ),
 
-                my_like:post_likes!left(
-                  id,
-                  profile_id,
-                  post_id
-                ),
+          my_like:post_likes!left(
+            id,
+            profile_id,
+            post_id
+          ),
 
-                my_save:saved_posts!left(
-                  id,
-                  profile_id,
-                  post_id
-                )
-                ''')
+          my_save:saved_posts!left(
+            id,
+            profile_id,
+            post_id
+          )
+        ''')
           .eq('status', 'ACTIVE')
           .filter('deleted_at', 'is', null)
+          .eq('my_like.profile_id', currentProfileId)
+          .eq('my_save.profile_id', currentProfileId)
           .lt('created_at', cursor)
           .order('created_at', ascending: false)
           .limit(limit);
 
-      final currentProfileId = await getCurrentProfileId();
+      debugPrint('[REPO] More posts response: ${response.length}');
 
       final posts = response
           .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
@@ -227,47 +238,50 @@ class PostRepository {
       final response = await _supabase
           .from('posts')
           .select('''
-                id,
-                profile_id,
-                caption,
-                location_name,
-                visibility,
-                like_count,
-                comment_count,
-                share_count,
-                save_count,
-                view_count,
-                created_at,
+          id,
+          profile_id,
+          caption,
+          location_name,
+          visibility,
+          like_count,
+          comment_count,
+          share_count,
+          save_count,
+          view_count,
+          created_at,
 
-             profile:profiles(
-  user_id,
-  username,
-  display_name,
-  avatar_path,
-  is_private
-),
-                media:post_media(
-                  storage_path,
-                  thumbnail_path,
-                  media_type,
-                  media_order
-                ),
+          profile:profiles(
+            user_id,
+            username,
+            display_name,
+            avatar_path,
+            is_private
+          ),
 
-                my_like:post_likes!left(
-                  id,
-                  profile_id,
-                  post_id
-                ),
+          media:post_media(
+            storage_path,
+            thumbnail_path,
+            media_type,
+            media_order
+          ),
 
-                my_save:saved_posts!left(
-                  id,
-                  profile_id,
-                  post_id
-                )
-                ''')
+          my_like:post_likes!left(
+            id,
+            profile_id,
+            post_id
+          ),
+
+          my_save:saved_posts!left(
+            id,
+            profile_id,
+            post_id
+          )
+        ''')
           .eq('profile_id', currentProfileId)
           .eq('status', 'ACTIVE')
           .filter('deleted_at', 'is', null)
+          .eq('my_like.profile_id', currentProfileId)
+          .eq('my_save.profile_id', currentProfileId)
           .order('created_at', ascending: false);
 
       return response
@@ -404,54 +418,62 @@ class PostRepository {
     debugPrint('[REPO] getNewPosts()');
 
     try {
+      final currentProfileId = await getCurrentProfileId();
+
+      if (currentProfileId == null) {
+        return [];
+      }
+
       final response = await _supabase
           .from('posts')
           .select('''
-                id,
-                profile_id,
-                caption,
-                location_name,
-                visibility,
-                like_count,
-                comment_count,
-                share_count,
-                save_count,
-                view_count,
-                created_at,
+          id,
+          profile_id,
+          caption,
+          location_name,
+          visibility,
+          like_count,
+          comment_count,
+          share_count,
+          save_count,
+          view_count,
+          created_at,
 
-            profile:profiles(
-  user_id,
-  username,
-  display_name,
-  avatar_path,
-  is_private
-),
+          profile:profiles(
+            user_id,
+            username,
+            display_name,
+            avatar_path,
+            is_private
+          ),
 
-                media:post_media(
-                  storage_path,
-                  thumbnail_path,
-                  media_type,
-                  media_order
-                ),
+          media:post_media(
+            storage_path,
+            thumbnail_path,
+            media_type,
+            media_order
+          ),
 
-                my_like:post_likes!left(
-                  id,
-                  profile_id,
-                  post_id
-                ),
+          my_like:post_likes!left(
+            id,
+            profile_id,
+            post_id
+          ),
 
-                my_save:saved_posts!left(
-                  id,
-                  profile_id,
-                  post_id
-                )
-                ''')
+          my_save:saved_posts!left(
+            id,
+            profile_id,
+            post_id
+          )
+        ''')
           .eq('status', 'ACTIVE')
           .filter('deleted_at', 'is', null)
+          .eq('my_like.profile_id', currentProfileId)
+          .eq('my_save.profile_id', currentProfileId)
           .gt('created_at', latestCreatedAt)
           .order('created_at', ascending: false);
 
-      final currentProfileId = await getCurrentProfileId();
+      debugPrint('[REPO] New posts response: ${response.length}');
 
       return response
           .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
