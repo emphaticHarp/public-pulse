@@ -48,27 +48,31 @@ class SettingPage extends StatelessWidget {
             const SettingSectionHeader(title: 'Account'),
             SettingCardGroup(
               children: [
-                SettingStatusItem(
-                  icon: Icons.shield_outlined,
-                  title: 'Account Status',
-                  subtitle: 'Current status of your account',
-                  statusText: controller.accountStatusText,
-                  statusColor: controller.accountStatusColor,
-                  showDivider: true,
+                Obx(
+                  () => SettingStatusItem(
+                    icon: Icons.shield_outlined,
+                    title: 'Account Status',
+                    subtitle: 'Current status of your account',
+                    statusText: controller.accountStatusText,
+                    statusColor: controller.accountStatusColor,
+                    showDivider: true,
+                  ),
                 ),
-                SettingCopyItem(
-                  icon: Icons.card_giftcard_rounded,
-                  title: 'Referral Code',
-                  subtitle: 'Share your referral code',
-                  valueText: controller.referralCode.isEmpty
-                      ? 'Not available'
-                      : controller.referralCode,
-                  onCopy: () {
-                    if (controller.referralCode.isNotEmpty) {
-                      controller.copyReferralCode(controller.referralCode);
-                    }
-                  },
-                  showDivider: false,
+                Obx(
+                  () => SettingCopyItem(
+                    icon: Icons.card_giftcard_rounded,
+                    title: 'Referral Code',
+                    subtitle: 'Share your referral code',
+                    valueText: controller.referralCode.isEmpty
+                        ? 'Not available'
+                        : controller.referralCode,
+                    onCopy: () {
+                      if (controller.referralCode.isNotEmpty) {
+                        controller.copyReferralCode(controller.referralCode);
+                      }
+                    },
+                    showDivider: false,
+                  ),
                 ),
               ],
             ),

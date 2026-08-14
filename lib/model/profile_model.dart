@@ -88,7 +88,8 @@ class ProfileModel {
     followerCount: (json['follower_count'] as num?)?.toInt(),
     followingCount: (json['following_count'] as num?)?.toInt(),
     postCount: (json['post_count'] as num?)?.toInt(),
-    accountStatus: json['account_status']?.toString(),
+    accountStatus:
+        (json['status'] ?? json['account_status'])?.toString(),
     referCode: json['refer_code']?.toString(),
   );
 
@@ -107,7 +108,7 @@ class ProfileModel {
     'follower_count': followerCount,
     'following_count': followingCount,
     'post_count': postCount,
-    'account_status': accountStatus,
+    'status': accountStatus,
     'refer_code': referCode,
   };
 
