@@ -6,10 +6,12 @@ import '../../controller/user_profile_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_font.dart';
 
+import '../../model/post_model.dart';
 import '../../widget/profile/profile_widget.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../core/cache/image_cache_key.dart';
+import '../post/post_detail_page.dart';
 
 class UserProfilePage extends StatelessWidget {
   final String userId;
@@ -198,7 +200,7 @@ class _ProfileBody extends StatelessWidget {
             const Divider(height: 1, color: AppColors.divider),
 
             // ─────────────────────────────────
-            // CONTENT
+            // POST GRID
             // ─────────────────────────────────
             Obx(() => _TabContent(photoPosts: controller.photoPosts.toList())),
           ],
@@ -248,11 +250,11 @@ class _ActionButtons extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-// TAB CONTENT
+// TAB CONTENT (POST GRID)
 // ─────────────────────────────────────────────
 
 class _TabContent extends StatelessWidget {
-  final List<String> photoPosts;
+  final List<PostModel> photoPosts;
 
   const _TabContent({required this.photoPosts});
 
@@ -276,32 +278,36 @@ class _TabContent extends StatelessWidget {
         mainAxisSpacing: 2,
       ),
       itemBuilder: (context, index) {
-        final imageUrl = photoPosts[index];
+        final post = photoPosts[index];
 
-        return CachedNetworkImage(
-          imageUrl: imageUrl,
+        if (post.mediaUrls.isEmpty) {
+          return Container(
+            color: AppColors.surfaceDefault,
+            child: const Center(
+              child: Icon(Icons.image_not_supported_outlined),
+            ),
+          );
+        }
 
-          cacheKey: supabaseStorageCacheKey(imageUrl),
-
-          fit: BoxFit.cover,
-
-          fadeInDuration: Duration.zero,
-          fadeOutDuration: Duration.zero,
-
-          placeholder: (context, url) {
-            return Container(color: AppColors.surfaceDefault);
-          },
-
-          errorWidget: (context, url, error) {
-            return Container(
+        // Tap → open Post Detail with the full PostModel, zero re-fetch.
+        return GestureDetector(
+          onTap: () => Get.to(() => PostDetailPage(post: post)),
+          child: CachedNetworkImage(
+            imageUrl: post.mediaUrls.first,
+            cacheKey: supabaseStorageCacheKey(post.mediaUrls.first),
+            fit: BoxFit.cover,
+            fadeInDuration: Duration.zero,
+            fadeOutDuration: Duration.zero,
+            placeholder: (context, url) =>
+                Container(color: AppColors.surfaceDefault),
+            errorWidget: (context, url, error) => Container(
               color: AppColors.surfaceDefault,
-
               child: const Icon(
                 Icons.broken_image_outlined,
                 color: AppColors.textSecondary,
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );

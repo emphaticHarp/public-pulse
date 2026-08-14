@@ -11,6 +11,7 @@ import '../../widget/profile/profile_widget.dart';
 import '../../view/setting/setting_page.dart';
 import 'edit_profile.dart';
 import '../../model/post_model.dart';
+import '../../view/post/post_detail_page.dart';
 
 class ProfilePage extends StatelessWidget {
   final String? userId;
@@ -303,17 +304,20 @@ class _TabContent extends StatelessWidget {
           );
         }
 
-        return Image.network(
-          post.mediaUrls.first,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            debugPrint('[PROFILE IMAGE ERROR] ${post.mediaUrls.first}');
-
-            return Container(
-              color: Colors.grey.shade200,
-              child: const Center(child: Icon(Icons.broken_image_outlined)),
-            );
-          },
+        // Tap → open Post Detail with the exact PostModel, zero re-fetch.
+        return GestureDetector(
+          onTap: () => Get.to(() => PostDetailPage(post: post)),
+          child: Image.network(
+            post.mediaUrls.first,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              debugPrint('[PROFILE IMAGE ERROR] ${post.mediaUrls.first}');
+              return Container(
+                color: Colors.grey.shade200,
+                child: const Center(child: Icon(Icons.broken_image_outlined)),
+              );
+            },
+          ),
         );
       },
     );

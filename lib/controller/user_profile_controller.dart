@@ -1,8 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../model/profile_model.dart';
+import '../model/post_model.dart';
 import '../core/repository/user_profile_repository.dart';
+import '../core/repository/profile_repository.dart';
+import '../core/services/current_user_service.dart';
 
 import 'followers_following_controller.dart';
 import '../view/profile/followers_following_page.dart';
@@ -55,10 +59,10 @@ class UserProfileController extends GetxController {
   final selectedTab = ProfileTab.photos.obs;
 
   // ─────────────────────────────────────────────
-  // MEDIA
+  // POSTS — full PostModel list for tap-to-detail
   // ─────────────────────────────────────────────
 
-  final photoPosts = <String>[].obs;
+  final photoPosts = <PostModel>[].obs;
 
   // ─────────────────────────────────────────────
   // URL CACHE
@@ -75,7 +79,6 @@ class UserProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
     _loadProfile();
   }
 
@@ -84,122 +87,115 @@ class UserProfileController extends GetxController {
   // ─────────────────────────────────────────────
 
   Future<void> _loadProfile() async {
-  isLoading(true);
+    isLoading(true);
 
-  try {
-    final profileFuture = _repo.getUserProfile(userId);
+    try {
+      // Fetch profile and follow state concurrently.
+      final results = await Future.wait([
+        _repo.getUserProfile(userId),
+        _repo.isFollowing(userId),
+        _repo.isFollowedBy(userId),
+      ]);
 
-    final postsFuture = _repo.getUserPostImages(userId);
+      final loadedProfile = results[0] as ProfileModel;
 
-    final loadedProfile = await profileFuture;
+      avatarUrl = loadedProfile.avatarPath != null
+          ? _repo.resolveUrl(loadedProfile.avatarPath!, bucket: 'avatars')
+          : null;
 
-    final loadedPosts = await postsFuture;
+      coverUrl = loadedProfile.coverPath != null
+          ? _repo.resolveUrl(loadedProfile.coverPath!, bucket: 'covers')
+          : null;
 
-    avatarUrl = loadedProfile.avatarPath != null
-        ? _repo.resolveUrl(
-            loadedProfile.avatarPath!,
-            bucket: 'avatars',
-          )
-        : null;
+      profile.value = loadedProfile;
+      followerCount.value = loadedProfile.followerCount ?? 0;
+      followingCount.value = loadedProfile.followingCount ?? 0;
+      isFollowing.value = results[1] as bool;
+      followsMe.value = results[2] as bool;
 
-    coverUrl = loadedProfile.coverPath != null
-        ? _repo.resolveUrl(
-            loadedProfile.coverPath!,
-            bucket: 'covers',
-          )
-        : null;
-
-    profile.value = loadedProfile;
-
-    photoPosts.assignAll(loadedPosts);
-
-    followerCount.value =
-        loadedProfile.followerCount ?? 0;
-
-    followingCount.value =
-        loadedProfile.followingCount ?? 0;
-
-    final results = await Future.wait([
-      _repo.isFollowing(userId),
-      _repo.isFollowedBy(userId),
-    ]);
-
-    isFollowing.value = results[0];
-    followsMe.value = results[1];
-  } catch (e) {
-    debugPrint('[USER_PROFILE] ERROR: $e');
-  } finally {
-    isLoading(false);
-  }
-}
-
-// ─────────────────────────────────────────────
-// FOLLOW BUTTON LABEL
-// ─────────────────────────────────────────────
-
-String get followButtonLabel {
-  if (isFollowing.value) {
-    return 'Following';
-  }
-
-  if (followsMe.value) {
-    return 'Follow Back';
-  }
-
-  return 'Follow';
-}
-
-// ─────────────────────────────────────────────
-// TOGGLE FOLLOW
-// ─────────────────────────────────────────────
-
-Future<void> toggleFollow() async {
-  if (isFollowLoading.value) {
-    return;
-  }
-
-  isFollowLoading.value = true;
-
-  final wasFollowing = isFollowing.value;
-  final oldFollowerCount = followerCount.value;
-
-  // Optimistic UI
-  isFollowing.value = !wasFollowing;
-
-  followerCount.value = wasFollowing
-      ? (followerCount.value - 1).clamp(0, 999999999)
-      : followerCount.value + 1;
-
-  try {
-    if (wasFollowing) {
-      await _repo.unfollowUser(userId);
-    } else {
-      await _repo.followUser(userId);
+      // Fetch full PostModel list for the grid (enables tap-to-detail).
+      await _loadUserPosts();
+    } catch (e) {
+      debugPrint('[USER_PROFILE] ERROR: $e');
+    } finally {
+      isLoading(false);
     }
-  } catch (e) {
-    debugPrint('[USER_PROFILE] FOLLOW ERROR: $e');
-
-    // Rollback
-    isFollowing.value = wasFollowing;
-    followerCount.value = oldFollowerCount;
-  } finally {
-    isFollowLoading.value = false;
   }
-}
 
-// ─────────────────────────────────────────────
-// TAB
-// ─────────────────────────────────────────────
+  // Resolves auth userId → internal profiles.id, then fetches PostModels.
+  Future<void> _loadUserPosts() async {
+    try {
+      // Look up internal profile UUID from auth user_id.
+      final row = await Supabase.instance.client
+          .from('profiles')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
 
-void changeTab(ProfileTab tab) {
-  selectedTab.value = tab;
-}
+      final internalProfileId = row['id'] as String;
+
+      final currentProfileId = await CurrentUserService.instance.getProfileId();
+
+      final rawPosts = await ProfileRepository.instance
+          .getUserPostsByProfileId(internalProfileId);
+
+      photoPosts.assignAll(
+        rawPosts.map((data) => PostModel.fromJson(data, currentProfileId)).toList(),
+      );
+    } catch (e) {
+      debugPrint('[USER_PROFILE] Post load error: $e');
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // FOLLOW BUTTON LABEL
+  // ─────────────────────────────────────────────
+
+  String get followButtonLabel {
+    if (isFollowing.value) return 'Following';
+    if (followsMe.value) return 'Follow Back';
+    return 'Follow';
+  }
+
+  // ─────────────────────────────────────────────
+  // TOGGLE FOLLOW
+  // ─────────────────────────────────────────────
+
+  Future<void> toggleFollow() async {
+    if (isFollowLoading.value) return;
+
+    isFollowLoading.value = true;
+
+    final wasFollowing = isFollowing.value;
+    final oldFollowerCount = followerCount.value;
+
+    // Optimistic UI.
+    isFollowing.value = !wasFollowing;
+    followerCount.value = wasFollowing
+        ? (followerCount.value - 1).clamp(0, 999999999)
+        : followerCount.value + 1;
+
+    try {
+      if (wasFollowing) {
+        await _repo.unfollowUser(userId);
+      } else {
+        await _repo.followUser(userId);
+      }
+    } catch (e) {
+      debugPrint('[USER_PROFILE] FOLLOW ERROR: $e');
+      // Rollback.
+      isFollowing.value = wasFollowing;
+      followerCount.value = oldFollowerCount;
+    } finally {
+      isFollowLoading.value = false;
+    }
+  }
 
   // ─────────────────────────────────────────────
   // TAB
   // ─────────────────────────────────────────────
 
- 
+  void changeTab(ProfileTab tab) => selectedTab.value = tab;
 
   // ─────────────────────────────────────────────
   // FOLLOWERS / FOLLOWING PAGE
@@ -215,8 +211,7 @@ void changeTab(ProfileTab tab) {
     controller.switchTab(initialTab);
 
     Get.to(
-      () =>
-          FollowersFollowingPage(initialTab: initialTab, controllerTag: ffTag),
+      () => FollowersFollowingPage(initialTab: initialTab, controllerTag: ffTag),
     );
   }
 }
