@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 import 'package:public_pulse/core/services/permission_service.dart';
@@ -210,7 +211,7 @@ class CreatePostController extends GetxController {
           title: 'Upload Failed',
           message: 'Could not upload your post. Please try again.',
           icon: Icons.cloud_off,
-          color: Colors.red,
+          color: AppColors.semanticRed,
         );
       }
     });
@@ -503,7 +504,7 @@ class CreatePostController extends GetxController {
         title: 'Location Error',
         message: message,
         icon: Icons.location_off_outlined,
-        color: Colors.orange,
+        color: AppColors.semanticOrange,
       );
     } finally {
       isGettingCurrentLocation.value = false;
@@ -579,7 +580,7 @@ class CreatePostController extends GetxController {
       title: 'Permission Required',
       message: 'Please grant $permission permission.',
       icon: Icons.lock_outline,
-      color: Colors.orange,
+      color: AppColors.semanticOrange,
     );
   }
 
@@ -594,14 +595,14 @@ class CreatePostController extends GetxController {
         title: 'Limit reached',
         message: 'You can add up to 10 media items',
         icon: Icons.info_outline,
-        color: Colors.orange,
+        color: AppColors.semanticOrange,
       );
       return;
     }
     Get.bottomSheet(
       Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: AppColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
         ),
         child: SafeArea(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 
 /// Centralized text styles for the Public Pulse app.
 /// All styles use the Poppins font family.
@@ -222,7 +223,7 @@ class AppShadow {
 
   static const List<BoxShadow> sm = [
     BoxShadow(
-      color: Color(0x0C000000),
+      color: AppColors.shadowSm,
       blurRadius: 4,
       offset: Offset(0, 1),
     ),
@@ -230,7 +231,7 @@ class AppShadow {
 
   static const List<BoxShadow> md = [
     BoxShadow(
-      color: Color(0x0C000000),
+      color: AppColors.shadowMd,
       blurRadius: 8,
       offset: Offset(0, 2),
     ),
@@ -238,7 +239,7 @@ class AppShadow {
 
   static const List<BoxShadow> card = [
     BoxShadow(
-      color: Color(0x0A000000),
+      color: AppColors.shadowCard,
       blurRadius: 12,
       offset: Offset(0, 4),
     ),

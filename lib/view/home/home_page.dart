@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     debugPrint("🏠 HomePage Build");
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: NetworkWrapper(
         child: RefreshIndicator(
           onRefresh: controller.refreshFeed,
@@ -66,7 +66,7 @@ class HomePage extends StatelessWidget {
                                         ? "1 New Post"
                                         : "${controller.newPostCount.value} New Posts",
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -102,7 +102,7 @@ class HomePage extends StatelessWidget {
                           Icon(
                             Icons.photo_library_outlined,
                             size: 80,
-                            color: Colors.grey.shade400,
+                            color: AppColors.greyShade400,
                           ),
                           SizedBox(height: 18),
                           Text(
@@ -115,7 +115,7 @@ class HomePage extends StatelessWidget {
                           SizedBox(height: 8),
                           Text(
                             "Posts from everyone will appear here.",
-                            style: TextStyle(fontSize: 15, color: Colors.grey),
+                            style: TextStyle(fontSize: 15, color: AppColors.grey),
                           ),
                         ],
                       ),
@@ -196,7 +196,7 @@ class HomePage extends StatelessWidget {
                             Get.bottomSheet(
                               CommentSheet(postId: post.id),
                               isScrollControlled: true,
-                              backgroundColor: Colors.white,
+                              backgroundColor: AppColors.white,
                             );
                           },
                         );

@@ -16,7 +16,7 @@ class CreatePostLocationSection extends StatelessWidget {
     Get.bottomSheet(
       _LocationPickerSheet(controller: controller),
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparentFull,
     );
   }
 
@@ -32,7 +32,7 @@ class CreatePostLocationSection extends StatelessWidget {
         final hasLocation = fullLocation.isNotEmpty;
 
         return Material(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
@@ -40,12 +40,12 @@ class CreatePostLocationSection extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.gray100),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
+                    color: AppColors.shadowBlack3,
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -172,7 +172,7 @@ class _LocationPickerSheet extends StatelessWidget {
       child: Container(
         height: screenHeight * 0.82,
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
@@ -326,7 +326,7 @@ class _LocationPickerSheet extends StatelessWidget {
                   final loading = controller.isGettingCurrentLocation.value;
 
                   return Material(
-                    color: Colors.white,
+                    color: AppColors.white,
                     borderRadius: BorderRadius.circular(12),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),

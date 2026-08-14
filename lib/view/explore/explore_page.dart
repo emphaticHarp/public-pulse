@@ -18,7 +18,7 @@ class ExplorePage extends StatelessWidget {
         centerTitle: true,
         title: const Text(
           "Explore",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: AppColors.black, fontWeight: FontWeight.bold),
         ),
       ),
       body: Padding(
@@ -32,7 +32,7 @@ class ExplorePage extends StatelessWidget {
                 hintText: "Search users",
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: AppColors.greyShade100,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide.none,
@@ -48,7 +48,7 @@ class ExplorePage extends StatelessWidget {
                     return const Center(
                       child: Text(
                         "No recent searches",
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: AppColors.grey),
                       ),
                     );
                   }
@@ -90,7 +90,7 @@ class ExplorePage extends StatelessWidget {
                   return const Center(
                     child: Text(
                       "No users found",
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: AppColors.grey),
                     ),
                   );
                 }

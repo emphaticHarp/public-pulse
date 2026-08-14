@@ -275,7 +275,7 @@ class CommentLongPressMenu extends StatelessWidget {
     HapticFeedback.mediumImpact();
 
     Get.generalDialog(
-      barrierColor: Colors.black.withValues(alpha: 0.55),
+      barrierColor: AppColors.overlayBlack55,
       barrierDismissible: true,
       barrierLabel: 'Dismiss comment menu',
       transitionDuration: const Duration(milliseconds: 180),
@@ -453,7 +453,7 @@ class CommentContextMenuOverlay extends StatelessWidget {
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(color: Colors.black.withValues(alpha: .18)),
+              child: Container(color: AppColors.overlayBlack18),
             ),
           ),
           // Lifted, non-dimmed copy of the comment in its original spot.
@@ -584,7 +584,7 @@ class _LiftedCommentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparentFull,
       child: TweenAnimationBuilder<double>(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
@@ -617,12 +617,12 @@ class _LiftedCommentCard extends StatelessWidget {
               // to its minimum intrinsic height once outside the list.
               height: height,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.white,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   // Long, soft "ambient" shadow — grows with lift.
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: mainOpacity),
+                    color: AppColors.overlayBlack50.withValues(alpha: mainOpacity),
                     blurRadius: blur,
                     spreadRadius: spread,
                     offset: Offset(0, dy),
@@ -631,7 +631,7 @@ class _LiftedCommentCard extends StatelessWidget {
                   // at rest so it never looks like it's floating even
                   // before the lift animation kicks in.
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: .10),
+                    color: AppColors.shadowBlack10,
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -686,10 +686,10 @@ class _CommentEditCard extends StatelessWidget {
     final controller = _controller();
 
     return Material(
-      color: Colors.white,
+      color: AppColors.white,
       borderRadius: BorderRadius.circular(18),
       elevation: 18,
-      shadowColor: Colors.black38,
+      shadowColor: AppColors.shadowBlack38,
       clipBehavior: Clip.antiAlias,
       child: KeyboardListener(
         focusNode: FocusNode(skipTraversal: true),
@@ -799,7 +799,7 @@ class _CommentEditCard extends StatelessWidget {
                         backgroundColor: canSave
                             ? AppColors.gray900
                             : AppColors.grayshade200,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 6,
@@ -817,7 +817,7 @@ class _CommentEditCard extends StatelessWidget {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
+                                    AlwaysStoppedAnimation(AppColors.white),
                               ),
                             )
                           : const Text(
@@ -868,10 +868,10 @@ class _CommentQuickMenu extends StatelessWidget {
         );
       },
       child: Material(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(18),
         elevation: 18,
-        shadowColor: Colors.black38,
+        shadowColor: AppColors.shadowBlack38,
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           width: width,
@@ -897,7 +897,7 @@ class _CommentQuickMenu extends StatelessWidget {
               _MenuRow(
                 icon: Icons.delete_outline,
                 label: "Delete",
-                color: Colors.red,
+                color: AppColors.semanticRed,
                 onTap: onDelete,
               ),
             ],

@@ -5,6 +5,7 @@ import 'package:public_pulse/controller/comment_controller.dart';
 import 'package:public_pulse/model/comment_model.dart';
 import 'package:public_pulse/widget/post/instagram_comment_menu.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 
 class CommentTile extends StatelessWidget {
   final CommentModel comment;
@@ -27,7 +28,7 @@ class CommentTile extends StatelessWidget {
       title: 'Delete Comment?',
       message: 'This action cannot be undone.',
       icon: Icons.delete_outline_rounded,
-      color: Colors.red,
+      color: AppColors.semanticRed,
       confirmText: 'Delete',
     );
     if (confirmed) {
@@ -66,7 +67,7 @@ class CommentTile extends StatelessWidget {
                     TextSpan(
                       text: comment.username,
                       style: const TextStyle(
-                        color: Colors.black,
+                        color: AppColors.black,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -75,7 +76,7 @@ class CommentTile extends StatelessWidget {
                     TextSpan(
                       text: comment.content,
                       style: const TextStyle(
-                        color: Colors.black87,
+                        color: AppColors.black87,
                         fontWeight: FontWeight.normal,
                         fontSize: 14,
                       ),
@@ -90,7 +91,7 @@ class CommentTile extends StatelessWidget {
                 children: [
                   Text(
                     _timeAgo(comment.createdAt),
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 12, color: AppColors.greyShade600),
                   ),
 
                   if (comment.isPending) ...[
@@ -98,7 +99,7 @@ class CommentTile extends StatelessWidget {
                     Text(
                       "Sending...",
                       style: TextStyle(
-                        color: Colors.grey.shade500,
+                        color: AppColors.greyShade500,
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
@@ -112,7 +113,7 @@ class CommentTile extends StatelessWidget {
 
         const SizedBox(width: 10),
 
-        const Icon(Icons.favorite_border, size: 18, color: Colors.grey),
+        const Icon(Icons.favorite_border, size: 18, color: AppColors.grey),
       ],
     );
 

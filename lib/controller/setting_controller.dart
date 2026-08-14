@@ -93,7 +93,7 @@ class SettingController extends GetxController {
         return AppColors.success;
       case 'suspended':
       case 'inactive':
-        return Colors.orange;
+        return AppColors.semanticOrange;
       case 'banned':
       case 'deleted':
         return AppColors.danger;

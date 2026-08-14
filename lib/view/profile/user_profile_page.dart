@@ -30,7 +30,7 @@ class UserProfilePage extends StatelessWidget {
 
       appBar: AppBar(
         backgroundColor: AppColors.surfaceDefault,
-        surfaceTintColor: Colors.transparent,
+        surfaceTintColor: AppColors.transparentFull,
         elevation: 0,
         scrolledUnderElevation: 0,
 
