@@ -650,46 +650,24 @@ class CreatePostController extends GetxController {
                     '🖼️ [MediaPicker] Choose Image from Gallery selected',
                   );
 
-                  // Close media picker bottom sheet first.
                   Get.back();
 
-                  final context = Get.context;
+                  // ==========================================================
+                  // REAL ANDROID GALLERY PERMISSION
+                  // ==========================================================
 
-                  if (context == null) {
-                    debugPrint(
-                      '🔴 [MediaPicker] Context unavailable for gallery access',
-                    );
+                  final granted =
+                      await PermissionService.requestGalleryPermission();
 
+                  debugPrint('🖼️ [MediaPicker] Gallery permission: $granted');
+
+                  if (!granted) {
                     _showPermissionError('Gallery');
-
                     return;
                   }
 
                   // ==========================================================
-                  // ASK USER BEFORE OPENING GALLERY
-                  // ==========================================================
-
-                  final allowed = await PermissionService.requestGalleryAccess(
-                    context,
-                  );
-
-                  debugPrint(
-                    '🖼️ [MediaPicker] Gallery access allowed: $allowed',
-                  );
-
-                  if (!allowed) {
-                    CustomAlert.show(
-                      title: 'Gallery Access Required',
-                      message: 'Gallery access is required to select a photo.',
-                      icon: Icons.photo_library_outlined,
-                      color: AppColors.semanticOrange,
-                    );
-
-                    return;
-                  }
-
-                  // ==========================================================
-                  // OPEN ANDROID PHOTO PICKER
+                  // OPEN GALLERY
                   // ==========================================================
 
                   final XFile? image = await picker.pickImage(

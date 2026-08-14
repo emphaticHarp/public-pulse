@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class PermissionService {
   // ============================================================
-  // CAMERA PERMISSION
+  // CAMERA
   // ============================================================
 
   static Future<bool> requestCameraPermission() async {
@@ -25,37 +24,24 @@ class PermissionService {
   }
 
   // ============================================================
-  // GALLERY ACCESS
+  // GALLERY / PHOTOS
   // ============================================================
 
-  static Future<bool> requestGalleryAccess(BuildContext context) async {
-    final allowed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Gallery Access'),
-          content: const Text(
-            'Public Pulse needs access to your gallery so you can select photos for your post.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: const Text('Allow'),
-            ),
-          ],
-        );
-      },
-    );
+  static Future<bool> requestGalleryPermission() async {
+    if (await Permission.photos.isGranted) {
+      return true;
+    }
 
-    return allowed ?? false;
+    final status = await Permission.photos.request();
+
+    if (status.isGranted) {
+      return true;
+    }
+
+    if (status.isPermanentlyDenied) {
+      await openAppSettings();
+    }
+
+    return false;
   }
 }
