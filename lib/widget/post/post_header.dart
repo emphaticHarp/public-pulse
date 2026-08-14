@@ -33,11 +33,31 @@ class PostHeader extends StatelessWidget {
     this.onDelete,
   });
 
+  String _resolveAvatarUrl(String value) {
+    final avatar = value.trim();
+
+    if (avatar.isEmpty) {
+      return '';
+    }
+
+    // Google / external avatar
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+      return avatar;
+    }
+
+    // Supabase Storage avatar
+    return Supabase.instance.client.storage
+        .from('avatars')
+        .getPublicUrl(avatar);
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
     final isMyPost = currentUserId != null && authorUserId == currentUserId;
+
+    final avatarUrl = _resolveAvatarUrl(profileImage);
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(
@@ -73,16 +93,19 @@ class PostHeader extends StatelessWidget {
                           radius: 20,
                           backgroundColor: AppColors.gray100,
 
-                          backgroundImage: profileImage.isNotEmpty
+                          backgroundImage: avatarUrl.isNotEmpty
                               ? CachedNetworkImageProvider(
-                                  profileImage,
-                                  cacheKey: supabaseStorageCacheKey(
-                                    profileImage,
-                                  ),
+                                  avatarUrl,
+                                  cacheKey:
+                                      avatarUrl.startsWith(
+                                        'https://lh3.googleusercontent.com',
+                                      )
+                                      ? avatarUrl
+                                      : supabaseStorageCacheKey(avatarUrl),
                                 )
                               : null,
 
-                          child: profileImage.isEmpty
+                          child: avatarUrl.isEmpty
                               ? const Icon(
                                   Icons.person,
                                   color: AppColors.gray400,

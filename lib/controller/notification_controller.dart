@@ -106,7 +106,7 @@ class NotificationController extends GetxController {
       case 3: // Follows
         filtered = filtered
             .where(
-              (n) => n.notificationType.trim().toUpperCase() == 'POST_FOLLOW',
+              (n) => n.notificationType.trim().toUpperCase() == 'FOLLOW',
             )
             .toList();
         break;
