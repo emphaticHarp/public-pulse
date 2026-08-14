@@ -94,18 +94,40 @@ class ProfileController extends GetxController {
 
     if (cachedProfile != null) {
       debugPrint('[PROFILE] Loaded own profile from Hive');
+      debugPrint(
+        '[PROFILE] Cached account status: ${cachedProfile.accountStatus}',
+      );
 
       _applyProfileToState(cachedProfile);
 
-      _profileLoaded = true;
+      final cachedStatus =
+          cachedProfile.accountStatus?.trim().toLowerCase();
 
-      // Load cached/server posts in background.
-      await loadMyPosts();
-      await loadSavedPosts();
+      final hasValidStatus =
+          cachedStatus != null &&
+          cachedStatus.isNotEmpty &&
+          cachedStatus != 'unknown';
 
-      debugPrint('[PROFILE] Own profile cache initialization complete');
+      // Cache is complete, so use it normally.
+      if (hasValidStatus) {
+        _profileLoaded = true;
 
-      return;
+        await loadMyPosts();
+        await loadSavedPosts();
+
+        debugPrint(
+          '[PROFILE] Own profile cache initialization complete',
+        );
+
+        return;
+      }
+
+      // Old/incomplete cache.
+      // Continue below and refresh profile from Supabase.
+      debugPrint(
+        '[PROFILE] Cached profile missing valid status '
+        '-> refreshing from Supabase',
+      );
     }
 
     // ----------------------------------------------------------

@@ -118,13 +118,18 @@ class PostHeader extends StatelessWidget {
                       const SizedBox(width: 12),
 
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
+                            // ======================================================
+                            // USERNAME + LOCATION
+                            // ======================================================
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
                                     onTap: () {
                                       // My own post → open my profile.
                                       if (isMyPost) {
@@ -148,39 +153,56 @@ class PostHeader extends StatelessWidget {
                                     },
                                     child: Text(
                                       username,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),
                                     ),
                                   ),
-                                ),
 
-                                FollowButton(
-                                  profileId: authorId,
-                                  isOwner: isMyPost,
-                                ),
-                              ],
-                            ),
+                                  if (location != null &&
+                                      location!.trim().isNotEmpty) ...[
+                                    const SizedBox(height: 2),
 
-                            if (location != null && location!.trim().isNotEmpty)
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.location_on,
-                                    size: 12,
-                                    color: AppColors.gray500,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    location!,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.gray500,
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.location_on,
+                                          size: 12,
+                                          color: AppColors.gray500,
+                                        ),
+                                        const SizedBox(width: 2),
+
+                                        Expanded(
+                                          child: Text(
+                                            location!,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.gray500,
+                                              height: 1.1,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
+                            ),
+
+                            const SizedBox(width: 8),
+
+                            // ======================================================
+                            // FOLLOW BUTTON
+                            // ======================================================
+                            FollowButton(
+                              profileId: authorId,
+                              isOwner: isMyPost,
+                            ),
                           ],
                         ),
                       ),

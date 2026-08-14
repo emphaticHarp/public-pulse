@@ -11,6 +11,7 @@ import 'package:public_pulse/view/auth/login_page.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
+import 'package:public_pulse/core/services/current_user_service.dart';
 
 /// All business logic for the Settings Page.
 /// UI must never contain raw logic — only call these methods.
@@ -30,11 +31,44 @@ class SettingController extends GetxController {
 
   // for displaying account status and referral code in the settings page
 
-  String get accountStatus =>
-      ProfileController.to.profile.value?.accountStatus ?? 'unknown';
+  /// Reactive account status — synced from ProfileController.
+  final _accountStatus = 'unknown'.obs;
 
-  String get referralCode =>
-      ProfileController.to.profile.value?.referCode ?? '';
+  /// Reactive referral code — synced from ProfileController.
+  final _referralCode = ''.obs;
+
+  /// Finds the current user's ProfileController (tagged 'my_profile' or untagged).
+  ProfileController? get _profileController {
+    if (Get.isRegistered<ProfileController>(tag: 'my_profile')) {
+      return Get.find<ProfileController>(tag: 'my_profile');
+    }
+
+    if (Get.isRegistered<ProfileController>()) {
+      return Get.find<ProfileController>();
+    }
+
+    return null;
+  }
+
+  String get accountStatus => _accountStatus.value;
+
+  String get referralCode => _referralCode.value;
+
+  /// Syncs account status and referral code from the ProfileController.
+  /// Called on init and whenever the profile changes.
+  void _syncProfileData() {
+    final pc = _profileController;
+    final profile = pc?.profile.value;
+
+    _accountStatus.value = profile?.accountStatus ?? 'unknown';
+    _referralCode.value = profile?.referCode ?? '';
+
+    debugPrint(
+      '[Settings] Synced profile data: '
+      'status=${_accountStatus.value}, '
+      'referral=${_referralCode.value}',
+    );
+  }
 
   String get accountStatusText {
     switch (accountStatus.toLowerCase()) {
@@ -88,6 +122,54 @@ class SettingController extends GetxController {
   void onInit() {
     super.onInit();
     _restoreTheme();
+
+    // Sync profile data immediately (in case profile is already loaded).
+    _syncProfileData();
+
+    // Listen to profile changes in the ProfileController.
+    // Use a small delay to allow lazy-loaded ProfileController to initialise.
+    _observeProfileChanges();
+  }
+
+  /// Sets up a listener on the ProfileController's profile observable.
+  /// When the profile loads or updates, account status & referral code refresh.
+  Worker? _profileWorker;
+
+  void _observeProfileChanges() {
+    // Clean up any previous worker.
+    _profileWorker?.dispose();
+
+    // Try to attach immediately.
+    final pc = _profileController;
+    if (pc != null) {
+      _profileWorker = ever(pc.profile, (_) {
+        _syncProfileData();
+      });
+      debugPrint('[Settings] Attached profile listener immediately');
+      return;
+    }
+
+    // ProfileController not registered yet — retry after a short delay.
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (Get.isRegistered<SettingController>() && _profileWorker == null) {
+        final delayedPc = _profileController;
+        if (delayedPc != null) {
+          _profileWorker = ever(delayedPc.profile, (_) {
+            _syncProfileData();
+          });
+          _syncProfileData(); // Pull current value now that it exists.
+          debugPrint('[Settings] Attached profile listener (delayed)');
+        } else {
+          debugPrint('[Settings] ProfileController still not registered');
+        }
+      }
+    });
+  }
+
+  @override
+  void onClose() {
+    _profileWorker?.dispose();
+    super.onClose();
   }
 
   void _restoreTheme() {
@@ -257,8 +339,6 @@ class SettingController extends GetxController {
     );
   }
 
-  
-
   // ── Logout ────────────────────────────────────────────────────────────────
 
   /// Full logout sequence:
@@ -295,6 +375,10 @@ class SettingController extends GetxController {
       await authService.signOut();
 
       debugPrint('[Settings] Auth sign-out complete');
+
+      CurrentUserService.instance.clear();
+
+      debugPrint('[Settings] CurrentUserService cleared');
 
       // ----------------------------------------------------------
       // 2. Clear ALL user-specific Hive cache
