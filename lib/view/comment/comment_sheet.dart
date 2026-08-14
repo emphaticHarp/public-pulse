@@ -18,7 +18,7 @@ class CommentSheet extends StatelessWidget {
       child: Container(
         height: MediaQuery.of(context).size.height * .85,
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -29,7 +29,7 @@ class CommentSheet extends StatelessWidget {
               width: 45,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.grey.shade400,
+                color: AppColors.greyShade400,
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
@@ -57,7 +57,7 @@ class CommentSheet extends StatelessWidget {
                   return const Center(
                     child: Text(
                       "No comments yet",
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      style: TextStyle(fontSize: 16, color: AppColors.grey),
                     ),
                   );
                 }
@@ -86,7 +86,7 @@ class CommentSheet extends StatelessWidget {
                       decoration: InputDecoration(
                         hintText: "Write a comment...",
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: AppColors.greyShade100,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
                           borderSide: BorderSide.none,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/services/auth_service.dart';
 import 'package:public_pulse/view/main/main_page.dart';
@@ -22,7 +23,7 @@ class LoginCodeController extends GetxController {
           title: 'Invalid Code',
           message: 'Enter a 6-character code.',
           icon: Icons.warning_amber_rounded,
-          color: Colors.orange,
+          color: AppColors.semanticOrange,
         );
         return;
       }
@@ -34,7 +35,7 @@ class LoginCodeController extends GetxController {
           title: 'Invalid Code',
           message: 'Incorrect login code.',
           icon: Icons.warning_amber_rounded,
-          color: Colors.orange,
+          color: AppColors.semanticOrange,
         );
         return;
       }
@@ -47,7 +48,7 @@ class LoginCodeController extends GetxController {
         title: 'Error',
         message: 'Something went wrong.',
         icon: Icons.error_outline,
-        color: Colors.red,
+        color: AppColors.semanticRed,
       );
     } finally {
       isLoading.value = false;

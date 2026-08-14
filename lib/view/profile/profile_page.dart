@@ -35,7 +35,7 @@ class ProfilePage extends StatelessWidget {
       backgroundColor: AppColors.surfaceDefault,
       appBar: AppBar(
         backgroundColor: AppColors.surfaceDefault,
-        surfaceTintColor: Colors.transparent,
+        surfaceTintColor: AppColors.transparentFull,
         elevation: 0,
         scrolledUnderElevation: 0,
 
@@ -296,7 +296,7 @@ class _TabContent extends StatelessWidget {
 
         if (post.mediaUrls.isEmpty) {
           return Container(
-            color: Colors.grey.shade200,
+            color: AppColors.greyShade200,
             child: const Center(
               child: Icon(Icons.image_not_supported_outlined),
             ),
@@ -310,7 +310,7 @@ class _TabContent extends StatelessWidget {
             debugPrint('[PROFILE IMAGE ERROR] ${post.mediaUrls.first}');
 
             return Container(
-              color: Colors.grey.shade200,
+              color: AppColors.greyShade200,
               child: const Center(child: Icon(Icons.broken_image_outlined)),
             );
           },

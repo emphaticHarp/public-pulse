@@ -5,6 +5,7 @@ import 'package:public_pulse/widget/post/post_header.dart';
 import 'package:public_pulse/widget/post/post_media.dart';
 import 'package:public_pulse/widget/post/interaction_bar.dart';
 import 'package:public_pulse/widget/post/post_caption.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 
 class PostCard extends StatelessWidget {
   final String profileImage;
@@ -190,7 +191,7 @@ class _UploadingMedia extends StatelessWidget {
 
         Positioned.fill(
           child: Container(
-            color: Colors.black.withValues(alpha: 0.45),
+            color: AppColors.overlayBlack45,
             child: const Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -200,14 +201,14 @@ class _UploadingMedia extends StatelessWidget {
                     height: 35,
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
-                      color: Colors.white,
+                      color: AppColors.white,
                     ),
                   ),
                   SizedBox(height: 12),
                   Text(
                     'Uploading...',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -229,7 +230,7 @@ class _UploadingMedia extends StatelessWidget {
         child: const Icon(
           Icons.image_not_supported_outlined,
           size: 50,
-          color: Colors.grey,
+          color: AppColors.grey,
         ),
       );
     }
@@ -246,7 +247,7 @@ class _UploadingMedia extends StatelessWidget {
     return Container(
       height: 350,
       width: double.infinity,
-      color: Colors.grey.shade200,
+      color: AppColors.greyShade200,
       child: Center(child: child),
     );
   }
@@ -273,7 +274,7 @@ class _UploadFailedMedia extends StatelessWidget {
       media = Container(
         height: 350,
         width: double.infinity,
-        color: Colors.grey.shade200,
+        color: AppColors.greyShade200,
       );
     } else {
       final file = File(localMediaPaths.first);
@@ -289,7 +290,7 @@ class _UploadFailedMedia extends StatelessWidget {
         media = Container(
           height: 350,
           width: double.infinity,
-          color: Colors.grey.shade200,
+          color: AppColors.greyShade200,
         );
       }
     }
@@ -300,17 +301,17 @@ class _UploadFailedMedia extends StatelessWidget {
 
         Positioned.fill(
           child: Container(
-            color: Colors.black.withValues(alpha: 0.55),
+            color: AppColors.overlayBlack55,
             child: const Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.cloud_off, color: Colors.white, size: 42),
+                  Icon(Icons.cloud_off, color: AppColors.white, size: 42),
                   SizedBox(height: 10),
                   Text(
                     'Upload failed',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.white,
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
                     ),
@@ -318,7 +319,7 @@ class _UploadFailedMedia extends StatelessWidget {
                   SizedBox(height: 4),
                   Text(
                     'Please try again',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                    style: TextStyle(color: AppColors.white70, fontSize: 14),
                   ),
                 ],
               ),

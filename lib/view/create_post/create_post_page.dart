@@ -50,7 +50,7 @@ class CreatePostPage extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.white,
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -104,7 +104,7 @@ class _Header extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         border: Border(bottom: BorderSide(color: AppColors.gray100, width: 1)),
       ),
       child: Row(
@@ -173,7 +173,7 @@ class _MediaCarousel extends StatelessWidget {
                     alignment: Alignment.center,
                     margin: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade400,
+                      color: AppColors.redShade400,
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: const Column(
@@ -181,14 +181,14 @@ class _MediaCarousel extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.delete_outline,
-                          color: Colors.white,
+                          color: AppColors.white,
                           size: 40,
                         ),
                         SizedBox(height: 8),
                         Text(
                           'Delete',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -218,13 +218,13 @@ class _MediaCarousel extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.5),
+              color: AppColors.overlayBlack50,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '${current + 1} of ${media.length}',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -278,7 +278,7 @@ class _MediaCarousel extends StatelessWidget {
                       border: Border.all(
                         color: index == current
                             ? AppColors.createPostRed600
-                            : Colors.transparent,
+                            : AppColors.transparentFull,
                         width: 2.5,
                       ),
                       boxShadow: index == current
@@ -395,7 +395,7 @@ class _MediaPreviewCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             blurRadius: 15,
-            color: Colors.black.withValues(alpha: 0.12),
+            color: AppColors.shadowBlack12,
             offset: const Offset(0, 6),
           ),
         ],
@@ -421,18 +421,18 @@ class _MediaPreviewCard extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
+                  color: AppColors.overlayBlack50,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.image, color: Colors.white, size: 14),
+                    const Icon(Icons.image, color: AppColors.white, size: 14),
                     const SizedBox(width: 5),
                     Text(
                       '$currentIndex/$totalCount',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -448,10 +448,10 @@ class _MediaPreviewCard extends StatelessWidget {
                 onTap: onRemove,
                 child: CircleAvatar(
                   radius: 18,
-                  backgroundColor: Colors.black45,
+                  backgroundColor: AppColors.overlayBlack45,
                   child: const Icon(
                     Icons.delete_outline,
-                    color: Colors.white,
+                    color: AppColors.white,
                     size: 20,
                   ),
                 ),
@@ -525,7 +525,7 @@ class _CaptionSection extends StatelessWidget {
               border: Border.all(color: AppColors.gray100),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
+                  color: AppColors.shadowBlack3,
                   blurRadius: 4,
                   offset: const Offset(0, 1),
                 ),
@@ -563,10 +563,10 @@ class _CaptionSection extends StatelessWidget {
                     final length = controller.caption.value.length;
                     Color color = AppColors.gray400;
                     if (length > 450) {
-                      color = Colors.orange;
+                      color = AppColors.semanticOrange;
                     }
                     if (length >= controller.captionMaxLength) {
-                      color = Colors.red;
+                      color = AppColors.semanticRed;
                     }
                     return Text(
                       '$length/${controller.captionMaxLength}',
@@ -671,7 +671,7 @@ class _UploadFooter extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         border: Border(top: BorderSide(color: AppColors.gray100, width: 1)),
       ),
       child: Obx(
@@ -696,7 +696,7 @@ class _UploadFooter extends StatelessWidget {
             style:
                 ElevatedButton.styleFrom(
                   backgroundColor: AppColors.createPostRed700,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -714,7 +714,7 @@ class _UploadFooter extends StatelessWidget {
                   width: 24,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 );
               }

@@ -35,9 +35,9 @@ class LoginCodePage extends StatelessWidget {
         color: AppColors.slate900,
       ),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 102, 101, 101),
+        color: AppColors.pinInputBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color.fromARGB(255, 121, 123, 126), width: 1.5),
+        border: Border.all(color: AppColors.pinInputBorder, width: 1.5),
       ),
     );
 
@@ -46,7 +46,7 @@ class LoginCodePage extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 246, 241, 239),
+      backgroundColor: AppColors.warmLightBg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -58,13 +58,13 @@ class LoginCodePage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: const Color.fromRGBO(209, 37, 94, 1).withValues(alpha: 0.05),
+                    color: AppColors.lockIconBgTint.withValues(alpha: 0.05),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.lock_outline_rounded,
                     size: 42,
-                    color: Colors.black,
+                    color: AppColors.lockIconTint,
                   ),
                 ),
 
@@ -78,7 +78,7 @@ class LoginCodePage extends StatelessWidget {
                         text: "Verification",
                         style: AppTextStyles.loginHeading.copyWith(
                           fontSize: 28,
-                          color: const  Color.fromRGBO(222, 55, 91, 1),
+                          color: AppColors.verificationAccent,
                         ),
                       ),
                       TextSpan(
@@ -137,8 +137,8 @@ class LoginCodePage extends StatelessWidget {
                           ? null
                           : controller.verifyCode,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromRGBO(222, 55, 91, 1),
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.verificationAccent,
+                        foregroundColor: AppColors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -150,13 +150,13 @@ class LoginCodePage extends StatelessWidget {
                               width: 22,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.2,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             )
                           : Text(
                               "Verify Code",
                               style: AppTextStyles.buttonText.copyWith(
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             ),
                     ),

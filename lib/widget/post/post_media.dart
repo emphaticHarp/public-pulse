@@ -106,13 +106,13 @@ class PostCarouselMedia extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.4),
+                  color: AppColors.overlayBlack40,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '${currentIndex + 1}/${imageUrls.length}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -172,8 +172,7 @@ class _SmoothDots extends StatelessWidget {
           width: width,
           height: 7,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            color: Colors.white.withValues(alpha: opacity),
+            borderRadius: BorderRadius.circular(4),              color: AppColors.white.withValues(alpha: opacity),
           ),
         );
       }),

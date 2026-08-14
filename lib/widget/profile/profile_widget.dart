@@ -71,7 +71,7 @@ class ChangePhotoButton extends StatelessWidget {
       ),
       child: Icon(
         Icons.camera_alt_outlined,
-        color: const Color.fromARGB(255, 168, 172, 179),
+        color: AppColors.cameraIconGrey,
         size: size * 0.5,
       ),
     ),

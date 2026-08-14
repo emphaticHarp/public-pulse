@@ -17,7 +17,7 @@ class NotificationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         top: false,
         child: Column(
@@ -119,12 +119,12 @@ class NotificationPage extends StatelessWidget {
       child: Container(
         height: 48, // h-12
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           border: Border.all(color: AppColors.gray100),
           borderRadius: BorderRadius.circular(12), // rounded-xl
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: AppColors.shadowBlack5,
               blurRadius: 2,
               offset: const Offset(0, 1),
             ),
@@ -232,12 +232,12 @@ class NotificationPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16), // px-4
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(12), // rounded-xl
             border: Border.all(color: AppColors.gray100),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: AppColors.shadowBlack5,
                 blurRadius: 2,
                 offset: const Offset(0, 1),
               ),

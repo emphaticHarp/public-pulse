@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 import '../core/repository/comment_repository.dart';
@@ -85,7 +86,7 @@ class CommentController extends GetxController {
         title: 'Too long',
         message: 'Maximum 500 characters',
         icon: Icons.warning_amber_rounded,
-        color: Colors.orange,
+        color: AppColors.semanticOrange,
       );
       return;
     }
@@ -155,7 +156,7 @@ class CommentController extends GetxController {
           title: 'Error',
           message: 'Failed to send comment',
           icon: Icons.error_outline,
-          color: Colors.red,
+          color: AppColors.semanticRed,
         );
       }
     } finally {
@@ -199,7 +200,7 @@ class CommentController extends GetxController {
         title: 'Too long',
         message: 'Maximum 500 characters',
         icon: Icons.warning_amber_rounded,
-        color: Colors.orange,
+        color: AppColors.semanticOrange,
       );
       return;
     }
@@ -237,7 +238,7 @@ class CommentController extends GetxController {
           title: 'Error',
           message: 'Failed to update comment',
           icon: Icons.error_outline,
-          color: Colors.red,
+          color: AppColors.semanticRed,
         );
       }
     } finally {
@@ -279,7 +280,7 @@ class CommentController extends GetxController {
         title: 'Error',
         message: 'Failed to delete comment',
         icon: Icons.error_outline,
-        color: Colors.red,
+        color: AppColors.semanticRed,
       );
     }
   }

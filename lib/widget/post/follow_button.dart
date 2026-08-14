@@ -26,27 +26,10 @@ class FollowButton extends StatelessWidget {
     return Obx(() {
       final bool isFollowing = controller.followingIds.contains(profileId);
 
+      // Already following → hide button.
+      // User can unfollow from the 3-dot menu.
       if (isFollowing) {
-        return OutlinedButton(
-          onPressed: () async {
-            await controller.unfollowUser(profileId);
-          },
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size(95, 34),
-            backgroundColor: AppColors.grayshade200,
-            side: BorderSide.none,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: const Text(
-            "Following",
-            style: TextStyle(
-              color: AppColors.gray600,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        );
+        return const SizedBox.shrink();
       }
 
       return ElevatedButton(
@@ -56,17 +39,13 @@ class FollowButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(95, 34),
           backgroundColor: AppColors.loginAccentRed,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: const Text(
           "Follow",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
       );
     });

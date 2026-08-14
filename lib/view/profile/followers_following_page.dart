@@ -27,13 +27,13 @@ class FollowersFollowingPage extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 246, 241, 239),
+      backgroundColor: AppColors.warmLightBg,
 
       // =========================================================
       // APP BAR
       // =========================================================
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 246, 241, 239),
+        backgroundColor: AppColors.warmLightBg,
 
         elevation: 0,
         centerTitle: false,
@@ -41,7 +41,7 @@ class FollowersFollowingPage extends StatelessWidget {
         title: Text(
           'Followers & Following',
           style: AppTextStyles.sectionHeading.copyWith(
-            color: const Color.fromARGB(255, 22, 22, 23),
+            color: AppColors.darkNearBlack,
           ),
         ),
 
