@@ -15,7 +15,10 @@ import '../../model/post_model.dart';
 class ProfilePage extends StatelessWidget {
   final String? userId;
 
-  const ProfilePage({super.key, this.userId});
+  /// True only when my own profile is opened from Explore.
+  final bool openedFromExplore;
+
+  const ProfilePage({super.key, this.userId, this.openedFromExplore = false});
 
   @override
   Widget build(BuildContext context) {
@@ -35,12 +38,37 @@ class ProfilePage extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+
+        // ============================================================
+        // BACK BUTTON
+        // Only when own profile was opened from Explore
+        // ============================================================
         automaticallyImplyLeading: false,
-        actions: userId == null
+
+        leading: openedFromExplore
+            ? IconButton(
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: AppColors.textPrimary,
+                ),
+                tooltip: 'Back',
+                onPressed: () {
+                  Get.back();
+                },
+              )
+            : null,
+
+        // ============================================================
+        // SETTINGS
+        // Show only on normal Profile tab
+        // ============================================================
+        actions: userId == null && !openedFromExplore
             ? [
                 IconButton(
-                  icon: const Icon(Icons.settings_outlined),
-                  color: AppColors.textPrimary,
+                  icon: const Icon(
+                    Icons.settings_outlined,
+                    color: AppColors.textPrimary,
+                  ),
                   tooltip: 'Settings',
                   onPressed: _openSettings,
                 ),

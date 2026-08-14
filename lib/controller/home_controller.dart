@@ -149,17 +149,85 @@ class HomeController extends GetxController {
     isLoading.value = true;
 
     try {
+      // ============================================================
+      // CURRENT USER
+      // ============================================================
+
+      final currentProfileId = await _repository.getCurrentProfileId();
+
+      if (currentProfileId == null) {
+        debugPrint('[HOME] No current profile ID');
+
+        posts.clear();
+
+        return;
+      }
+
+      // ============================================================
+      // CHECK WHO OWNS THE CACHED FEED
+      // ============================================================
+
+      final cachedOwner = CacheManager.getPostCacheOwnerProfileId();
+
+      final hasCachedFeed = CacheManager.hasPostCache();
+
+      debugPrint('[HOME] Current profile: $currentProfileId');
+
+      debugPrint('[HOME] Cached feed owner: $cachedOwner');
+
+      // ============================================================
+      // DIFFERENT USER / OLD LEGACY CACHE
+      // ============================================================
+
+      if (hasCachedFeed && cachedOwner != currentProfileId) {
+        debugPrint('[HOME] Different cache owner detected');
+
+        debugPrint('[HOME] Clearing previous user feed cache');
+
+        await CacheManager.clearPostCache();
+
+        posts.clear();
+
+        nextCursor = null;
+        hasMore.value = true;
+
+        _previouslyLoadedPostIds.clear();
+      }
+
+      // ============================================================
+      // MARK CACHE AS BELONGING TO CURRENT USER
+      // ============================================================
+
+      await CacheManager.setPostCacheOwnerProfileId(currentProfileId);
+
+      // ============================================================
+      // LOAD CACHE
+      // ============================================================
+
       loadCachedPosts();
 
+      // ============================================================
+      // NO VALID CACHE → SERVER
+      // ============================================================
+
       if (posts.isEmpty) {
+        debugPrint('[HOME] No valid cache → fetching from server');
+
         await loadPosts();
+      } else {
+        debugPrint('[HOME] Valid cache belongs to current user');
       }
+
+      // ============================================================
+      // OTHER USER DATA
+      // ============================================================
 
       await Future.wait([loadMyPosts(), loadFollowingIds()]);
 
       debugPrint('[HOME] ===== USER INITIALIZATION COMPLETE =====');
     } catch (e, stackTrace) {
       debugPrint('[HOME] initializeForUser error: $e');
+
       debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
@@ -267,22 +335,14 @@ class HomeController extends GetxController {
       // Server is authoritative for the first page.
       // ----------------------------------------------------------
 
-      final cacheIds = posts.map((post) => post.id).toList();
+      // Server response is authoritative.
+      posts.assignAll(page.posts);
 
-      final serverIds = page.posts.map((post) => post.id).toList();
+      _previouslyLoadedPostIds
+        ..clear()
+        ..addAll(page.posts.map((post) => post.id));
 
-      if (cacheIds.toString() != serverIds.toString()) {
-        posts.assignAll(page.posts);
-
-        _previouslyLoadedPostIds
-          ..clear()
-          ..addAll(page.posts.map((post) => post.id));
-
-        debugPrint('[HOME] Feed changed → UI updated');
-      } else {
-        debugPrint('[HOME] Server feed same as cache');
-      }
-
+      debugPrint('[HOME] Feed updated from server');
       await CacheManager.cachePosts(
         posts,
         nextCursor: nextCursor,

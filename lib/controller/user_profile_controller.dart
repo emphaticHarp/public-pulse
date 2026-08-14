@@ -83,119 +83,122 @@ class UserProfileController extends GetxController {
   // ─────────────────────────────────────────────
 
   Future<void> _loadProfile() async {
-    isLoading(true);
+  isLoading(true);
 
-    try {
-      final profileFuture = _repo.getUserProfile(userId);
+  try {
+    final profileFuture = _repo.getUserProfile(userId);
 
-      final followingFuture = _repo.isFollowing(userId);
+    final postsFuture = _repo.getUserPostImages(userId);
 
-      final followsMeFuture = _repo.isFollowedBy(userId);
+    final loadedProfile = await profileFuture;
 
-      final postsFuture = _repo.getUserPostImages(userId);
+    final loadedPosts = await postsFuture;
 
-      // Run all requests in parallel.
-      final loadedProfile = await profileFuture;
+    avatarUrl = loadedProfile.avatarPath != null
+        ? _repo.resolveUrl(
+            loadedProfile.avatarPath!,
+            bucket: 'avatars',
+          )
+        : null;
 
-      final following = await followingFuture;
+    coverUrl = loadedProfile.coverPath != null
+        ? _repo.resolveUrl(
+            loadedProfile.coverPath!,
+            bucket: 'covers',
+          )
+        : null;
 
-      final followedByMe = await followsMeFuture;
+    profile.value = loadedProfile;
 
-      final loadedPosts = await postsFuture;
+    photoPosts.assignAll(loadedPosts);
 
-      // Resolve URLs once.
-      avatarUrl = loadedProfile.avatarPath != null
-          ? _repo.resolveUrl(loadedProfile.avatarPath!, bucket: 'avatars')
-          : null;
+    followerCount.value =
+        loadedProfile.followerCount ?? 0;
 
-      coverUrl = loadedProfile.coverPath != null
-          ? _repo.resolveUrl(loadedProfile.coverPath!, bucket: 'covers')
-          : null;
+    followingCount.value =
+        loadedProfile.followingCount ?? 0;
 
-      profile.value = loadedProfile;
+    final results = await Future.wait([
+      _repo.isFollowing(userId),
+      _repo.isFollowedBy(userId),
+    ]);
 
-      photoPosts.assignAll(loadedPosts);
+    isFollowing.value = results[0];
+    followsMe.value = results[1];
+  } catch (e) {
+    print('[USER_PROFILE] ERROR: $e');
+  } finally {
+    isLoading(false);
+  }
+}
 
-      followerCount.value = loadedProfile.followerCount ?? 0;
+// ─────────────────────────────────────────────
+// FOLLOW BUTTON LABEL
+// ─────────────────────────────────────────────
 
-      followingCount.value = loadedProfile.followingCount ?? 0;
-
-      isFollowing.value = following;
-
-      followsMe.value = followedByMe;
-    } catch (e) {
-      print('[USER_PROFILE] ERROR: $e');
-    } finally {
-      isLoading(false);
-    }
+String get followButtonLabel {
+  if (isFollowing.value) {
+    return 'Following';
   }
 
-  // ─────────────────────────────────────────────
-  // BUTTON LABEL
-  // ─────────────────────────────────────────────
-
-  String get followButtonLabel {
-    if (isFollowing.value) {
-      return 'Following';
-    }
-
-    if (followsMe.value) {
-      return 'Follow Back';
-    }
-
-    return 'Follow';
+  if (followsMe.value) {
+    return 'Follow Back';
   }
 
-  // ─────────────────────────────────────────────
-  // TOGGLE FOLLOW
-  // ─────────────────────────────────────────────
+  return 'Follow';
+}
 
-  Future<void> toggleFollow() async {
-    if (isFollowLoading.value) {
-      return;
-    }
+// ─────────────────────────────────────────────
+// TOGGLE FOLLOW
+// ─────────────────────────────────────────────
 
-    isFollowLoading(true);
-
-    final wasFollowing = isFollowing.value;
-
-    final oldFollowerCount = followerCount.value;
-
-    // ─────────────────────────────────────────
-    // OPTIMISTIC UI
-    // ─────────────────────────────────────────
-
-    isFollowing.value = !wasFollowing;
-
-    followerCount.value = wasFollowing
-        ? (followerCount.value - 1).clamp(0, 999999999)
-        : followerCount.value + 1;
-
-    try {
-      if (wasFollowing) {
-        await _repo.unfollowUser(userId);
-      } else {
-        await _repo.followUser(userId);
-      }
-    } catch (e) {
-      print('[USER_PROFILE] FOLLOW ERROR: $e');
-
-      // Rollback.
-      isFollowing.value = wasFollowing;
-
-      followerCount.value = oldFollowerCount;
-    } finally {
-      isFollowLoading(false);
-    }
+Future<void> toggleFollow() async {
+  if (isFollowLoading.value) {
+    return;
   }
+
+  isFollowLoading.value = true;
+
+  final wasFollowing = isFollowing.value;
+  final oldFollowerCount = followerCount.value;
+
+  // Optimistic UI
+  isFollowing.value = !wasFollowing;
+
+  followerCount.value = wasFollowing
+      ? (followerCount.value - 1).clamp(0, 999999999)
+      : followerCount.value + 1;
+
+  try {
+    if (wasFollowing) {
+      await _repo.unfollowUser(userId);
+    } else {
+      await _repo.followUser(userId);
+    }
+  } catch (e) {
+    print('[USER_PROFILE] FOLLOW ERROR: $e');
+
+    // Rollback
+    isFollowing.value = wasFollowing;
+    followerCount.value = oldFollowerCount;
+  } finally {
+    isFollowLoading.value = false;
+  }
+}
+
+// ─────────────────────────────────────────────
+// TAB
+// ─────────────────────────────────────────────
+
+void changeTab(ProfileTab tab) {
+  selectedTab.value = tab;
+}
 
   // ─────────────────────────────────────────────
   // TAB
   // ─────────────────────────────────────────────
 
-  void changeTab(ProfileTab tab) {
-    selectedTab.value = tab;
-  }
+ 
 
   // ─────────────────────────────────────────────
   // FOLLOWERS / FOLLOWING PAGE

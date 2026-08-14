@@ -225,9 +225,7 @@ class _ActionButtons extends StatelessWidget {
           Expanded(
             child: AppPrimaryButton(
               label: controller.followButtonLabel,
-
               loading: controller.isFollowLoading.value,
-
               onTap: controller.toggleFollow,
             ),
           ),
@@ -238,7 +236,6 @@ class _ActionButtons extends StatelessWidget {
             child: AppOutlinedButton(
               label: 'Message',
               icon: Icons.mail_outline,
-
               onTap: () {
                 // Messaging feature later.
               },

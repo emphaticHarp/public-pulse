@@ -11,6 +11,26 @@ class CacheManager {
   // Hive box for cached posts.
   static Box get _postBox => Hive.box(HiveBoxes.cachedPosts);
 
+  // ============================================================
+  // POST CACHE OWNER
+  // ============================================================
+
+  static const String _postCacheOwnerKey = 'post_cache_owner_profile_id';
+
+  static String? getPostCacheOwnerProfileId() {
+    return _postBox.get(_postCacheOwnerKey)?.toString();
+  }
+
+  static Future<void> setPostCacheOwnerProfileId(String profileId) async {
+    await _postBox.put(_postCacheOwnerKey, profileId);
+
+    debugPrint('[CACHE] Post cache owner set: $profileId');
+  }
+
+  static bool hasPostCache() {
+    return _postBox.containsKey(CacheKeys.posts);
+  }
+
   // Save posts and the current timestamp.
   static Future<void> cachePosts(
     List<PostModel> posts, {
