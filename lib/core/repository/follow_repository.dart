@@ -7,8 +7,6 @@ class FollowRepository {
 
   static final FollowRepository instance = FollowRepository._();
 
-  final _client = Supabase.instance.client;
-
   final _followChunks = Supabase.instance.client.from('user_follow2_chunked');
 
   // ============================================================

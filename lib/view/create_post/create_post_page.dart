@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/controller/create_post_controller.dart';
@@ -621,35 +620,35 @@ class _VisibilitySection extends StatelessWidget {
           const SizedBox(height: 12),
 
           Obx(
-            () => Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.gray100),
-              ),
-              child: Column(
-                children: [
-                  RadioListTile<String>(
-                    value: "PUBLIC",
-                    groupValue: controller.visibility.value,
-                    activeColor: AppColors.createPostRed600,
-                    title: const Text("Public"),
-                    subtitle: const Text("Everyone can view this post"),
-                    onChanged: (v) {
-                      controller.visibility.value = v!;
-                    },
-                  ),
-                  const Divider(height: 1),
-                  RadioListTile<String>(
-                    value: "PRIVATE",
-                    groupValue: controller.visibility.value,
-                    activeColor: AppColors.createPostRed600,
-                    title: const Text("Followers Only"),
-                    subtitle: const Text("Only your followers can view this"),
-                    onChanged: (v) {
-                      controller.visibility.value = v!;
-                    },
-                  ),
-                ],
+            () => RadioGroup<String>(
+              groupValue: controller.visibility.value,
+              onChanged: (String? v) {
+                if (v != null) {
+                  controller.visibility.value = v;
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.gray100),
+                ),
+                child: Column(
+                  children: [
+                    RadioListTile<String>(
+                      value: "PUBLIC",
+                      activeColor: AppColors.createPostRed600,
+                      title: const Text("Public"),
+                      subtitle: const Text("Everyone can view this post"),
+                    ),
+                    const Divider(height: 1),
+                    RadioListTile<String>(
+                      value: "PRIVATE",
+                      activeColor: AppColors.createPostRed600,
+                      title: const Text("Followers Only"),
+                      subtitle: const Text("Only your followers can view this"),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -65,9 +65,9 @@ class FollowersFollowingController extends GetxController
 
     tabController.addListener(_handleTabChange);
 
-    print('[FF_DEBUG] Controller initialized');
-    print('[FF_DEBUG] userId: $userId');
-    print('[FF_DEBUG] initialTab: $initialTab');
+    debugPrint('[FF_DEBUG] Controller initialized');
+    debugPrint('[FF_DEBUG] userId: $userId');
+    debugPrint('[FF_DEBUG] initialTab: $initialTab');
 
     if (initialTab == 0) {
       loadFollowers();
@@ -103,7 +103,7 @@ class FollowersFollowingController extends GetxController
   // ============================================================
 
   void switchTab(int index) {
-    print('[FF_DEBUG] switchTab: $index');
+    debugPrint('[FF_DEBUG] switchTab: $index');
 
     selectedTab.value = index;
 
@@ -125,9 +125,9 @@ class FollowersFollowingController extends GetxController
       return;
     }
 
-    print('[FF_DEBUG] Loading followers...');
-    print('[FF_DEBUG] Profile userId: $userId');
-    print('[FF_DEBUG] forceRefresh: $forceRefresh');
+    debugPrint('[FF_DEBUG] Loading followers...');
+    debugPrint('[FF_DEBUG] Profile userId: $userId');
+    debugPrint('[FF_DEBUG] forceRefresh: $forceRefresh');
 
     // ----------------------------------------------------------
     // CACHE FIRST
@@ -145,12 +145,12 @@ class FollowersFollowingController extends GetxController
 
             _followersLoaded = true;
 
-            print('[FF_CACHE] Loaded ${followers.length} followers from cache');
+            debugPrint('[FF_CACHE] Loaded ${followers.length} followers from cache');
           }
         }
       } catch (e, stackTrace) {
-        print('[FF_CACHE] ERROR reading followers cache: $e');
-        print(stackTrace);
+        debugPrint('[FF_CACHE] ERROR reading followers cache: $e');
+        debugPrintStack(stackTrace: stackTrace);
       }
     }
 
@@ -163,7 +163,7 @@ class FollowersFollowingController extends GetxController
     try {
       final result = await _repo.getFollowers(userId);
 
-      print('[FF_DEBUG] Repository returned ${result.length} followers');
+      debugPrint('[FF_DEBUG] Repository returned ${result.length} followers');
 
       followers.assignAll(result);
 
@@ -171,10 +171,10 @@ class FollowersFollowingController extends GetxController
 
       await _cache.updateFollowers(profileId: userId, followers: result);
 
-      print('[FF_CACHE] Saved ${result.length} followers to cache');
+      debugPrint('[FF_CACHE] Saved ${result.length} followers to cache');
     } catch (e, stackTrace) {
-      print('[FF_DEBUG] ERROR loading followers: $e');
-      print(stackTrace);
+      debugPrint('[FF_DEBUG] ERROR loading followers: $e');
+      debugPrintStack(stackTrace: stackTrace);
 
       // Do NOT clear existing cached users.
     } finally {
@@ -191,9 +191,9 @@ class FollowersFollowingController extends GetxController
       return;
     }
 
-    print('[FF_DEBUG] Loading following...');
-    print('[FF_DEBUG] Profile userId: $userId');
-    print('[FF_DEBUG] forceRefresh: $forceRefresh');
+    debugPrint('[FF_DEBUG] Loading following...');
+    debugPrint('[FF_DEBUG] Profile userId: $userId');
+    debugPrint('[FF_DEBUG] forceRefresh: $forceRefresh');
 
     // ----------------------------------------------------------
     // CACHE FIRST
@@ -211,12 +211,12 @@ class FollowersFollowingController extends GetxController
 
             _followingLoaded = true;
 
-            print('[FF_CACHE] Loaded ${following.length} following from cache');
+            debugPrint('[FF_CACHE] Loaded ${following.length} following from cache');
           }
         }
       } catch (e, stackTrace) {
-        print('[FF_CACHE] ERROR reading following cache: $e');
-        print(stackTrace);
+        debugPrint('[FF_CACHE] ERROR reading following cache: $e');
+        debugPrintStack(stackTrace: stackTrace);
       }
     }
 
@@ -229,7 +229,7 @@ class FollowersFollowingController extends GetxController
     try {
       final result = await _repo.getFollowing(userId);
 
-      print('[FF_DEBUG] Repository returned ${result.length} following');
+      debugPrint('[FF_DEBUG] Repository returned ${result.length} following');
 
       following.assignAll(result);
 
@@ -237,10 +237,10 @@ class FollowersFollowingController extends GetxController
 
       await _cache.updateFollowing(profileId: userId, following: result);
 
-      print('[FF_CACHE] Saved ${result.length} following to cache');
+      debugPrint('[FF_CACHE] Saved ${result.length} following to cache');
     } catch (e, stackTrace) {
-      print('[FF_DEBUG] ERROR loading following: $e');
-      print(stackTrace);
+      debugPrint('[FF_DEBUG] ERROR loading following: $e');
+      debugPrintStack(stackTrace: stackTrace);
 
       // Keep cached/current users visible.
     } finally {
@@ -253,7 +253,7 @@ class FollowersFollowingController extends GetxController
   // ============================================================
 
   Future<void> refreshList() async {
-    print('[FF_DEBUG] Refreshing current list');
+    debugPrint('[FF_DEBUG] Refreshing current list');
 
     // IMPORTANT:
     // Do not clear followers/following first.

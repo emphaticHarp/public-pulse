@@ -22,7 +22,7 @@ class ProfileController extends GetxController {
 
   /// This is only safe when the controller was registered without a tag.
   /// For tagged controllers, prefer:
-  /// Get.find<ProfileController>(tag: ...)
+  /// `Get.find<ProfileController>(tag: ...)`
   static ProfileController get to {
     return Get.find<ProfileController>();
   }

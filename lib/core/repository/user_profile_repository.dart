@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:public_pulse/model/profile_model.dart';
@@ -45,7 +46,7 @@ class UserProfileRepository {
 
         final profileId = data['id'] as String;
 
-        print(
+        debugPrint(
           '[USER_PROFILE_REPO] Profile ID fetched: '
           '$userId -> $profileId',
         );
@@ -99,7 +100,7 @@ class UserProfileRepository {
     for (final row in rows) {
       final mediaRaw = row['post_media'];
 
-      print('[USER_POSTS] post=${row['id']} media=$mediaRaw');
+      debugPrint('[USER_POSTS] post=${row['id']} media=$mediaRaw');
 
       if (mediaRaw is! List || mediaRaw.isEmpty) {
         continue;

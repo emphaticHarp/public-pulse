@@ -3,7 +3,6 @@ import '../compression/image_compressor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/model/profile_model.dart';
 import 'package:flutter/foundation.dart';
-import 'package:public_pulse/model/post_model.dart';
 
 /// Singleton repository for all profile-related Supabase operations.
 ///

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -49,7 +48,7 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: url,
-    anonKey: key,
+    publishableKey: key,
     httpClient: LoggingHttpClient(),
   );
   // Initialize Hive and open cache boxes for offline storage.

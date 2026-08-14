@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:public_pulse/model/profile_model.dart';
 import 'hive_boxes.dart';
@@ -179,7 +180,7 @@ class FollowersFollowingCacheService {
 
       return {'followers': followers, 'following': following};
     } catch (e) {
-      print('[FF_CACHE] Cache read error: $e');
+      debugPrint('[FF_CACHE] Cache read error: $e');
 
       _box.delete(profileId);
 

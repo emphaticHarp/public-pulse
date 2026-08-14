@@ -88,8 +88,6 @@ class HomeController extends GetxController {
 
   final Set<String> _previouslyLoadedPostIds = {};
 
-  bool _homeInitialized = false;
-
   // ============================================================
   // INIT
   // ============================================================
@@ -234,10 +232,6 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> _initializeHome() async {
-    await initializeForUser();
-  }
-
   // ============================================================
   // SCROLL / PAGINATION
   // ============================================================
@@ -263,21 +257,6 @@ class HomeController extends GetxController {
       '[POST-TRACE] $source → '
       '${postList.length} posts | IDs: $ids',
     );
-  }
-
-  void _logDuplicateCheck(String source, List<PostModel> newPosts) {
-    final newIds = newPosts.map((post) => post.id).toSet();
-
-    final duplicates = newIds.intersection(_previouslyLoadedPostIds);
-
-    if (duplicates.isNotEmpty) {
-      debugPrint(
-        '[POST-TRACE] DUPLICATE ($source): '
-        '${duplicates.length} → $duplicates',
-      );
-    }
-
-    _previouslyLoadedPostIds.addAll(newIds);
   }
 
   // ============================================================
@@ -438,7 +417,7 @@ class HomeController extends GetxController {
       final cached = CacheManager.getCachedFollowingIds();
 
       if (cached.isNotEmpty) {
-        followingIds.value = cached;
+        followingIds.assignAll(cached);
 
         debugPrint('[FOLLOW] Loaded ${cached.length} IDs from cache');
       }
@@ -449,7 +428,7 @@ class HomeController extends GetxController {
 
       final server = await FollowRepository.instance.getFollowingIds();
 
-      followingIds.value = server;
+      followingIds.assignAll(server);
 
       await CacheManager.cacheFollowingIds(server);
 

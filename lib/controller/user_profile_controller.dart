@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../model/profile_model.dart';
@@ -126,7 +127,7 @@ class UserProfileController extends GetxController {
     isFollowing.value = results[0];
     followsMe.value = results[1];
   } catch (e) {
-    print('[USER_PROFILE] ERROR: $e');
+    debugPrint('[USER_PROFILE] ERROR: $e');
   } finally {
     isLoading(false);
   }
@@ -176,7 +177,7 @@ Future<void> toggleFollow() async {
       await _repo.followUser(userId);
     }
   } catch (e) {
-    print('[USER_PROFILE] FOLLOW ERROR: $e');
+    debugPrint('[USER_PROFILE] FOLLOW ERROR: $e');
 
     // Rollback
     isFollowing.value = wasFollowing;

@@ -190,7 +190,7 @@ class _UploadingMedia extends StatelessWidget {
 
         Positioned.fill(
           child: Container(
-            color: Colors.black.withOpacity(0.45),
+            color: Colors.black.withValues(alpha: 0.45),
             child: const Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -300,7 +300,7 @@ class _UploadFailedMedia extends StatelessWidget {
 
         Positioned.fill(
           child: Container(
-            color: Colors.black.withOpacity(0.55),
+            color: Colors.black.withValues(alpha: 0.55),
             child: const Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

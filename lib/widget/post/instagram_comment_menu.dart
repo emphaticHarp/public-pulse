@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 
-enum _OverlayMode { menu, editing }
+enum OverlayMode { menu, editing }
 
 /// Holds all the live, mutable state for a single open comment menu:
 /// the finger-follow drag offset (already rubber-banded), the "lift"
@@ -22,7 +22,7 @@ class CommentMenuController extends GetxController
   /// visibly rises as soon as the long-press registers.
   final Rx<double> liftProgress = 0.0.obs;
 
-  final Rx<_OverlayMode> mode = Rx<_OverlayMode>(_OverlayMode.menu);
+  final Rx<OverlayMode> mode = Rx<OverlayMode>(OverlayMode.menu);
   final RxBool isSaving = false.obs;
 
   Offset? pressStartGlobal;
@@ -58,7 +58,7 @@ class CommentMenuController extends GetxController
     _settleController = null;
     dragOffset.value = Offset.zero;
     liftProgress.value = 0;
-    mode.value = _OverlayMode.menu;
+    mode.value = OverlayMode.menu;
     isSaving.value = false;
     pressStartGlobal = null;
   }
@@ -120,9 +120,9 @@ class CommentMenuController extends GetxController
     });
   }
 
-  void enterEditMode() => mode.value = _OverlayMode.editing;
+  void enterEditMode() => mode.value = OverlayMode.editing;
 
-  void cancelEdit() => mode.value = _OverlayMode.menu;
+  void cancelEdit() => mode.value = OverlayMode.menu;
 
   @override
   void onClose() {
@@ -453,7 +453,7 @@ class CommentContextMenuOverlay extends StatelessWidget {
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(color: Colors.black.withOpacity(.18)),
+              child: Container(color: Colors.black.withValues(alpha: .18)),
             ),
           ),
           // Lifted, non-dimmed copy of the comment in its original spot.
@@ -463,14 +463,14 @@ class CommentContextMenuOverlay extends StatelessWidget {
             // Only follow the finger while the quick menu is showing;
             // once editing starts the finger has already lifted.
             final followOffset =
-                mode == _OverlayMode.menu ? rawOffset : Offset.zero;
+                mode == OverlayMode.menu ? rawOffset : Offset.zero;
             // A hair of tilt proportional to horizontal drag, like a
             // card being held between two fingers.
             final tilt = (followOffset.dx / 400).clamp(-0.035, 0.035);
 
             return Positioned(
               left: commentRect.left,
-              top: mode == _OverlayMode.menu ? commentRect.top : editTop,
+              top: mode == OverlayMode.menu ? commentRect.top : editTop,
               width: commentRect.width,
               // FIX: pin the exact original height while in menu mode
               // so the tile doesn't collapse to its minimum intrinsic
@@ -478,7 +478,7 @@ class CommentContextMenuOverlay extends StatelessWidget {
               // constraints (that collapse is what read as "squeezed").
               // Left null in editing mode so the editor can size
               // itself normally (it's usually taller than the tile).
-              height: mode == _OverlayMode.menu ? commentRect.height : null,
+              height: mode == OverlayMode.menu ? commentRect.height : null,
               child: Transform.translate(
                 offset: followOffset,
                 child: Transform.rotate(
@@ -501,7 +501,7 @@ class CommentContextMenuOverlay extends StatelessWidget {
                           ),
                         );
                       },
-                      child: mode == _OverlayMode.menu
+                      child: mode == OverlayMode.menu
                           ? _LiftedCommentCard(
                               key: const ValueKey("comment"),
                               commentBuilder: commentBuilder,
@@ -534,14 +534,14 @@ class CommentContextMenuOverlay extends StatelessWidget {
               top: menuTop,
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 120),
-                opacity: mode == _OverlayMode.menu ? 1 : 0,
+                opacity: mode == OverlayMode.menu ? 1 : 0,
                 child: AnimatedSlide(
                   duration: const Duration(milliseconds: 120),
-                  offset: mode == _OverlayMode.menu
+                  offset: mode == OverlayMode.menu
                       ? Offset.zero
                       : const Offset(0, -0.15),
                   child: IgnorePointer(
-                    ignoring: mode != _OverlayMode.menu,
+                    ignoring: mode != OverlayMode.menu,
                     child: _CommentQuickMenu(
                       width: menuWidth,
                       onEdit: controller.enterEditMode,
@@ -622,7 +622,7 @@ class _LiftedCommentCard extends StatelessWidget {
                 boxShadow: [
                   // Long, soft "ambient" shadow — grows with lift.
                   BoxShadow(
-                    color: Colors.black.withOpacity(mainOpacity),
+                    color: Colors.black.withValues(alpha: mainOpacity),
                     blurRadius: blur,
                     spreadRadius: spread,
                     offset: Offset(0, dy),
@@ -631,7 +631,7 @@ class _LiftedCommentCard extends StatelessWidget {
                   // at rest so it never looks like it's floating even
                   // before the lift animation kicks in.
                   BoxShadow(
-                    color: Colors.black.withOpacity(.10),
+                    color: Colors.black.withValues(alpha: .10),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -745,7 +745,7 @@ class _CommentEditCard extends StatelessWidget {
                 decoration: InputDecoration(
                   isDense: true,
                   filled: true,
-                  fillColor: AppColors.grayshade200.withOpacity(.35),
+                  fillColor: AppColors.grayshade200.withValues(alpha: .35),
                   counterText: '',
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -774,7 +774,7 @@ class _CommentEditCard extends StatelessWidget {
                     TextButton(
                       onPressed: isSaving.value ? null : onCancel,
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.gray900.withOpacity(.6),
+                        foregroundColor: AppColors.gray900.withValues(alpha: .6),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,

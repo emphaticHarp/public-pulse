@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class CommentModel {
   final String id;
 

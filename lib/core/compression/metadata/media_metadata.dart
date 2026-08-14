@@ -182,7 +182,9 @@ class MediaMetadataExtractor {
     // 3. Fetch current position.
     try {
       return await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
       );
     } catch (_) {
       return null;

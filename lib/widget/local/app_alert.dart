@@ -42,7 +42,7 @@ class CustomAlert extends StatelessWidget {
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(.08),
+                  color: color.withValues(alpha: .08),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 34),
@@ -145,7 +145,7 @@ class CustomAlert extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(.2),
+                color: Colors.black.withValues(alpha: .2),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
