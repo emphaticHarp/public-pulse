@@ -649,10 +649,49 @@ class CreatePostController extends GetxController {
                   debugPrint(
                     '🖼️ [MediaPicker] Choose Image from Gallery selected',
                   );
+
+                  // Close media picker bottom sheet first.
                   Get.back();
 
-                  // image_picker handles gallery permissions internally
-                  // on both Android and iOS — no manual permission check needed.
+                  final context = Get.context;
+
+                  if (context == null) {
+                    debugPrint(
+                      '🔴 [MediaPicker] Context unavailable for gallery access',
+                    );
+
+                    _showPermissionError('Gallery');
+
+                    return;
+                  }
+
+                  // ==========================================================
+                  // ASK USER BEFORE OPENING GALLERY
+                  // ==========================================================
+
+                  final allowed = await PermissionService.requestGalleryAccess(
+                    context,
+                  );
+
+                  debugPrint(
+                    '🖼️ [MediaPicker] Gallery access allowed: $allowed',
+                  );
+
+                  if (!allowed) {
+                    CustomAlert.show(
+                      title: 'Gallery Access Required',
+                      message: 'Gallery access is required to select a photo.',
+                      icon: Icons.photo_library_outlined,
+                      color: AppColors.semanticOrange,
+                    );
+
+                    return;
+                  }
+
+                  // ==========================================================
+                  // OPEN ANDROID PHOTO PICKER
+                  // ==========================================================
+
                   final XFile? image = await picker.pickImage(
                     source: ImageSource.gallery,
                   );
@@ -661,9 +700,12 @@ class CreatePostController extends GetxController {
                     debugPrint(
                       '🖼️ [MediaPicker] Image selected: ${image.path}',
                     );
+
                     pendingMedia.add(PendingMedia(originalPath: image.path));
+
                     debugPrint(
-                      '🖼️ [MediaPicker] Media count now: ${pendingMedia.length}',
+                      '🖼️ [MediaPicker] Media count now: '
+                      '${pendingMedia.length}',
                     );
                   } else {
                     debugPrint('🟡 [MediaPicker] Image selection cancelled');
