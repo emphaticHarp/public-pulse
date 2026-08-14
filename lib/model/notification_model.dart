@@ -80,16 +80,23 @@ class NotificationModel {
     // AVATAR
     // ==========================================================
 
-    final avatarPath = actor['avatar_path'];
+    final avatarPath = actor['avatar_path']?.toString().trim();
 
     String avatarUrl = '';
 
-    if (avatarPath != null && avatarPath.toString().isNotEmpty) {
-      avatarUrl = Supabase.instance.client.storage
-          .from('avatars')
-          .getPublicUrl(avatarPath.toString());
+    if (avatarPath != null && avatarPath.isNotEmpty) {
+      // Google / external image URL
+      if (avatarPath.startsWith('http://') ||
+          avatarPath.startsWith('https://')) {
+        avatarUrl = avatarPath;
+      }
+      // Supabase Storage path
+      else {
+        avatarUrl = Supabase.instance.client.storage
+            .from('avatars')
+            .getPublicUrl(avatarPath);
+      }
     }
-
     // ==========================================================
     // COMMENT TEXT
     // ==========================================================
@@ -156,7 +163,7 @@ class NotificationModel {
       case 'POST_COMMENT':
         return 'commented on your post';
 
-      case 'POST_FOLLOW':
+      case 'FOLLOW':
         return 'started following you';
 
       case 'POST_MENTION':

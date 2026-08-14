@@ -364,7 +364,7 @@ class NotificationPage extends StatelessWidget {
                 // ------------------------------------------------
                 // FOLLOW BACK
                 // ------------------------------------------------
-              if (item.notificationType.trim().toUpperCase() == 'POST_FOLLOW') ...[
+              if (item.notificationType.trim().toUpperCase() == 'FOLLOW') ...[
                   const SizedBox(height: 10),
 
                   SizedBox(
