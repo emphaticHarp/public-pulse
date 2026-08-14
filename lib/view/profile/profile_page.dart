@@ -313,22 +313,11 @@ class _TabContent extends StatelessWidget {
             errorBuilder: (context, error, stackTrace) {
               debugPrint('[PROFILE IMAGE ERROR] ${post.mediaUrls.first}');
               return Container(
-                color: Colors.grey.shade200,
+                color: AppColors.greyShade200,
                 child: const Center(child: Icon(Icons.broken_image_outlined)),
               );
             },
           ),
-        return Image.network(
-          post.mediaUrls.first,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            debugPrint('[PROFILE IMAGE ERROR] ${post.mediaUrls.first}');
-
-            return Container(
-              color: AppColors.greyShade200,
-              child: const Center(child: Icon(Icons.broken_image_outlined)),
-            );
-          },
         );
       },
     );
