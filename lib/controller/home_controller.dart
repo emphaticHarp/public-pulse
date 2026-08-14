@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/model/pending_media.dart';
@@ -713,7 +714,7 @@ class HomeController extends GetxController {
         title: 'Error',
         message: 'Failed to delete post',
         icon: Icons.error_outline,
-        color: Colors.red,
+        color: AppColors.semanticRed,
       );
 
       return;
@@ -723,7 +724,7 @@ class HomeController extends GetxController {
       title: 'Deleted',
       message: 'Post deleted successfully',
       icon: Icons.check_circle_outline,
-      color: Colors.green,
+      color: AppColors.semanticGreen,
     );
   }
 

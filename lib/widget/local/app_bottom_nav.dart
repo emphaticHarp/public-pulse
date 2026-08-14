@@ -36,7 +36,7 @@ class AppBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         border: Border(top: BorderSide(color: AppColors.gray100, width: 1)),
       ),
       child: SafeArea(
@@ -62,7 +62,7 @@ class AppBottomNavBar extends StatelessWidget {
 
   Widget _navItem(_NavItemData item) {
     final bool isActive = currentIndex == item.index;
-    final Color color = isActive ? const Color.fromRGBO(226, 29, 72, 1) : AppColors.gray500;
+    final Color color = isActive ? AppColors.navActiveIcon : AppColors.gray500;
 
     return InkWell(
       onTap: () => onTap(item.index),
@@ -118,13 +118,13 @@ class AppBottomNavBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.loginAccentRed.withValues(alpha: 0.35),
+                  color: AppColors.createButtonShadow,
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: const Icon(Icons.add, color: Colors.white, size: 26),
+            child: const Icon(Icons.add, color: AppColors.white, size: 26),
           ),
         ),
       ),

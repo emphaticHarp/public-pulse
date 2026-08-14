@@ -26,7 +26,7 @@ class CustomAlert extends StatelessWidget {
     Color color = AppColors.loginAccentRed,
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
-    Color confirmColor = Colors.red,
+    Color confirmColor = AppColors.semanticRed,
   }) async {
     final result = await Get.dialog<bool>(
       Dialog(
@@ -60,7 +60,7 @@ class CustomAlert extends StatelessWidget {
                 message,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.grey.shade600,
+                  color: AppColors.greyShade600,
                   height: 1.5,
                 ),
               ),
@@ -82,7 +82,7 @@ class CustomAlert extends StatelessWidget {
                       onPressed: () => Get.back(result: true),
                       child: Text(
                         confirmText,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: AppColors.white),
                       ),
                     ),
                   ),
@@ -141,11 +141,11 @@ class CustomAlert extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F7),
+            color: AppColors.alertCardBg,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: .2),
+                color: AppColors.shadowBlack8,
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -164,7 +164,7 @@ class CustomAlert extends StatelessWidget {
                       color: color,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, color: Colors.white, size: 12),
+                    child: Icon(icon, color: AppColors.white, size: 12),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -172,13 +172,13 @@ class CustomAlert extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey[700],
+                      color: AppColors.greyShade700,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  Text('\u00b7', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  Text('\u00b7', style: TextStyle(fontSize: 12, color: AppColors.greyShade500)),
                   const SizedBox(width: 4),
-                  Text('now', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                  Text('now', style: TextStyle(fontSize: 12, color: AppColors.greyShade500)),
                 ],
               ),
               const SizedBox(height: 4),
@@ -192,7 +192,7 @@ class CustomAlert extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 message,
-                style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                style: TextStyle(fontSize: 13, color: AppColors.greyShade800),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

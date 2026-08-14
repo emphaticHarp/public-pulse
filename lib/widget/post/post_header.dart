@@ -58,6 +58,8 @@ class PostHeader extends StatelessWidget {
     final isMyPost = currentUserId != null && authorUserId == currentUserId;
 
     final avatarUrl = _resolveAvatarUrl(profileImage);
+
+    final HomeController homeController = Get.find<HomeController>();
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(
@@ -209,131 +211,174 @@ class PostHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-                PopupMenuButton<String>(
-                  elevation: 12,
-                  color: Colors.white,
-                  shadowColor: Colors.black26,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  position: PopupMenuPosition.under,
-                  splashRadius: 20,
-                  icon: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.more_horiz_rounded,
-                      color: AppColors.gray700,
-                      size: 20,
-                    ),
-                  ),
+                Obx(() {
+                  final bool isFollowing = homeController.followingIds.contains(
+                    authorId,
+                  );
 
-                  onSelected: (value) async {
-                    if (value == "delete") {
-                      final controller = Get.find<HomeController>();
-                      final confirmed = await CustomAlert.showConfirm(
-                        title: 'Delete Post?',
-                        message: 'This post will be permanently removed.',
-                        icon: Icons.delete_outline_rounded,
-                        color: Colors.red,
-                        confirmText: 'Delete',
-                      );
-                      if (confirmed) {
-                        await controller.deletePost(postId);
+                  return PopupMenuButton<String>(
+                    elevation: 12,
+                    color: AppColors.white,
+                    shadowColor: AppColors.shadowBlack26,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    position: PopupMenuPosition.under,
+                    splashRadius: 20,
+
+                    icon: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppColors.greyShade100,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.more_horiz_rounded,
+                        color: AppColors.gray700,
+                        size: 20,
+                      ),
+                    ),
+
+                    // ==========================================================
+                    // MENU ACTIONS
+                    // ==========================================================
+                    onSelected: (value) async {
+                      // --------------------------------------------------------
+                      // DELETE
+                      // --------------------------------------------------------
+
+                      if (value == 'delete') {
+                        final confirmed = await CustomAlert.showConfirm(
+                          title: 'Delete Post?',
+                          message: 'This post will be permanently removed.',
+                          icon: Icons.delete_outline_rounded,
+                          color: AppColors.semanticRed,
+                          confirmText: 'Delete',
+                        );
+
+                        if (confirmed) {
+                          await homeController.deletePost(postId);
+                        }
+
+                        return;
                       }
-                    }
 
-                    if (value == "report") {
-                      CustomAlert.show(
-                        title: 'Report',
-                        message: 'Report feature coming soon',
-                        icon: Icons.flag_outlined,
-                        color: Colors.orange,
-                      );
-                    }
+                      // --------------------------------------------------------
+                      // REPORT
+                      // --------------------------------------------------------
 
-                    if (value == "block") {
-                      CustomAlert.show(
-                        title: 'Block',
-                        message: 'Block feature coming soon',
-                        icon: Icons.block_outlined,
-                        color: Colors.red,
-                      );
-                    }
+                      if (value == 'report') {
+                        CustomAlert.show(
+                          title: 'Report',
+                          message: 'Report feature coming soon',
+                          icon: Icons.flag_outlined,
+                          color: AppColors.semanticOrange,
+                        );
 
-                    if (value == "unfollow") {
-                      CustomAlert.show(
-                        title: 'Unfollow',
-                        message: 'Unfollow feature coming soon',
-                        icon: Icons.person_remove_outlined,
-                        color: Colors.blue,
-                      );
-                    }
-                  },
+                        return;
+                      }
 
-                  itemBuilder: (context) {
-                    if (isOwner) {
+                      // --------------------------------------------------------
+                      // BLOCK
+                      // --------------------------------------------------------
+
+                      if (value == 'block') {
+                        CustomAlert.show(
+                          title: 'Block',
+                          message: 'Block feature coming soon',
+                          icon: Icons.block_outlined,
+                          color: AppColors.semanticRed,
+                        );
+
+                        return;
+                      }
+
+                      // --------------------------------------------------------
+                      // UNFOLLOW
+                      // --------------------------------------------------------
+
+                      if (value == 'unfollow') {
+                        await homeController.unfollowUser(authorId);
+                        return;
+                      }
+                    },
+
+                    // ==========================================================
+                    // MENU ITEMS
+                    // ==========================================================
+                    itemBuilder: (context) {
+                      // --------------------------------------------------------
+                      // MY OWN POST
+                      // --------------------------------------------------------
+
+                      if (isOwner) {
+                        return const [
+                          PopupMenuItem<String>(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: AppColors.semanticRed,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Delete Post',
+                                  style: TextStyle(
+                                    color: AppColors.semanticRed,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ];
+                      }
+
+                      // --------------------------------------------------------
+                      // OTHER USER POST
+                      // --------------------------------------------------------
+
                       return [
-                        PopupMenuItem<String>(
-                          value: "delete",
+                        const PopupMenuItem<String>(
+                          value: 'report',
                           child: Row(
                             children: [
-                              Icon(
-                                Icons.delete_outline_rounded,
-                                color: Colors.red,
-                              ),
+                              Icon(Icons.flag_outlined, color: AppColors.semanticOrange),
                               SizedBox(width: 10),
-                              Text(
-                                "Delete Post",
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              Text('Report'),
                             ],
                           ),
                         ),
-                      ];
-                    }
 
-                    return [
-                      const PopupMenuItem(
-                        value: "report",
-                        child: Row(
-                          children: [
-                            Icon(Icons.flag_outlined, color: Colors.orange),
-                            SizedBox(width: 10),
-                            Text("Report"),
-                          ],
+                        const PopupMenuItem<String>(
+                          value: 'block',
+                          child: Row(
+                            children: [
+                              Icon(Icons.block_outlined, color: AppColors.semanticRed),
+                              SizedBox(width: 10),
+                              Text('Block'),
+                            ],
+                          ),
                         ),
-                      ),
-                      const PopupMenuItem(
-                        value: "block",
-                        child: Row(
-                          children: [
-                            Icon(Icons.block_outlined, color: Colors.red),
-                            SizedBox(width: 10),
-                            Text("Block"),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: "unfollow",
-                        child: Row(
-                          children: [
-                            Icon(Icons.person_remove_outlined),
-                            SizedBox(width: 10),
-                            Text("Unfollow"),
-                          ],
-                        ),
-                      ),
-                    ];
-                  },
-                ),
-              ],
+
+                        // Only show Unfollow when currently following.
+                        if (isFollowing)
+                          const PopupMenuItem<String>(
+                            value: 'unfollow',
+                            child: Row(
+                              children: [
+                                Icon(Icons.person_remove_outlined),
+                                SizedBox(width: 10),
+                                Text('Unfollow'),
+                              ],
+                            ),
+                          ),
+                      ];
+                    },
+                  );
+                }),
+              ], //----------------------------------
             ),
           ),
         ],
