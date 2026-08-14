@@ -120,16 +120,24 @@ class _PostMedia extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (post.mediaUrls.isEmpty) return const SizedBox.shrink();
+    if (post.mediaUrls.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     if (post.isCarousel) {
       return PostCarouselMedia(
         imageUrls: post.mediaUrls,
+        aspectRatios: post.mediaAspectRatios,
         postId: post.id,
       );
     }
 
-    return PostMedia(imageUrl: post.mediaUrls.first);
+    return PostMedia(
+      imageUrl: post.mediaUrls.first,
+      aspectRatio: post.mediaAspectRatios.isNotEmpty
+          ? post.mediaAspectRatios.first
+          : 4 / 5,
+    );
   }
 }
 

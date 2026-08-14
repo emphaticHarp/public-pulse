@@ -20,6 +20,9 @@ class PostCard extends StatelessWidget {
   final String? imageUrl;
   final List<String>? imageUrls;
 
+  // Aspect ratio for each media item.
+  final List<double> mediaAspectRatios;
+
   final String postId;
 
   final IconData likeIcon;
@@ -54,6 +57,7 @@ class PostCard extends StatelessWidget {
 
     this.imageUrl,
     this.imageUrls,
+    required this.mediaAspectRatios,
 
     required this.postId,
 
@@ -118,9 +122,18 @@ class PostCard extends StatelessWidget {
               isCarousel: isCarousel,
             )
           else if (isCarousel)
-            PostCarouselMedia(imageUrls: imageUrls ?? const [], postId: postId)
+            PostCarouselMedia(
+              imageUrls: imageUrls ?? const [],
+              aspectRatios: mediaAspectRatios,
+              postId: postId,
+            )
           else if (imageUrl != null)
-            PostMedia(imageUrl: imageUrl!)
+            PostMedia(
+              imageUrl: imageUrl!,
+              aspectRatio: mediaAspectRatios.isNotEmpty
+                  ? mediaAspectRatios.first
+                  : 4 / 5,
+            )
           else
             const SizedBox.shrink(),
 

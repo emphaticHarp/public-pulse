@@ -7,12 +7,17 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 class PostMedia extends StatelessWidget {
   final String imageUrl;
-  const PostMedia({super.key, required this.imageUrl});
+  final double aspectRatio;
 
+  const PostMedia({
+    super.key,
+    required this.imageUrl,
+    required this.aspectRatio,
+  });
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 4 / 5,
+      aspectRatio: aspectRatio > 0 ? aspectRatio : 4 / 5,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -43,11 +48,13 @@ class PostMedia extends StatelessWidget {
 
 class PostCarouselMedia extends StatelessWidget {
   final List<String> imageUrls;
+  final List<double> aspectRatios;
   final String postId;
 
   const PostCarouselMedia({
     super.key,
     required this.imageUrls,
+    required this.aspectRatios,
     required this.postId,
   });
 
@@ -58,8 +65,13 @@ class PostCarouselMedia extends StatelessWidget {
     return Obx(() {
       final currentIndex = controller.carouselIndexes[postId] ?? 0;
 
+      final double carouselAspectRatio =
+          aspectRatios.isNotEmpty && aspectRatios.first > 0
+          ? aspectRatios.first
+          : 4 / 5;
+
       return AspectRatio(
-        aspectRatio: 4 / 5,
+        aspectRatio: carouselAspectRatio,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -172,7 +184,8 @@ class _SmoothDots extends StatelessWidget {
           width: width,
           height: 7,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),              color: AppColors.white.withValues(alpha: opacity),
+            borderRadius: BorderRadius.circular(4),
+            color: AppColors.white.withValues(alpha: opacity),
           ),
         );
       }),

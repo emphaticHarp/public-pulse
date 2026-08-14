@@ -176,7 +176,7 @@ class CreatePostRepository {
     String? caption,
     String? location,
     required String visibility,
-    required List<Map<String, String>> mediaItems,
+    required List<Map<String, dynamic>> mediaItems,
   }) async {
     final postResponse = await _supabase
         .from('posts')
@@ -201,6 +201,8 @@ class CreatePostRepository {
           'media_type': item['media_type'],
           'media_order': index + 1,
           'thumbnail_path': null,
+          'width': item['width'],
+          'height': item['height'],
         };
       }).toList();
 

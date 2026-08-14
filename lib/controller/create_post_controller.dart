@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
@@ -217,6 +218,33 @@ class CreatePostController extends GetxController {
     });
   }
 
+  // ============================================================
+  // IMAGE DIMENSIONS
+  // ============================================================
+
+  Future<({int width, int height})> _getImageDimensions(
+    File file,
+  ) async {
+    final bytes = await file.readAsBytes();
+
+    final codec = await ui.instantiateImageCodec(bytes);
+
+    try {
+      final frame = await codec.getNextFrame();
+
+      try {
+        return (
+          width: frame.image.width,
+          height: frame.image.height,
+        );
+      } finally {
+        frame.image.dispose();
+      }
+    } finally {
+      codec.dispose();
+    }
+  }
+
   Future<void> _uploadMediaInBackground({
     required List<PendingMedia> mediaSnapshot,
     required String? caption,
@@ -227,7 +255,7 @@ class CreatePostController extends GetxController {
   }) async {
     debugPrint('📤 [BackgroundUpload] STARTED');
 
-    final List<Map<String, String>> mediaItems = [];
+    final List<Map<String, dynamic>> mediaItems = [];
 
     final List<Map<String, dynamic>> mediaFileRefs = [];
 
@@ -269,6 +297,19 @@ class CreatePostController extends GetxController {
         );
       }
 
+      // ============================================================
+      // GET ACTUAL UPLOADED IMAGE DIMENSIONS
+      // ============================================================
+
+      final dimensions =
+          await _getImageDimensions(uploadFile);
+
+      debugPrint(
+        '📐 [BackgroundUpload] '
+        'Image ${i + 1}: '
+        '${dimensions.width} x ${dimensions.height}',
+      );
+
       final originalName = uploadFile.path.split(RegExp(r'[/\\]')).last;
 
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_$originalName';
@@ -301,7 +342,12 @@ class CreatePostController extends GetxController {
         'Storage upload completed: $storagePath',
       );
 
-      mediaItems.add({'storage_path': storagePath, 'media_type': 'IMAGE'});
+      mediaItems.add({
+        'storage_path': storagePath,
+        'media_type': 'IMAGE',
+        'width': dimensions.width,
+        'height': dimensions.height,
+      });
 
       mediaFileRefs.add({
         'originalPath': originalPath,

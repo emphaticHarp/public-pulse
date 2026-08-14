@@ -790,6 +790,11 @@ class HomeController extends GetxController {
       thumbnailUrls: const [],
       isCarousel: mediaSnapshot.length > 1,
 
+      // Temporary uploading posts use local files.
+      // Real aspect ratios will arrive after the uploaded post
+      // is fetched back from Supabase.
+      mediaAspectRatios: const [],
+
       likeCount: 0,
       commentCount: 0,
       shareCount: 0,
