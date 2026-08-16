@@ -222,9 +222,7 @@ class CreatePostController extends GetxController {
   // IMAGE DIMENSIONS
   // ============================================================
 
-  Future<({int width, int height})> _getImageDimensions(
-    File file,
-  ) async {
+  Future<({int width, int height})> _getImageDimensions(File file) async {
     final bytes = await file.readAsBytes();
 
     final codec = await ui.instantiateImageCodec(bytes);
@@ -233,10 +231,7 @@ class CreatePostController extends GetxController {
       final frame = await codec.getNextFrame();
 
       try {
-        return (
-          width: frame.image.width,
-          height: frame.image.height,
-        );
+        return (width: frame.image.width, height: frame.image.height);
       } finally {
         frame.image.dispose();
       }
@@ -301,8 +296,7 @@ class CreatePostController extends GetxController {
       // GET ACTUAL UPLOADED IMAGE DIMENSIONS
       // ============================================================
 
-      final dimensions =
-          await _getImageDimensions(uploadFile);
+      final dimensions = await _getImageDimensions(uploadFile);
 
       debugPrint(
         '📐 [BackgroundUpload] '
@@ -655,35 +649,97 @@ class CreatePostController extends GetxController {
           child: Wrap(
             children: [
               ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text("Take Photo"),
+                leading: const Icon(Icons.photo_library),
+                title: const Text("Choose Photos from Gallery"),
                 onTap: () async {
-                  debugPrint('📸 [MediaPicker] Take Photo selected');
+                  debugPrint(
+                    '🖼️ [MediaPicker] Choose Photos from Gallery selected',
+                  );
+
                   Get.back();
 
+                  // ==========================================================
+                  // GALLERY PERMISSION
+                  // ==========================================================
+
                   final granted =
-                      await PermissionService.requestCameraPermission();
-                  debugPrint('📸 [MediaPicker] Camera permission: $granted');
+                      await PermissionService.requestGalleryPermission();
+
+                  debugPrint('🖼️ [MediaPicker] Gallery permission: $granted');
 
                   if (!granted) {
-                    _showPermissionError("Camera");
+                    _showPermissionError('Gallery');
                     return;
                   }
 
-                  final XFile? image = await picker.pickImage(
-                    source: ImageSource.camera,
+                  // ==========================================================
+                  // AVAILABLE SLOTS
+                  // ==========================================================
+
+                  final remainingSlots = 10 - pendingMedia.length;
+
+                  if (remainingSlots <= 0) {
+                    CustomAlert.show(
+                      title: 'Limit Reached',
+                      message: 'You can add up to 10 photos.',
+                      icon: Icons.info_outline,
+                      color: AppColors.semanticOrange,
+                    );
+
+                    return;
+                  }
+
+                  // ==========================================================
+                  // MULTIPLE IMAGE PICKER
+                  // ==========================================================
+
+                  final List<XFile> images = await picker.pickMultiImage();
+
+                  if (images.isEmpty) {
+                    debugPrint('🟡 [MediaPicker] Image selection cancelled');
+                    return;
+                  }
+
+                  debugPrint(
+                    '🖼️ [MediaPicker] '
+                    '${images.length} images selected',
                   );
 
-                  if (image != null) {
-                    debugPrint(
-                      '📸 [MediaPicker] Photo captured: ${image.path}',
+                  // ==========================================================
+                  // KEEP MAXIMUM 10 PHOTOS
+                  // ==========================================================
+
+                  final selectedImages = images.take(remainingSlots).toList();
+
+                  pendingMedia.addAll(
+                    selectedImages.map(
+                      (image) => PendingMedia(originalPath: image.path),
+                    ),
+                  );
+
+                  // Start carousel from first selected image.
+                  currentIndex.value = 0;
+
+                  debugPrint(
+                    '🖼️ [MediaPicker] '
+                    '${selectedImages.length} images added',
+                  );
+
+                  debugPrint(
+                    '🖼️ [MediaPicker] '
+                    'Total media count: ${pendingMedia.length}',
+                  );
+
+                  // User selected more than available slots.
+                  if (images.length > remainingSlots) {
+                    CustomAlert.show(
+                      title: 'Photo Limit',
+                      message:
+                          'Only $remainingSlots photos were added. '
+                          'You can add up to 10 photos.',
+                      icon: Icons.info_outline,
+                      color: AppColors.semanticOrange,
                     );
-                    pendingMedia.add(PendingMedia(originalPath: image.path));
-                    debugPrint(
-                      '📸 [MediaPicker] Media count now: ${pendingMedia.length}',
-                    );
-                  } else {
-                    debugPrint('🟡 [MediaPicker] Photo capture cancelled');
                   }
                 },
               ),

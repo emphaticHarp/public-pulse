@@ -164,431 +164,425 @@ class _LocationPickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      height: screenHeight * 0.82,
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            // ================================================
+            // DRAG HANDLE
+            // ================================================
 
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 200),
-      padding: EdgeInsets.only(bottom: keyboardHeight),
-      child: Container(
-        height: screenHeight * 0.82,
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            children: [
-              // ================================================
-              // DRAG HANDLE
-              // ================================================
-
-              Container(
-                width: 42,
-                height: 4,
-                margin: const EdgeInsets.only(top: 12, bottom: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.createPostGray300,
-                  borderRadius: BorderRadius.circular(20),
-                ),
+            Container(
+              width: 42,
+              height: 4,
+              margin: const EdgeInsets.only(top: 12, bottom: 14),
+              decoration: BoxDecoration(
+                color: AppColors.createPostGray300,
+                borderRadius: BorderRadius.circular(20),
               ),
+            ),
 
-              // ================================================
-              // HEADER
-              // ================================================
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      color: AppColors.createPostRed600,
-                      size: 23,
-                    ),
+            // ================================================
+            // HEADER
+            // ================================================
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.location_on_outlined,
+                    color: AppColors.createPostRed600,
+                    size: 23,
+                  ),
 
-                    const SizedBox(width: 9),
+                  const SizedBox(width: 9),
 
-                    const Expanded(
-                      child: Text(
-                        'Add Location',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.createPostGray800,
-                        ),
+                  const Expanded(
+                    child: Text(
+                      'Add Location',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.createPostGray800,
                       ),
                     ),
+                  ),
 
-                    GestureDetector(
-                      onTap: () {
-                        Get.back();
-                      },
-                      child: Container(
-                        width: 34,
-                        height: 34,
-                        decoration: const BoxDecoration(
-                          color: AppColors.gray100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          size: 18,
-                          color: AppColors.gray500,
-                        ),
+                  GestureDetector(
+                    onTap: () {
+                      Get.back();
+                    },
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: const BoxDecoration(
+                        color: AppColors.gray100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 18,
+                        color: AppColors.gray500,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
-              const SizedBox(height: 18),
+            const SizedBox(height: 18),
 
-              // ================================================
-              // SEARCH BAR
-              // ================================================
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: TextField(
-                  controller: controller.locationSearchController,
+            // ================================================
+            // SEARCH BAR
+            // ================================================
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: controller.locationSearchController,
 
-                  onChanged: controller.onLocationSearchChanged,
+                onChanged: controller.onLocationSearchChanged,
 
-                  textInputAction: TextInputAction.search,
+                textInputAction: TextInputAction.search,
 
-                  decoration: InputDecoration(
-                    hintText: 'Search city, place or address...',
+                decoration: InputDecoration(
+                  hintText: 'Search city, place or address...',
 
-                    hintStyle: const TextStyle(
-                      color: AppColors.gray400,
-                      fontSize: 14,
-                    ),
+                  hintStyle: const TextStyle(
+                    color: AppColors.gray400,
+                    fontSize: 14,
+                  ),
 
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: AppColors.gray500,
-                    ),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: AppColors.gray500,
+                  ),
 
-                    suffixIcon: Obx(() {
-                      if (controller.isSearchingLocation.value) {
-                        return const Padding(
-                          padding: EdgeInsets.all(15),
-                          child: SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.createPostRed600,
-                            ),
+                  suffixIcon: Obx(() {
+                    if (controller.isSearchingLocation.value) {
+                      return const Padding(
+                        padding: EdgeInsets.all(15),
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.createPostRed600,
                           ),
-                        );
-                      }
+                        ),
+                      );
+                    }
 
-                      return const SizedBox.shrink();
-                    }),
+                    return const SizedBox.shrink();
+                  }),
 
-                    filled: true,
-                    fillColor: AppColors.gray50,
+                  filled: true,
+                  fillColor: AppColors.gray50,
 
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 15,
-                    ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 15,
+                  ),
 
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
 
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppColors.gray100),
-                    ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AppColors.gray100),
+                  ),
 
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(
-                        color: AppColors.createPostRed600,
-                        width: 1.5,
-                      ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: AppColors.createPostRed600,
+                      width: 1.5,
                     ),
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 10),
+            const SizedBox(height: 10),
 
-              // ================================================
-              // CURRENT LOCATION
-              // ================================================
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Obx(() {
-                  final loading = controller.isGettingCurrentLocation.value;
+            // ================================================
+            // CURRENT LOCATION
+            // ================================================
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Obx(() {
+                final loading = controller.isGettingCurrentLocation.value;
 
-                  return Material(
-                    color: AppColors.white,
+                return Material(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(12),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
 
-                      onTap: loading ? null : controller.useCurrentLocation,
+                    onTap: loading ? null : controller.useCurrentLocation,
 
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 13,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: AppColors.createPostRed600.withValues(
-                                  alpha: 0.08,
-                                ),
-                                shape: BoxShape.circle,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 13,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: AppColors.createPostRed600.withValues(
+                                alpha: 0.08,
                               ),
-                              child: const Icon(
-                                Icons.my_location,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.my_location,
+                              color: AppColors.createPostRed600,
+                              size: 20,
+                            ),
+                          ),
+
+                          const SizedBox(width: 13),
+
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Use Current Location',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.createPostGray800,
+                                  ),
+                                ),
+
+                                SizedBox(height: 2),
+
+                                Text(
+                                  'Use your phone GPS',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.gray500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          if (loading)
+                            const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
                                 color: AppColors.createPostRed600,
-                                size: 20,
                               ),
+                            )
+                          else
+                            const Icon(
+                              Icons.chevron_right,
+                              color: AppColors.gray400,
+                              size: 20,
                             ),
-
-                            const SizedBox(width: 13),
-
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Use Current Location',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.createPostGray800,
-                                    ),
-                                  ),
-
-                                  SizedBox(height: 2),
-
-                                  Text(
-                                    'Use your phone GPS',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.gray500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            if (loading)
-                              const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.createPostRed600,
-                                ),
-                              )
-                            else
-                              const Icon(
-                                Icons.chevron_right,
-                                color: AppColors.gray400,
-                                size: 20,
-                              ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
-                  );
-                }),
-              ),
+                  ),
+                );
+              }),
+            ),
 
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Divider(height: 12, color: AppColors.gray100),
-              ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(height: 12, color: AppColors.gray100),
+            ),
 
-              // ================================================
-              // SEARCH RESULTS
-              // ================================================
-              Expanded(
-                child: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: controller.locationSearchController,
+            // ================================================
+            // SEARCH RESULTS
+            // ================================================
+            Expanded(
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: controller.locationSearchController,
 
-                  builder: (context, textValue, child) {
-                    final query = textValue.text.trim();
+                builder: (context, textValue, child) {
+                  final query = textValue.text.trim();
 
-                    return Obx(() {
-                      final results = controller.locationSuggestions;
+                  return Obx(() {
+                    final results = controller.locationSuggestions;
 
-                      final searching = controller.isSearchingLocation.value;
+                    final searching = controller.isSearchingLocation.value;
 
-                      // ----------------------------------------
-                      // EMPTY
-                      // ----------------------------------------
+                    // ----------------------------------------
+                    // EMPTY
+                    // ----------------------------------------
 
-                      if (query.length < 2) {
-                        return const _LocationEmptyState();
-                      }
+                    if (query.length < 2) {
+                      return const _LocationEmptyState();
+                    }
 
-                      // ----------------------------------------
-                      // SEARCHING
-                      // ----------------------------------------
+                    // ----------------------------------------
+                    // SEARCHING
+                    // ----------------------------------------
 
-                      if (searching && results.isEmpty) {
-                        return const Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: AppColors.createPostRed600,
-                              ),
+                    if (searching && results.isEmpty) {
+                      return const Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: AppColors.createPostRed600,
+                            ),
 
-                              SizedBox(height: 14),
+                            SizedBox(height: 14),
 
-                              Text(
-                                'Searching locations...',
-                                style: TextStyle(
-                                  color: AppColors.gray500,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      // ----------------------------------------
-                      // NO RESULTS
-                      // ----------------------------------------
-
-                      if (!searching && results.isEmpty) {
-                        return const _NoLocationResult();
-                      }
-
-                      // ----------------------------------------
-                      // RESULT LIST
-                      // ----------------------------------------
-
-                      return ListView.separated(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-
-                        padding: const EdgeInsets.only(bottom: 20),
-
-                        itemCount: results.length,
-
-                        separatorBuilder: (context, index) {
-                          return const Divider(
-                            height: 1,
-                            indent: 72,
-                            color: AppColors.gray100,
-                          );
-                        },
-
-                        itemBuilder: (context, index) {
-                          final item = results[index];
-
-                          return InkWell(
-                            onTap: () {
-                              FocusScope.of(context).unfocus();
-
-                              controller.selectLocation(item);
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                                vertical: 12,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 42,
-                                    height: 42,
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.gray100,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.location_on_outlined,
-                                      color: AppColors.createPostRed600,
-                                      size: 20,
-                                    ),
-                                  ),
-
-                                  const SizedBox(width: 13),
-
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item.name,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.createPostGray800,
-                                          ),
-                                        ),
-
-                                        const SizedBox(height: 4),
-
-                                        Text(
-                                          item.formattedAddress,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            height: 1.4,
-                                            color: AppColors.gray500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  const SizedBox(width: 8),
-
-                                  const Padding(
-                                    padding: EdgeInsets.only(top: 10),
-                                    child: Icon(
-                                      Icons.chevron_right,
-                                      color: AppColors.gray400,
-                                      size: 18,
-                                    ),
-                                  ),
-                                ],
+                            Text(
+                              'Searching locations...',
+                              style: TextStyle(
+                                color: AppColors.gray500,
+                                fontSize: 13,
                               ),
                             ),
-                          );
-                        },
+                          ],
+                        ),
                       );
-                    });
-                  },
-                ),
-              ),
+                    }
 
-              // ================================================
-              // ATTRIBUTION
-              // ================================================
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
-                child: Text(
-                  'Location search powered by Geoapify',
-                  style: TextStyle(fontSize: 10, color: AppColors.gray400),
-                ),
+                    // ----------------------------------------
+                    // NO RESULTS
+                    // ----------------------------------------
+
+                    if (!searching && results.isEmpty) {
+                      return const _NoLocationResult();
+                    }
+
+                    // ----------------------------------------
+                    // RESULT LIST
+                    // ----------------------------------------
+
+                    return ListView.separated(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+
+                      padding: const EdgeInsets.only(bottom: 20),
+
+                      itemCount: results.length,
+
+                      separatorBuilder: (context, index) {
+                        return const Divider(
+                          height: 1,
+                          indent: 72,
+                          color: AppColors.gray100,
+                        );
+                      },
+
+                      itemBuilder: (context, index) {
+                        final item = results[index];
+
+                        return InkWell(
+                          onTap: () {
+                            FocusScope.of(context).unfocus();
+
+                            controller.selectLocation(item);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.gray100,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.location_on_outlined,
+                                    color: AppColors.createPostRed600,
+                                    size: 20,
+                                  ),
+                                ),
+
+                                const SizedBox(width: 13),
+
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.createPostGray800,
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 4),
+
+                                      Text(
+                                        item.formattedAddress,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          height: 1.4,
+                                          color: AppColors.gray500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(width: 8),
+
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 10),
+                                  child: Icon(
+                                    Icons.chevron_right,
+                                    color: AppColors.gray400,
+                                    size: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  });
+                },
               ),
-            ],
-          ),
+            ),
+
+            // ================================================
+            // ATTRIBUTION
+            // ================================================
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: Text(
+                'Location search powered by Geoapify',
+                style: TextStyle(fontSize: 10, color: AppColors.gray400),
+              ),
+            ),
+          ],
         ),
       ),
     );

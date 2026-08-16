@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
@@ -29,6 +30,54 @@ Widget _buildMediaImage(String path, BoxFit fit) {
       child: const Icon(Icons.broken_image, color: AppColors.gray400, size: 48),
     ),
   );
+}
+
+// for aspect ratio for previeweing the image which is selected
+
+final Map<String, Future<double>> _mediaAspectRatioCache = {};
+
+Future<double> _getMediaAspectRatio(String path) {
+  return _mediaAspectRatioCache.putIfAbsent(path, () async {
+    try {
+      // Create Post pending media is normally a local file.
+      if (path.startsWith('http://') || path.startsWith('https://')) {
+        return 4 / 5;
+      }
+
+      final file = File(path);
+
+      if (!file.existsSync()) {
+        return 4 / 5;
+      }
+
+      final bytes = await file.readAsBytes();
+
+      final codec = await ui.instantiateImageCodec(bytes);
+
+      try {
+        final frame = await codec.getNextFrame();
+
+        try {
+          final width = frame.image.width.toDouble();
+          final height = frame.image.height.toDouble();
+
+          if (width <= 0 || height <= 0) {
+            return 4 / 5;
+          }
+
+          return width / height;
+        } finally {
+          frame.image.dispose();
+        }
+      } finally {
+        codec.dispose();
+      }
+    } catch (e) {
+      debugPrint('🖼️ [CreatePostPage] Failed to read image dimensions: $e');
+
+      return 4 / 5;
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -152,69 +201,82 @@ class _MediaCarousel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Main carousel
-        SizedBox(
-          height: 380,
-          child: Obx(() {
-            final media = controller.pendingMedia;
-            if (media.isEmpty) {
-              return _EmptyState(onTap: controller.showMediaPicker);
-            }
-            return PageView.builder(
-              controller: controller.pageController,
-              onPageChanged: controller.onPageChanged,
-              itemCount: media.length,
-              itemBuilder: (context, index) {
-                return Dismissible(
-                  key: Key('media_$index'),
-                  direction: DismissDirection.up,
-                  onDismissed: (_) => controller.removeImageAt(index),
-                  background: Container(
-                    alignment: Alignment.center,
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.redShade400,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.delete_outline,
-                          color: AppColors.white,
-                          size: 40,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Delete',
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  child: _MediaPreviewCard(
-                    imageUrl: media[index].originalPath,
-                    currentIndex: index + 1,
-                    totalCount: media.length,
-                    onRemove: () {
-                      controller.removeImageAt(index);
-                    },
-                  ),
-                );
-              },
-            );
-          }),
-        ),
-        const SizedBox(height: 12),
-        // Swipe counter
+        // =====================================================
+        // MAIN IMAGE PREVIEW
+        // =====================================================
+
         Obx(() {
           final media = controller.pendingMedia;
-          if (media.isEmpty) return const SizedBox.shrink();
-          final current = controller.currentIndex.value;
+
+          if (media.isEmpty) {
+            return SizedBox(
+              height: 380,
+              child: _EmptyState(onTap: controller.showMediaPicker),
+            );
+          }
+
+          int current = controller.currentIndex.value;
+
+          if (current < 0) {
+            current = 0;
+          }
+
+          if (current >= media.length) {
+            current = media.length - 1;
+          }
+
+          final currentPath = media[current].originalPath;
+
+          return FutureBuilder<double>(
+            future: _getMediaAspectRatio(currentPath),
+            builder: (context, snapshot) {
+              final aspectRatio = snapshot.data ?? 4 / 5;
+
+              return AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                alignment: Alignment.topCenter,
+                child: AspectRatio(
+                  aspectRatio: aspectRatio,
+                  child: PageView.builder(
+                    controller: controller.pageController,
+                    onPageChanged: controller.onPageChanged,
+                    itemCount: media.length,
+                    itemBuilder: (context, index) {
+                      return _MediaPreviewCard(
+                        imageUrl: media[index].originalPath,
+                        currentIndex: index + 1,
+                        totalCount: media.length,
+                        onRemove: () {
+                          controller.removeImageAt(index);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          );
+        }),
+
+        const SizedBox(height: 12),
+
+        // =====================================================
+        // IMAGE COUNTER
+        // =====================================================
+        Obx(() {
+          final media = controller.pendingMedia;
+
+          if (media.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          int current = controller.currentIndex.value;
+
+          if (current >= media.length) {
+            current = media.length - 1;
+          }
+
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -231,44 +293,36 @@ class _MediaCarousel extends StatelessWidget {
             ),
           );
         }),
+
         const SizedBox(height: 12),
-        // Thumbnail strip
+
+        // =====================================================
+        // THUMBNAILS
+        // =====================================================
         Obx(() {
           final media = controller.pendingMedia;
-          if (media.isEmpty) return const SizedBox.shrink();
+
+          if (media.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
           final current = controller.currentIndex.value;
+
           return SizedBox(
             height: 76,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: media.length < 10 ? media.length + 1 : media.length,
+
+              // Only selected images.
+              // No "+" item anymore.
+              itemCount: media.length,
+
               itemBuilder: (context, index) {
-                if (index == media.length) {
-                  return GestureDetector(
-                    onTap: controller.showMediaPicker,
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      margin: const EdgeInsets.only(left: 8),
-                      decoration: BoxDecoration(
-                        color: AppColors.gray100,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: AppColors.createPostGray300,
-                          width: 2,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        color: AppColors.createPostRed600,
-                        size: 28,
-                      ),
-                    ),
-                  );
-                }
                 return GestureDetector(
-                  onTap: () => controller.animateToPage(index),
+                  onTap: () {
+                    controller.animateToPage(index);
+                  },
                   child: Container(
                     width: 60,
                     height: 60,
@@ -405,11 +459,15 @@ class _MediaPreviewCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
+
+            //Portrait → full image 
+//Landscape → full image
+//Square → full image 
             // Zoomable image
             InteractiveViewer(
               minScale: 1,
               maxScale: 4,
-              child: _buildMediaImage(imageUrl, BoxFit.cover),
+              child: _buildMediaImage(imageUrl, BoxFit.contain),
             ),
             // Media type indicator (top-left)
             Positioned(
