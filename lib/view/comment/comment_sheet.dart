@@ -16,7 +16,7 @@ class CommentSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        height: MediaQuery.of(context).size.height * .85,
+        height: MediaQuery.of(context).size.height * .90,
         decoration: const BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -45,10 +45,16 @@ class CommentSheet extends StatelessWidget {
 
             Expanded(
               child: Obx(() {
-                if (controller.isLoading.value) {
+                if (controller.isLoading.value &&
+                    controller.comments.isEmpty) {
                   return const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.loginAccentRed,
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.loginAccentRed,
+                      ),
                     ),
                   );
                 }

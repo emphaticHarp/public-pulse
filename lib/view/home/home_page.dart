@@ -183,7 +183,7 @@ class HomePage extends StatelessWidget {
                           },
                           // for opeming the comment tile
                           // Comment
-                          onCommentTap: () async {
+                          onCommentTap: () {
                             CommentController commentController;
 
                             if (Get.isRegistered<CommentController>()) {
@@ -192,12 +192,28 @@ class HomePage extends StatelessWidget {
                               commentController = Get.put(CommentController());
                             }
 
-                            await commentController.loadComments(post.id);
+                            // 1. Immediately prepare cached comments.
+                            commentController.prepareComments(post.id);
 
+                            // 2. Open the sheet immediately with slide-up animation.
                             Get.bottomSheet(
                               CommentSheet(postId: post.id),
                               isScrollControlled: true,
-                              backgroundColor: AppColors.white,
+                              backgroundColor: AppColors.transparentFull,
+                              barrierColor: AppColors.overlayBlack50,
+                              isDismissible: true,
+                              enableDrag: true,
+                              enterBottomSheetDuration: const Duration(
+                                milliseconds: 280,
+                              ),
+                              exitBottomSheetDuration: const Duration(
+                                milliseconds: 220,
+                              ),
+                            );
+
+                            // 3. Refresh from Supabase AFTER the sheet starts opening.
+                            Future.microtask(
+                              () => commentController.loadComments(post.id),
                             );
                           },
                         );
