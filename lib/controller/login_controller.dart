@@ -4,6 +4,7 @@ import 'package:public_pulse/core/services/auth_service.dart';
 import 'package:public_pulse/widget/login/login_code_page.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 import 'package:public_pulse/controller/home_controller.dart';
+import 'package:public_pulse/core/services/initial_permission_service.dart';
 
 class LoginController extends GetxController {
   final RxBool isGoogleLoading = false.obs;
@@ -44,15 +45,33 @@ class LoginController extends GetxController {
 
           switch (status) {
             case "active":
+              // ============================================================
+              // FIRST-TIME PERMISSIONS FOR NEW USERS ONLY
+              // ============================================================
+
+              await InitialPermissionService.requestIfNeeded(user.id);
+
+              // ============================================================
+              // INITIALIZE HOME
+              // ============================================================
+
               final homeController = Get.find<HomeController>();
 
               await homeController.initializeForUser();
 
               Get.offAll(() => MainPage());
+
               break;
 
             case "pending":
+              // This account has entered the new-user registration flow.
+              // Remember locally that permissions must be requested
+              // after the account becomes ACTIVE.
+
+              await InitialPermissionService.markNewUser(user.id);
+
               Get.offAll(() => LoginCodePage());
+
               break;
 
             case "blocked":

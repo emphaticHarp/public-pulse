@@ -62,24 +62,9 @@ class FollowRepository {
 
       debugPrint('[FOLLOW] $myProfileId → $targetProfileId');
 
-      // ----------------------------------------------------------
-      // Add target to MY following list
-      // ----------------------------------------------------------
-
-      await _addToChunk(
-        profileId: myProfileId,
-        column: 'following_profile_ids',
-        targetProfileId: targetProfileId,
-      );
-
-      // ----------------------------------------------------------
-      // Add ME to TARGET's followers list
-      // ----------------------------------------------------------
-
-      await _addToChunk(
-        profileId: targetProfileId,
-        column: 'follower_profile_ids',
-        targetProfileId: myProfileId,
+      await Supabase.instance.client.rpc(
+        'follow_user',
+        params: {'p_following_profile_id': targetProfileId},
       );
 
       debugPrint('[FOLLOW] Follow completed');
@@ -102,23 +87,20 @@ class FollowRepository {
       final myProfileId = await CurrentUserService.instance.getProfileId();
 
       if (myProfileId == null) {
+        debugPrint('[FOLLOW] Current profile ID is null');
+        return false;
+      }
+
+      if (myProfileId == targetProfileId) {
+        debugPrint('[FOLLOW] Cannot unfollow yourself');
         return false;
       }
 
       debugPrint('[FOLLOW] Unfollow $myProfileId → $targetProfileId');
 
-      // Remove target from MY following list.
-      await _removeFromChunks(
-        profileId: myProfileId,
-        column: 'following_profile_ids',
-        targetProfileId: targetProfileId,
-      );
-
-      // Remove ME from TARGET's followers list.
-      await _removeFromChunks(
-        profileId: targetProfileId,
-        column: 'follower_profile_ids',
-        targetProfileId: myProfileId,
+      await Supabase.instance.client.rpc(
+        'unfollow_user',
+        params: {'p_following_profile_id': targetProfileId},
       );
 
       debugPrint('[FOLLOW] Unfollow completed');
@@ -129,101 +111,6 @@ class FollowRepository {
       debugPrintStack(stackTrace: stackTrace);
 
       return false;
-    }
-  }
-
-  // ============================================================
-  // ADD TO CHUNK
-  // ============================================================
-
-  Future<void> _addToChunk({
-    required String profileId,
-    required String column,
-    required String targetProfileId,
-  }) async {
-    final rows = await _followChunks
-        .select('id, profile_id, chunk, $column')
-        .eq('profile_id', profileId)
-        .order('chunk', ascending: true);
-
-    // ----------------------------------------------------------
-    // Already exists?
-    // ----------------------------------------------------------
-
-    for (final row in rows) {
-      final ids = row[column];
-
-      if (ids is List && ids.any((id) => id?.toString() == targetProfileId)) {
-        debugPrint('[FOLLOW] Already exists in $column');
-        return;
-      }
-    }
-
-    // ----------------------------------------------------------
-    // Add to existing chunk
-    // ----------------------------------------------------------
-
-    for (final row in rows) {
-      final ids = List<String>.from(
-        (row[column] as List?)?.map((e) => e.toString()) ?? [],
-      );
-
-      if (ids.length < 100) {
-        ids.add(targetProfileId);
-
-        await _followChunks.update({column: ids}).eq('id', row['id']);
-
-        return;
-      }
-    }
-
-    // ----------------------------------------------------------
-    // Create new chunk
-    // ----------------------------------------------------------
-
-    final nextChunk = rows.isEmpty
-        ? 1
-        : ((rows.last['chunk'] as num?)?.toInt() ?? 0) + 1;
-
-    await _followChunks.insert({
-      'profile_id': profileId,
-      'chunk': nextChunk,
-      column: [targetProfileId],
-    });
-  }
-
-  // ============================================================
-  // REMOVE FROM CHUNKS
-  // ============================================================
-
-  Future<void> _removeFromChunks({
-    required String profileId,
-    required String column,
-    required String targetProfileId,
-  }) async {
-    final rows = await _followChunks
-        .select('id, profile_id, chunk, $column')
-        .eq('profile_id', profileId)
-        .order('chunk', ascending: true);
-
-    for (final row in rows) {
-      final ids = List<String>.from(
-        (row[column] as List?)?.map((e) => e.toString()) ?? [],
-      );
-
-      if (!ids.contains(targetProfileId)) {
-        continue;
-      }
-
-      ids.remove(targetProfileId);
-
-      if (ids.isEmpty) {
-        await _followChunks.delete().eq('id', row['id']);
-      } else {
-        await _followChunks.update({column: ids}).eq('id', row['id']);
-      }
-
-      return;
     }
   }
 }

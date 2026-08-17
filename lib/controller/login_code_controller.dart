@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:public_pulse/core/services/auth_service.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
+import 'package:public_pulse/core/services/permission_service.dart';
 
 class LoginCodeController extends GetxController {
   final pinController = TextEditingController();
@@ -40,7 +41,23 @@ class LoginCodeController extends GetxController {
         return;
       }
 
-     await _authService.activateCurrentUser(code);
+      await _authService.activateCurrentUser(code);
+
+      // ============================================================
+      // FIRST-TIME APP PERMISSIONS
+      // ============================================================
+
+      debugPrint(
+        '[LOGIN-CODE] User activated. Requesting initial permissions...',
+      );
+
+      await PermissionService.requestInitialPermissions();
+
+      debugPrint('[LOGIN-CODE] Initial permission flow completed');
+
+      // ============================================================
+      // OPEN MAIN APP
+      // ============================================================
 
       Get.offAll(() => MainPage());
     } catch (e) {

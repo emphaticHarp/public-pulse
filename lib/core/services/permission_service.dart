@@ -55,7 +55,8 @@ class PermissionService {
         return true;
       }
 
-      if (storageStatus.isPermanentlyDenied || photosStatus.isPermanentlyDenied) {
+      if (storageStatus.isPermanentlyDenied ||
+          photosStatus.isPermanentlyDenied) {
         await openAppSettings();
       }
 
@@ -78,5 +79,46 @@ class PermissionService {
     }
 
     return false;
+  }
+  // ============================================================
+  // LOCATION
+  // ============================================================
+
+  // ============================================================
+  // LOCATION
+  // ============================================================
+
+  static Future<bool> requestLocationPermission() async {
+    if (await Permission.locationWhenInUse.isGranted) {
+      return true;
+    }
+
+    final status = await Permission.locationWhenInUse.request();
+
+    if (status.isGranted) {
+      return true;
+    }
+
+    if (status.isPermanentlyDenied) {
+      await openAppSettings();
+    }
+
+    return false;
+  }
+
+  // ============================================================
+  // NOTIFICATIONS
+  // ============================================================
+
+  // ============================================================
+  // INITIAL APP PERMISSIONS
+  // ============================================================
+
+  static Future<void> requestInitialPermissions() async {
+    await requestCameraPermission();
+
+    await requestGalleryPermission();
+
+    await requestLocationPermission();
   }
 }
