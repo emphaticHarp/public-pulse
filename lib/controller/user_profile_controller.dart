@@ -203,15 +203,33 @@ class UserProfileController extends GetxController {
 
   void openFollowersFollowing(int initialTab) {
     if (!Get.isRegistered<FollowersFollowingController>(tag: ffTag)) {
-      Get.put(FollowersFollowingController(userId: userId), tag: ffTag);
+      Get.put(
+        FollowersFollowingController(
+          userId: userId,
+          initialTab: initialTab,
+        ),
+        tag: ffTag,
+      );
     }
 
-    final controller = Get.find<FollowersFollowingController>(tag: ffTag);
+    final controller =
+        Get.find<FollowersFollowingController>(tag: ffTag);
 
     controller.switchTab(initialTab);
 
+    // Always refresh from Supabase when opening the list.
+    // Existing cached data stays visible while refreshing.
+    if (initialTab == 0) {
+      controller.loadFollowers(forceRefresh: true);
+    } else {
+      controller.loadFollowing(forceRefresh: true);
+    }
+
     Get.to(
-      () => FollowersFollowingPage(initialTab: initialTab, controllerTag: ffTag),
+      () => FollowersFollowingPage(
+        initialTab: initialTab,
+        controllerTag: ffTag,
+      ),
     );
   }
 }
