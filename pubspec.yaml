@@ -34,35 +34,65 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  # Check internet connectivity status on the device
   connectivity_plus: ^7.3.0
+  # Verify internet connection availability with multiple checks
   internet_connection_checker_plus: ^3.1.1
+  # State management and routing solution
   get: ^4.7.3
+  # Pick images from device gallery or camera
   image_picker: ^1.2.3
+  # Handle device permissions (camera, location, etc.)
   permission_handler: ^12.0.3
+  # Integrate Apple Sign-In authentication
   sign_in_with_apple: ^6.1.0
+  # Store and retrieve app preferences locally
   shared_preferences: ^2.5.5
+  # Backend database and authentication with Supabase
   supabase_flutter: ^2.16.0
+  # Load environment variables from .env file
   flutter_dotenv: ^6.0.1
+  # Integrate Google Sign-In authentication
   google_sign_in: ^6.3.0
+  # Make HTTP requests to APIs
   http: ^1.6.0
+  # PIN input widget for OTP verification
   pinput: ^6.0.2
+  # Get device file system paths
   path_provider: ^2.1.6
+  # Compress images to reduce file size
   flutter_image_compress: ^2.5.1
+  # State management for reactive UI updates
   provider: ^6.1.2
+  # Read EXIF metadata from images
   exif: ^3.3.0
+  # Get current device geolocation
   geolocator: ^14.0.3
+  # HTTP client for API requests with interceptors
   dio: ^5.11.0
+  # Manage app permissions
   permission_manager: ^2.0.9
+  # Local NoSQL database for data storage
   hive_ce: ^2.19.3
+  # Flutter integration for Hive database
   hive_ce_flutter: ^2.3.4
+  # Cryptographic functions for secure data
   crypto: ^3.0.7
+  # Image processing and manipulation
   image: ^4.8.0
+  # Get MIME types for files
   mime: ^2.0.0
+  # Get device information (model, OS version, etc.)
   device_info_plus: ^13.2.0
+  # Get app package information (version, build number)
   package_info_plus: ^10.2.1
+  # Cache and load images from network efficiently
   cached_network_image: ^3.4.1
+  # Generate unique identifiers
   uuid: ^4.6.0
+  # Launch URLs and open links
   url_launcher: ^6.3.2
+  # Convert coordinates to addresses and vice versa
   geocoding: ^4.0.0
 dev_dependencies:
   flutter_test:
@@ -73,7 +103,9 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
+  # Code style and best practices linting rules
   flutter_lints: ^6.0.0
+  # Generate app launcher icons for iOS and Android
   flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
