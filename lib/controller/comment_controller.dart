@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../core/repository/comment_repository.dart';
 import '../model/comment_model.dart';
@@ -33,42 +34,84 @@ class CommentController extends GetxController {
     super.onClose();
   }
 
+  String _resolveAvatarUrl(String? value) {
+    final avatar = value?.trim() ?? '';
+
+    if (avatar.isEmpty) {
+      return '';
+    }
+
+    // Google avatar / already complete URL.
+    if (avatar.startsWith('http://') ||
+        avatar.startsWith('https://')) {
+      return avatar;
+    }
+
+    // User uploaded/updated avatar in Supabase.
+    return Supabase.instance.client.storage
+        .from('avatars')
+        .getPublicUrl(avatar);
+  }
+
   Future<void> _loadCurrentProfile() async {
     if (_currentProfile != null) return;
 
     _currentProfile = await _repository.getCurrentProfile();
   }
 
-  Future<void> loadComments(String postId) async {
+  void prepareComments(String postId) {
     currentPostId = postId;
 
-    await _loadCurrentProfile();
-
-    // Load cache first
     final cachedComments = CacheManager.getCachedComments(postId);
 
     if (cachedComments.isNotEmpty) {
       comments.assignAll(cachedComments);
+      isLoading.value = false;
+    } else {
+      comments.clear();
+      isLoading.value = true;
+    }
+  }
+
+  Future<void> loadComments(String postId) async {
+    currentPostId = postId;
+
+    // ─────────────────────────────────────────────
+    // CACHE FIRST — no network wait
+    // ─────────────────────────────────────────────
+
+    final cachedComments = CacheManager.getCachedComments(postId);
+
+    if (cachedComments.isNotEmpty) {
+      comments.assignAll(cachedComments);
+      isLoading.value = false;
+    } else {
+      comments.clear();
+      isLoading.value = true;
     }
 
     try {
-      isLoading.value = comments.isEmpty;
+      // Profile + comment count can load together.
+      final results = await Future.wait([
+        _loadCurrentProfile(),
+        _repository.getCommentCount(postId),
+      ]);
 
-      // Only fetch comment count
-      final serverCount = await _repository.getCommentCount(postId);
+      final serverCount = results[1] as int;
 
-      // Cache is already correct
+      // Cached comments are still current.
       if (serverCount == comments.length) {
-        isLoading.value = false;
         return;
       }
 
-      // Something changed -> fetch latest comments
+      // Only download full comments when something changed.
       final serverComments = await _repository.getComments(postId);
 
       comments.assignAll(serverComments);
 
       await CacheManager.cacheComments(postId, serverComments);
+    } catch (e) {
+      debugPrint('[COMMENTS] Load error: $e');
     } finally {
       isLoading.value = false;
     }
@@ -106,7 +149,9 @@ class CommentController extends GetxController {
       postId: currentPostId!,
       profileId: _currentProfile!['id'],
       username: _currentProfile!['username'],
-      profileImage: _currentProfile!['avatar_path'],
+      profileImage: _resolveAvatarUrl(
+        _currentProfile!['avatar_path']?.toString(),
+      ),
       content: text,
       createdAt: DateTime.now(),
       isPending: true,
