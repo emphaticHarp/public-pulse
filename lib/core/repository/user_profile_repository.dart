@@ -222,32 +222,17 @@ class UserProfileRepository {
   ///   follower_profile_ids → current user
   Future<void> followUser(String targetUserId) async {
     final myProfileId = await _getProfileIdFromUserId(_uid);
-
     final targetProfileId = await _getProfileIdFromUserId(targetUserId);
 
     if (myProfileId == targetProfileId) {
       return;
     }
 
-    // Already following?
-    final alreadyFollowing = await isFollowing(targetUserId);
-
-    if (alreadyFollowing) {
-      return;
-    }
-
-    // Add target to my following list.
-    await _addToChunk(
-      profileId: myProfileId,
-      column: 'following_profile_ids',
-      targetProfileId: targetProfileId,
-    );
-
-    // Add me to target's followers list.
-    await _addToChunk(
-      profileId: targetProfileId,
-      column: 'follower_profile_ids',
-      targetProfileId: myProfileId,
+    await Supabase.instance.client.rpc(
+      'follow_user',
+      params: {
+        'p_following_profile_id': targetProfileId,
+      },
     );
   }
 
@@ -258,111 +243,17 @@ class UserProfileRepository {
   /// Removes a follow relationship from the chunked system.
   Future<void> unfollowUser(String targetUserId) async {
     final myProfileId = await _getProfileIdFromUserId(_uid);
-
     final targetProfileId = await _getProfileIdFromUserId(targetUserId);
 
-    // Remove target from my following list.
-    await _removeFromChunks(
-      profileId: myProfileId,
-      column: 'following_profile_ids',
-      targetProfileId: targetProfileId,
-    );
-
-    // Remove me from target's followers list.
-    await _removeFromChunks(
-      profileId: targetProfileId,
-      column: 'follower_profile_ids',
-      targetProfileId: myProfileId,
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // ADD TO CHUNK
-  // ─────────────────────────────────────────────
-
-  Future<void> _addToChunk({
-    required String profileId,
-    required String column,
-    required String targetProfileId,
-  }) async {
-    final rows = await _followChunks
-        .select('id, profile_id, chunk, $column')
-        .eq('profile_id', profileId)
-        .order('chunk', ascending: true);
-
-    // Check if already exists anywhere.
-    for (final row in rows) {
-      final ids = row[column];
-
-      if (ids is List && ids.any((id) => id?.toString() == targetProfileId)) {
-        return;
-      }
-    }
-
-    // Try to add to an existing chunk.
-    for (final row in rows) {
-      final ids = List<String>.from(
-        (row[column] as List?)?.map((e) => e.toString()) ?? [],
-      );
-
-      // Keep the chunk reasonably sized.
-      if (ids.length < 100) {
-        ids.add(targetProfileId);
-
-        await _followChunks.update({column: ids}).eq('id', row['id']);
-
-        return;
-      }
-    }
-
-    // No suitable chunk exists.
-    //
-    // Create the first/next chunk.
-    final nextChunk = rows.isEmpty
-        ? 1
-        : ((rows.last['chunk'] as num?)?.toInt() ?? 0) + 1;
-
-    await _followChunks.insert({
-      'profile_id': profileId,
-      'chunk': nextChunk,
-      column: [targetProfileId],
-    });
-  }
-
-  // ─────────────────────────────────────────────
-  // REMOVE FROM CHUNKS
-  // ─────────────────────────────────────────────
-
-  Future<void> _removeFromChunks({
-    required String profileId,
-    required String column,
-    required String targetProfileId,
-  }) async {
-    final rows = await _followChunks
-        .select('id, profile_id, chunk, $column')
-        .eq('profile_id', profileId)
-        .order('chunk', ascending: true);
-
-    for (final row in rows) {
-      final ids = List<String>.from(
-        (row[column] as List?)?.map((e) => e.toString()) ?? [],
-      );
-
-      if (!ids.contains(targetProfileId)) {
-        continue;
-      }
-
-      ids.remove(targetProfileId);
-
-      if (ids.isEmpty) {
-        // Delete empty chunk.
-        await _followChunks.delete().eq('id', row['id']);
-      } else {
-        // Update existing chunk.
-        await _followChunks.update({column: ids}).eq('id', row['id']);
-      }
-
+    if (myProfileId == targetProfileId) {
       return;
     }
+
+    await Supabase.instance.client.rpc(
+      'unfollow_user',
+      params: {
+        'p_following_profile_id': targetProfileId,
+      },
+    );
   }
 }
