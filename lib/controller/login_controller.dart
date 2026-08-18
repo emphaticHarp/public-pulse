@@ -5,6 +5,8 @@ import 'package:public_pulse/view/login/login_code_page.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/core/services/initial_permission_service.dart';
+import 'package:public_pulse/controller/profile_controller.dart';
+import 'package:public_pulse/core/cache/cache_manager.dart';
 
 class LoginController extends GetxController {
   final RxBool isGoogleLoading = false.obs;
@@ -103,6 +105,20 @@ class LoginController extends GetxController {
 
     try {
       isGoogleLoading.value = true;
+
+      // ============================================================
+      // CLEAR OLD PROFILE CACHE BEFORE A FRESH LOGIN
+      // ============================================================
+
+      if (Get.isRegistered<ProfileController>()) {
+        await Get.find<ProfileController>().invalidateProfile();
+      } else {
+        await CacheManager.clearUserProfileCache();
+      }
+
+      // ============================================================
+      // GOOGLE LOGIN
+      // ============================================================
 
       final success = await _authService.signInWithGoogle();
 

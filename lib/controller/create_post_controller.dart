@@ -648,8 +648,79 @@ class CreatePostController extends GetxController {
         child: SafeArea(
           child: Wrap(
             children: [
+              // ──────────────────────────────────────────────────────────
+              // 1. CAMERA
+              // ──────────────────────────────────────────────────────────
               ListTile(
-                leading: const Icon(Icons.photo_library),
+                leading: const Icon(Icons.camera_alt_rounded),
+                title: const Text("Take Photo"),
+                onTap: () async {
+                  debugPrint('📷 [MediaPicker] Take Photo selected');
+
+                  Get.back();
+
+                  // ==========================================================
+                  // CAMERA PERMISSION
+                  // ==========================================================
+
+                  final granted =
+                      await PermissionService.requestCameraPermission();
+
+                  debugPrint('📷 [MediaPicker] Camera permission: $granted');
+
+                  if (!granted) {
+                    _showPermissionError('Camera');
+                    return;
+                  }
+
+                  // ==========================================================
+                  // OPEN CAMERA
+                  // ==========================================================
+
+                  final XFile? image = await picker.pickImage(
+                    source: ImageSource.camera,
+                  );
+
+                  if (image == null) {
+                    debugPrint('🟡 [MediaPicker] Camera cancelled');
+                    return;
+                  }
+
+                  // Safety check
+                  if (pendingMedia.length >= 10) {
+                    CustomAlert.show(
+                      title: 'Limit Reached',
+                      message: 'You can add up to 10 photos.',
+                      icon: Icons.info_outline,
+                      color: AppColors.semanticOrange,
+                    );
+                    return;
+                  }
+
+                  pendingMedia.add(
+                    PendingMedia(
+                      originalPath: image.path,
+                    ),
+                  );
+
+                  // Show the newly captured photo
+                  currentIndex.value = pendingMedia.length - 1;
+
+                  debugPrint(
+                    '📷 [MediaPicker] Photo captured: ${image.path}',
+                  );
+
+                  debugPrint(
+                    '📷 [MediaPicker] Total media count: ${pendingMedia.length}',
+                  );
+                },
+              ),
+
+              // ──────────────────────────────────────────────────────────
+              // 2. GALLERY
+              // ──────────────────────────────────────────────────────────
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded),
                 title: const Text("Choose Photos from Gallery"),
                 onTap: () async {
                   debugPrint(
@@ -740,55 +811,6 @@ class CreatePostController extends GetxController {
                       icon: Icons.info_outline,
                       color: AppColors.semanticOrange,
                     );
-                  }
-                },
-              ),
-
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text("Choose Image from Gallery"),
-                onTap: () async {
-                  debugPrint(
-                    '🖼️ [MediaPicker] Choose Image from Gallery selected',
-                  );
-
-                  Get.back();
-
-                  // ==========================================================
-                  // REAL ANDROID GALLERY PERMISSION
-                  // ==========================================================
-
-                  final granted =
-                      await PermissionService.requestGalleryPermission();
-
-                  debugPrint('🖼️ [MediaPicker] Gallery permission: $granted');
-
-                  if (!granted) {
-                    _showPermissionError('Gallery');
-                    return;
-                  }
-
-                  // ==========================================================
-                  // OPEN GALLERY
-                  // ==========================================================
-
-                  final XFile? image = await picker.pickImage(
-                    source: ImageSource.gallery,
-                  );
-
-                  if (image != null) {
-                    debugPrint(
-                      '🖼️ [MediaPicker] Image selected: ${image.path}',
-                    );
-
-                    pendingMedia.add(PendingMedia(originalPath: image.path));
-
-                    debugPrint(
-                      '🖼️ [MediaPicker] Media count now: '
-                      '${pendingMedia.length}',
-                    );
-                  } else {
-                    debugPrint('🟡 [MediaPicker] Image selection cancelled');
                   }
                 },
               ),

@@ -23,7 +23,7 @@ class AppBottomNavBar extends StatelessWidget {
 
   static const List<_NavItemData> _items = [
     _NavItemData(index: 0, icon: Icons.home_rounded, label: 'Home'),
-     _NavItemData(index: 1, icon: Icons.explore_rounded, label: 'Explore'),
+    _NavItemData(index: 1, icon: Icons.explore_rounded, label: 'Explore'),
     _NavItemData(
       index: 2,
       icon: Icons.notifications_none_rounded,
@@ -34,6 +34,9 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final bool isCompact = mediaQuery.size.height < 680;
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.white,
@@ -48,11 +51,16 @@ class AppBottomNavBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(child: _navItem(_items[0])),
-              Expanded(child: _navItem(_items[1])),
-              Expanded(child: _createPostButton()),
-              Expanded(child: _navItem(_items[2])),
-              Expanded(child: _navItem(_items[3])),
+              Expanded(child: _navItem(_items[0], isCompact: isCompact)),
+              Expanded(child: _navItem(_items[1], isCompact: isCompact)),
+              Expanded(
+                child: _createPostButton(
+                  barHeight: _barHeight,
+                  isCompact: isCompact,
+                ),
+              ),
+              Expanded(child: _navItem(_items[2], isCompact: isCompact)),
+              Expanded(child: _navItem(_items[3], isCompact: isCompact)),
             ],
           ),
         ),
@@ -60,7 +68,7 @@ class AppBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _navItem(_NavItemData item) {
+  Widget _navItem(_NavItemData item, {required bool isCompact}) {
     final bool isActive = currentIndex == item.index;
     final Color color = isActive ? AppColors.loginAccentRed : AppColors.gray500;
 
@@ -75,15 +83,30 @@ class AppBottomNavBar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(item.icon, size: 26, color: color),
-              const SizedBox(height: 4),
-              Text(
-                item.label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                  color: color,
+              Icon(
+                item.icon,
+                size: isCompact ? 24 : 26,
+                color: color,
+              ),
+
+              SizedBox(
+                height: isCompact ? 2 : 4,
+              ),
+
+              // Prevent "Notifications" from overflowing
+              // on small phones.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: isCompact ? 9 : 10,
+                    fontWeight: isActive
+                        ? FontWeight.bold
+                        : FontWeight.w500,
+                    color: color,
+                  ),
                 ),
               ),
             ],
@@ -93,38 +116,55 @@ class AppBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _createPostButton() {
+  // ============================================================
+  // CREATE POST BUTTON
+  // ============================================================
+
+  Widget _createPostButton({
+    required double barHeight,
+    required bool isCompact,
+  }) {
+    final double buttonSize = isCompact ? 42 : 48;
+    final double radius = isCompact ? 14 : 16;
+
     return SizedBox(
+      height: barHeight,
       width: double.infinity,
-      height: _barHeight,
       child: Center(
         child: InkWell(
           onTap: () {
             if (!Get.isRegistered<CreatePostController>()) {
               Get.put(CreatePostController());
             }
+
             Get.to(
               () => const CreatePostPage(),
               transition: Transition.downToUp,
               duration: const Duration(milliseconds: 300),
             );
           },
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(radius),
           child: Container(
-            width: 48,
-            height: 48,
+            width: buttonSize,
+            height: buttonSize,
             decoration: BoxDecoration(
               color: AppColors.loginAccentRed,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(radius),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.loginAccentRed,
+                  color: AppColors.loginAccentRed.withValues(
+                    alpha: 0.30,
+                  ),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: const Icon(Icons.add, color: AppColors.white, size: 26),
+            child: Icon(
+              Icons.add,
+              color: AppColors.white,
+              size: isCompact ? 24 : 26,
+            ),
           ),
         ),
       ),

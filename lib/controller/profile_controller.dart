@@ -349,10 +349,19 @@ class ProfileController extends GetxController {
       await CacheManager.clearCachedProfileByUserId(userId!);
     }
 
+    // Clear old profile from memory
     profile.value = null;
 
+    // Clear old counts from memory
+    postCount.value = 0;
+    followerCount.value = 0;
+    followingCount.value = 0;
+
+    // Clear old post lists from memory
     photoPosts.clear();
     savedPosts.clear();
+
+    errorMessage.value = '';
 
     debugPrint('[PROFILE CACHE] Invalidated | userId=$userId');
   }

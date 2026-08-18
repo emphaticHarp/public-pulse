@@ -12,13 +12,17 @@ class HomePage extends StatelessWidget {
 
   final HomeController controller = Get.find<HomeController>();
 
+  static const double _feedMaxWidth = 600;
+
   @override
   Widget build(BuildContext context) {
     debugPrint("🏠 HomePage Build");
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: NetworkWrapper(
-        child: RefreshIndicator(
+   body: SafeArea(
+  bottom: false,
+  child: NetworkWrapper(
+    child: RefreshIndicator(
           onRefresh: controller.refreshFeed,
           color: AppColors.loginAccentRed,
           child: CustomScrollView(
@@ -35,39 +39,50 @@ class HomePage extends StatelessWidget {
                     duration: const Duration(milliseconds: 250),
                     child: controller.newPostCount.value == 0
                         ? const SizedBox.shrink()
-                        : Padding(
+                        : Center(
                             key: const ValueKey("new_posts_banner"),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: GestureDetector(
-                              onTap: () async {
-                                await controller.refreshFeed();
-                                if (controller.scrollController.hasClients) {
-                                  controller.scrollController.animateTo(
-                                    0,
-                                    duration: const Duration(milliseconds: 400),
-                                    curve: Curves.easeOut,
-                                  );
-                                }
-                              },
-                              child: Container(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: _feedMaxWidth,
+                              ),
+                              child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
+                                  horizontal: 16,
+                                  vertical: 8,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.loginAccentRed,
-                                  borderRadius: BorderRadius.circular(25),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    controller.newPostCount.value == 1
-                                        ? "1 New Post"
-                                        : "${controller.newPostCount.value} New Posts",
-                                    style: const TextStyle(
-                                      color: AppColors.white,
-                                      fontWeight: FontWeight.bold,
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    await controller.refreshFeed();
+
+                                    if (controller.scrollController.hasClients) {
+                                      controller.scrollController.animateTo(
+                                        0,
+                                        duration: const Duration(
+                                          milliseconds: 400,
+                                        ),
+                                        curve: Curves.easeOut,
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.loginAccentRed,
+                                      borderRadius: BorderRadius.circular(25),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        controller.newPostCount.value == 1
+                                            ? "1 New Post"
+                                            : "${controller.newPostCount.value} New Posts",
+                                        style: const TextStyle(
+                                          color: AppColors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -96,28 +111,41 @@ class HomePage extends StatelessWidget {
                   return SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.photo_library_outlined,
-                            size: 80,
-                            color: AppColors.greyShade400,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: 420,
                           ),
-                          SizedBox(height: 18),
-                          Text(
-                            "No Posts Yet",
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.photo_library_outlined,
+                                size: 72,
+                                color: AppColors.greyShade400,
+                              ),
+                              const SizedBox(height: 18),
+                              const Text(
+                                "No Posts Yet",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                "Posts from everyone will appear here.",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: AppColors.grey,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            "Posts from everyone will appear here.",
-                            style: TextStyle(fontSize: 15, color: AppColors.grey),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   );
@@ -142,80 +170,87 @@ class HomePage extends StatelessWidget {
 
                         final post = controller.posts[index];
 
-                        return PostCard(
-                          key: ValueKey(post.id),
-                          profileImage: post.profileImage ?? '',
-                          username: post.username,
-                          authorId: post.profileId,
-                          authorUserId: post.authorUserId,
-                          location: post.location ?? '',
-                          isCarousel: post.isCarousel,
-                          isOwner: post.isOwner,
-                          imageUrl: post.mediaUrls.isNotEmpty
-                              ? post.mediaUrls.first
-                              : null,
-                          imageUrls: post.mediaUrls,
-                          mediaAspectRatios: post.mediaAspectRatios,
-                          postId: post.id,
+                        return Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: _feedMaxWidth,
+                            ),
+                            child: PostCard(
+                              key: ValueKey(post.id),
+                              profileImage: post.profileImage ?? '',
+                              username: post.username,
+                              authorId: post.profileId,
+                              authorUserId: post.authorUserId,
+                              location: post.location ?? '',
+                              isCarousel: post.isCarousel,
+                              isOwner: post.isOwner,
+                              imageUrl: post.mediaUrls.isNotEmpty
+                                  ? post.mediaUrls.first
+                                  : null,
+                              imageUrls: post.mediaUrls,
+                              mediaAspectRatios: post.mediaAspectRatios,
+                              postId: post.id,
 
-                          isUploading: post.isUploading,
-                          localMediaPaths: post.localMediaPaths,
+                              isUploading: post.isUploading,
+                              localMediaPaths: post.localMediaPaths,
 
-                          likeIcon: post.isLiked
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          likeIconColor: post.isLiked
-                              ? AppColors.loginAccentRed
-                              : AppColors.gray900,
-                          likeCount: post.likeCount.toString(),
-                          commentCount: post.commentCount.toString(),
-                          shareCount: post.shareCount.toString(),
-                          caption: post.caption ?? '',
-                          //for save post
-                          isBookmarked: post.isSaved,
-                          onBookmarkTap: () {
-                            controller.toggleSave(post);
-                          },
-                          // for like
-                          // Like
-                          onLikeTap: () {
-                            controller.toggleLike(post);
-                          },
-                          // for opeming the comment tile
-                          // Comment
-                          onCommentTap: () {
-                            CommentController commentController;
+                              likeIcon: post.isLiked
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              likeIconColor: post.isLiked
+                                  ? AppColors.loginAccentRed
+                                  : AppColors.gray900,
+                              likeCount: post.likeCount.toString(),
+                              commentCount: post.commentCount.toString(),
+                              shareCount: post.shareCount.toString(),
+                              caption: post.caption ?? '',
+                              //for save post
+                              isBookmarked: post.isSaved,
+                              onBookmarkTap: () {
+                                controller.toggleSave(post);
+                              },
+                              // for like
+                              // Like
+                              onLikeTap: () {
+                                controller.toggleLike(post);
+                              },
+                              // for opeming the comment tile
+                              // Comment
+                              onCommentTap: () {
+                                CommentController commentController;
 
-                            if (Get.isRegistered<CommentController>()) {
-                              commentController = Get.find<CommentController>();
-                            } else {
-                              commentController = Get.put(CommentController());
-                            }
+                                if (Get.isRegistered<CommentController>()) {
+                                  commentController = Get.find<CommentController>();
+                                } else {
+                                  commentController = Get.put(CommentController());
+                                }
 
-                            // 1. Immediately prepare cached comments.
-                            commentController.prepareComments(post.id);
+                                // 1. Immediately prepare cached comments.
+                                commentController.prepareComments(post.id);
 
-                            // 2. Open the sheet immediately with slide-up animation.
-                            Get.bottomSheet(
-                              CommentSheet(postId: post.id),
-                              isScrollControlled: true,
-                              backgroundColor: AppColors.transparentFull,
-                              barrierColor: AppColors.overlayBlack50,
-                              isDismissible: true,
-                              enableDrag: true,
-                              enterBottomSheetDuration: const Duration(
-                                milliseconds: 280,
-                              ),
-                              exitBottomSheetDuration: const Duration(
-                                milliseconds: 220,
-                              ),
-                            );
+                                // 2. Open the sheet immediately with slide-up animation.
+                                Get.bottomSheet(
+                                  CommentSheet(postId: post.id),
+                                  isScrollControlled: true,
+                                  backgroundColor: AppColors.transparentFull,
+                                  barrierColor: AppColors.overlayBlack50,
+                                  isDismissible: true,
+                                  enableDrag: true,
+                                  enterBottomSheetDuration: const Duration(
+                                    milliseconds: 280,
+                                  ),
+                                  exitBottomSheetDuration: const Duration(
+                                    milliseconds: 220,
+                                  ),
+                                );
 
-                            // 3. Refresh from Supabase AFTER the sheet starts opening.
-                            Future.microtask(
-                              () => commentController.loadComments(post.id),
-                            );
-                          },
+                                // 3. Refresh from Supabase AFTER the sheet starts opening.
+                                Future.microtask(
+                                  () => commentController.loadComments(post.id),
+                                );
+                              },
+                            ),
+                          ),
                         );
                       },
                       childCount:
@@ -229,41 +264,48 @@ class HomePage extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   // ---------------- Header with logo ----------------
   Widget _buildHeader(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 40),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: _feedMaxWidth,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: SizedBox(
-              width: 42,
-              height: 42,
-              child: Transform.scale(
-                scale: 3.5,
-                child: Image.asset(
-                  'assets/images/logo.webp',
-                  width: 42,
-                  height: 42,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      color: AppColors.loginAccentRed,
-                      shape: BoxShape.circle,
+              width: 132,
+              height: 52,
+              child: Image.asset(
+                'assets/images/logo.webp',
+                fit: BoxFit.contain,
+                alignment: Alignment.centerLeft,
+                errorBuilder: (context, error, stackTrace) {
+                  return Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: const BoxDecoration(
+                        color: AppColors.loginAccentRed,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
