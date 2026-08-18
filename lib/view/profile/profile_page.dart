@@ -266,7 +266,9 @@ class _TabContent extends StatelessWidget {
     if (loading && posts.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 40),
-        child: Center(child: CircularProgressIndicator(color: AppColors.loginAccentRed)),
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.loginAccentRed),
+        ),
       );
     }
 
@@ -295,7 +297,18 @@ class _TabContent extends StatelessWidget {
       itemBuilder: (context, index) {
         final post = posts[index];
 
-        if (post.mediaUrls.isEmpty) {
+        // ============================================================
+        // PROFILE GRID IMAGE
+        // Thumbnail first → full post image as fallback for old posts
+        // ============================================================
+
+        final String? gridImageUrl = post.thumbnailUrls.isNotEmpty
+            ? post.thumbnailUrls.first
+            : post.mediaUrls.isNotEmpty
+            ? post.mediaUrls.first
+            : null;
+
+        if (gridImageUrl == null || gridImageUrl.isEmpty) {
           return Container(
             color: AppColors.greyShade200,
             child: const Center(
@@ -304,14 +317,16 @@ class _TabContent extends StatelessWidget {
           );
         }
 
-        // Tap → open Post Detail with the exact PostModel, zero re-fetch.
+        // Tap → PostDetailPage still receives the complete PostModel.
+        // PostDetailPage can continue using post.mediaUrls.
         return GestureDetector(
           onTap: () => Get.to(() => PostDetailPage(post: post)),
           child: Image.network(
-            post.mediaUrls.first,
+            gridImageUrl,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              debugPrint('[PROFILE IMAGE ERROR] ${post.mediaUrls.first}');
+              debugPrint('[PROFILE THUMBNAIL ERROR] $gridImageUrl');
+
               return Container(
                 color: AppColors.greyShade200,
                 child: const Center(child: Icon(Icons.broken_image_outlined)),

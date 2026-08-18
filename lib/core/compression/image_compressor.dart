@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,6 +12,10 @@ class ImageCompressor {
   static const int _minDimension = 800;
   static const int _minQuality = 35;
   static const int _maxAttempts = 5;
+  // for thumbnail
+  static const int _thumbnailTargetMaxBytes = 8 * 1024; // 8 KB
+  static const int _thumbnailStartDimension = 100;
+  static const int _thumbnailMinDimension = 100;
 
   Future<File?> compressImage(String inputPath) async {
     final originalFile = File(inputPath);
@@ -104,6 +109,78 @@ class ImageCompressor {
     final finalFile = File(finalPath);
     await finalFile.writeAsBytes(bestBytes, flush: true);
     return finalFile;
+  }
+
+  //compression for thumbnail
+
+  Future<File?> createThumbnail(File sourceFile) async {
+    try {
+      final originalBytes = await sourceFile.readAsBytes();
+
+      if (originalBytes.isEmpty) {
+        return null;
+      }
+
+      final dir = await getTemporaryDirectory();
+      final sessionId = DateTime.now().microsecondsSinceEpoch;
+
+      int dimension = _thumbnailStartDimension;
+      int quality = 100;
+
+      Uint8List? bestBytes;
+
+      // Try several times to get a lightweight thumbnail.
+      for (int attempt = 0; attempt < 5; attempt++) {
+        final resultBytes = await _safeCompress(
+          originalBytes,
+          quality: quality,
+          minWidth: dimension,
+          minHeight: dimension,
+        );
+
+        if (resultBytes == null) {
+          break;
+        }
+
+        bestBytes = resultBytes;
+
+        // Small enough.
+        if (resultBytes.length <= _thumbnailTargetMaxBytes) {
+          break;
+        }
+
+        // Reduce size/quality progressively.
+        if (quality > 25) {
+          quality -= 7;
+        } else if (dimension > _thumbnailMinDimension) {
+          dimension -= 40;
+          quality = 35;
+        } else {
+          break;
+        }
+      }
+
+      if (bestBytes == null) {
+        return null;
+      }
+
+      final thumbnailPath = '${dir.path}/${sessionId}_thumbnail.webp';
+
+      final thumbnailFile = File(thumbnailPath);
+
+      await thumbnailFile.writeAsBytes(bestBytes, flush: true);
+
+      debugPrint(
+        '🖼️ Thumbnail created: '
+        '${bestBytes.length / 1024} KB',
+      );
+
+      return thumbnailFile;
+    } catch (e) {
+      debugPrint('🔴 Thumbnail creation failed: $e');
+
+      return null;
+    }
   }
 
   /// Re-encodes to webp at quality 100 (i.e. no real compression, just a

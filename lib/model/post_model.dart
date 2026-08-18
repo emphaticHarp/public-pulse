@@ -167,7 +167,21 @@ class PostModel {
           .where((url) => url.isNotEmpty)
           .toList(),
 
-      thumbnailUrls: const [],
+      thumbnailUrls: media
+          .map((item) {
+            final path = item['thumbnail_path']?.toString();
+
+            if (path == null || path.isEmpty) {
+              return '';
+            }
+
+            return BunnyUploadService.instance.resolveMediaUrl(
+              path,
+              bucket: 'posts-images',
+            );
+          })
+          .where((url) => url.isNotEmpty)
+          .toList(),
 
       isCarousel: media.length > 1,
       mediaAspectRatios: mediaAspectRatios,
