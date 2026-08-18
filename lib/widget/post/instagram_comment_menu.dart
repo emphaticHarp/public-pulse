@@ -897,7 +897,7 @@ class _CommentQuickMenu extends StatelessWidget {
               _MenuRow(
                 icon: Icons.delete_outline,
                 label: "Delete",
-                color: AppColors.semanticRed,
+                color: AppColors.loginAccentRed,
                 onTap: onDelete,
               ),
             ],

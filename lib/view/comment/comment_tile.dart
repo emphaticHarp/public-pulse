@@ -28,7 +28,7 @@ class CommentTile extends StatelessWidget {
       title: 'Delete Comment?',
       message: 'This action cannot be undone.',
       icon: Icons.delete_outline_rounded,
-      color: AppColors.semanticRed,
+      color: AppColors.loginAccentRed,
       confirmText: 'Delete',
     );
     if (confirmed) {

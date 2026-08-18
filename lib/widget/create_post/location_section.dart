@@ -61,12 +61,12 @@ class CreatePostLocationSection extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.createPostRed600.withValues(alpha: 0.08),
+                      color: AppColors.loginAccentRed.withValues(alpha: 0.08),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.location_on_outlined,
-                      color: AppColors.createPostRed600,
+                      color: AppColors.loginAccentRed,
                       size: 21,
                     ),
                   ),
@@ -87,7 +87,7 @@ class CreatePostLocationSection extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             color: hasLocation
                                 ? AppColors.gray500
-                                : AppColors.createPostRed600,
+                                : AppColors.loginAccentRed,
                           ),
                         ),
 
@@ -197,7 +197,7 @@ class _LocationPickerSheet extends StatelessWidget {
                 children: [
                   const Icon(
                     Icons.location_on_outlined,
-                    color: AppColors.createPostRed600,
+                    color: AppColors.loginAccentRed,
                     size: 23,
                   ),
 
@@ -272,7 +272,7 @@ class _LocationPickerSheet extends StatelessWidget {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppColors.createPostRed600,
+                            color: AppColors.loginAccentRed,
                           ),
                         ),
                       );
@@ -302,7 +302,7 @@ class _LocationPickerSheet extends StatelessWidget {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: const BorderSide(
-                      color: AppColors.createPostRed600,
+                      color: AppColors.loginAccentRed,
                       width: 1.5,
                     ),
                   ),
@@ -339,14 +339,14 @@ class _LocationPickerSheet extends StatelessWidget {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: AppColors.createPostRed600.withValues(
+                              color: AppColors.loginAccentRed.withValues(
                                 alpha: 0.08,
                               ),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
                               Icons.my_location,
-                              color: AppColors.createPostRed600,
+                              color: AppColors.loginAccentRed,
                               size: 20,
                             ),
                           ),
@@ -385,7 +385,7 @@ class _LocationPickerSheet extends StatelessWidget {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColors.createPostRed600,
+                                color: AppColors.loginAccentRed,
                               ),
                             )
                           else
@@ -441,7 +441,7 @@ class _LocationPickerSheet extends StatelessWidget {
                           children: [
                             CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              color: AppColors.createPostRed600,
+                              color: AppColors.loginAccentRed,
                             ),
 
                             SizedBox(height: 14),
@@ -512,7 +512,7 @@ class _LocationPickerSheet extends StatelessWidget {
                                   ),
                                   child: const Icon(
                                     Icons.location_on_outlined,
-                                    color: AppColors.createPostRed600,
+                                    color: AppColors.loginAccentRed,
                                     size: 20,
                                   ),
                                 ),
@@ -608,13 +608,13 @@ class _LocationEmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: AppColors.createPostRed600.withValues(alpha: 0.07),
+                color: AppColors.loginAccentRed.withValues(alpha: 0.07),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.location_searching,
                 size: 32,
-                color: AppColors.createPostRed600,
+                color: AppColors.loginAccentRed,
               ),
             ),
 

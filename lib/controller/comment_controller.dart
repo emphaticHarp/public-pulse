@@ -201,7 +201,7 @@ class CommentController extends GetxController {
           title: 'Error',
           message: 'Failed to send comment',
           icon: Icons.error_outline,
-          color: AppColors.semanticRed,
+          color: AppColors.loginAccentRed,
         );
       }
     } finally {
@@ -283,7 +283,7 @@ class CommentController extends GetxController {
           title: 'Error',
           message: 'Failed to update comment',
           icon: Icons.error_outline,
-          color: AppColors.semanticRed,
+          color: AppColors.loginAccentRed,
         );
       }
     } finally {
@@ -325,7 +325,7 @@ class CommentController extends GetxController {
         title: 'Error',
         message: 'Failed to delete comment',
         icon: Icons.error_outline,
-        color: AppColors.semanticRed,
+        color: AppColors.loginAccentRed,
       );
     }
   }

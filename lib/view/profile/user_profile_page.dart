@@ -44,7 +44,7 @@ class UserProfilePage extends StatelessWidget {
       body: Obx(() {
         if (controller.isLoading.value || controller.profile.value == null) {
           return const Center(
-            child: CircularProgressIndicator(color: AppColors.brand),
+            child: CircularProgressIndicator(color: AppColors.loginAccentRed),
           );
         }
 

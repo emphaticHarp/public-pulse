@@ -17,6 +17,7 @@ class EditProfileController extends GetxController {
 
   late final ProfileModel original = ProfileController.to.profile.value!;
 
+  final displayNameCtrl = TextEditingController();
   final usernameCtrl = TextEditingController();
   final bioCtrl = TextEditingController();
 
@@ -39,14 +40,18 @@ class EditProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    displayNameCtrl.text = original.displayName ?? '';
     usernameCtrl.text = original.username;
     bioCtrl.text = original.bio ?? '';
   }
 
   @override
   void onClose() {
+    displayNameCtrl.dispose();
     usernameCtrl.dispose();
     bioCtrl.dispose();
+
     super.onClose();
   }
 
@@ -90,6 +95,7 @@ class EditProfileController extends GetxController {
       final username = usernameCtrl.text.trim().toLowerCase();
 
       final updated = await _repo.updateProfile(
+        displayName: displayNameCtrl.text.trim(),
         username: username == original.username ? null : username,
         bio: bioCtrl.text.trim(),
         avatarFile: pickedAvatar.value,
@@ -109,6 +115,11 @@ class EditProfileController extends GetxController {
 
   bool _isFormValid() {
     errorMessage('');
+
+    if (displayNameCtrl.text.trim().isEmpty) {
+      return _fail('Display name is required.');
+    }
+
     if (usernameCtrl.text.trim().isEmpty) {
       return _fail('Username is required.');
     }

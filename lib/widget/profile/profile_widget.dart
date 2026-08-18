@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_font.dart';
@@ -55,27 +56,70 @@ class ProfileAvatar extends StatelessWidget {
 
 class ChangePhotoButton extends StatelessWidget {
   final VoidCallback onTap;
-  final double size;
+  final bool circular;
 
-  const ChangePhotoButton({super.key, required this.onTap, this.size = 34});
+  const ChangePhotoButton({
+    super.key,
+    required this.onTap,
+    this.circular = false,
+  });
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      height: size,
-      width: size,
-      decoration: const BoxDecoration(
-        color: AppColors.pureBlack,
-        shape: BoxShape.circle,
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.transparentFull,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: circular ? const CircleBorder() : null,
+        child: Container(
+          decoration: BoxDecoration(
+            // Very light full-image overlay.
+            color: AppColors.overlayBlack18.withValues(alpha: 0.10),
+            shape: circular ? BoxShape.circle : BoxShape.rectangle,
+          ),
+          alignment: Alignment.center,
+
+          // Frosted / blurred camera button.
+          child: ClipOval(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: 8,
+                sigmaY: 8,
+              ),
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.black.withValues(alpha: 0.22),
+                  shape: BoxShape.circle,
+
+                  // Softer border instead of sharp white.
+                  border: Border.all(
+                    color: AppColors.white.withValues(alpha: 0.35),
+                    width: 1,
+                  ),
+
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withValues(alpha: 0.12),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: AppColors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
-      child: Icon(
-        Icons.camera_alt_outlined,
-        color: AppColors.cameraIconGrey,
-        size: size * 0.5,
-      ),
-    ),
-  );
+    );
+  }
 }
 
 /// Cover photo + floating circular avatar. Shared by Profile Screen and Edit Profile Screen
@@ -94,40 +138,79 @@ class ProfileHeaderImage extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 220,
-    child: Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          height: 170,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image:
-                  coverImage ??
-                  const AssetImage('assets/images/cover_placeholder.png'),
-              fit: BoxFit.cover,
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 220,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // ─────────────────────────────────────
+          // COVER IMAGE
+          // ─────────────────────────────────────
+
+          SizedBox(
+            height: 170,
+            width: double.infinity,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  color: AppColors.gray100,
+                  child: coverImage != null
+                      ? DecoratedBox(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: coverImage!,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        )
+                      : const Center(
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 46,
+                            color: AppColors.gray400,
+                          ),
+                        ),
+                ),
+
+                // Full cover overlay.
+                if (coverAction != null)
+                  Positioned.fill(child: ClipRect(child: coverAction!)),
+              ],
             ),
           ),
-        ),
-        if (coverAction != null)
-          Positioned(right: 16, bottom: 62, child: coverAction!),
-        Positioned(
-          left: 20,
-          top: 130,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              ProfileAvatar(image: profileImage),
-              if (avatarAction != null)
-                Positioned(right: 0, bottom: 0, child: avatarAction!),
-            ],
+
+          // ─────────────────────────────────────
+          // PROFILE IMAGE
+          // ─────────────────────────────────────
+          Positioned(
+            left: 20,
+            top: 130,
+            child: SizedBox(
+              width: 104,
+              height: 104,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ProfileAvatar(image: profileImage, radius: 48),
+
+                  // Full circular avatar overlay.
+                  if (avatarAction != null)
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: ClipOval(child: avatarAction!),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class ProfileStatColumn extends StatelessWidget {
@@ -179,7 +262,7 @@ class ProfileTabSelector extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     children: ProfileTab.values.map((tab) {
       final isActive = tab == selected;
-      final color = isActive ? AppColors.brand : AppColors.textSecondary;
+      final color = isActive ? AppColors.loginAccentRed : AppColors.textSecondary;
       return Expanded(
         child: GestureDetector(
           onTap: () => onChanged(tab),
@@ -199,7 +282,7 @@ class ProfileTabSelector extends StatelessWidget {
               ),
               Container(
                 height: 2,
-                color: isActive ? AppColors.brand : AppColors.transparent,
+                color: isActive ? AppColors.loginAccentRed : AppColors.transparent,
               ),
             ],
           ),
@@ -295,7 +378,7 @@ class AppPrimaryButton extends StatelessWidget {
   Widget build(BuildContext context) => ElevatedButton(
     onPressed: loading ? null : onTap,
     style: ElevatedButton.styleFrom(
-      backgroundColor: AppColors.brand,
+      backgroundColor: AppColors.loginAccentRed,
       padding: _buttonPadding,
       shape: _buttonShape,
     ),

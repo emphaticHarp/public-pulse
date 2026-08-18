@@ -4,11 +4,11 @@ class AppColors {
   AppColors._();
 
   // ── Primary Brand Colors ──────────────────────────────────────────────
-  /// Login accent red - used for buttons and links on login page
-  static const Color loginAccentRed = Color.fromRGBO(226, 29, 72, 1);
+  /// Login accent red - the single red used across the entire app
+  static const Color loginAccentRed = Color.fromRGBO(217, 33, 52, 0.83);
 
-  /// Onboarding/Splash accent red - used for buttons and highlights
-  static const Color accentRed = Color.fromRGBO(217, 33, 52, 0.83);
+  /// Onboarding/Splash accent red - alias to loginAccentRed
+  static const Color accentRed = loginAccentRed;
 
   // ── Surface Colors ────────────────────────────────────────────────────
   /// Primary white - used for card backgrounds and light surfaces
@@ -62,7 +62,8 @@ class AppColors {
   /// Gray 900 - dark text and icon color
   static const Color gray900 = Color(0xFF111827);
 
-  static const Color brand = Color(0xFFE6192E);
+  /// Brand color - alias to loginAccentRed
+  static const Color brand = loginAccentRed;
 
   static const Color surfaceDefault = Color(0xFFFBF9F8);
 
@@ -79,14 +80,14 @@ class AppColors {
   static const Color divider = Color(0xFFF1F5F9); // slate-100
 
   // ── Create Post Page Colors ─────────────────────────────────────────────
-  /// Create Post Red 600 - primary red for create post page
-  static const Color createPostRed600 = Color.fromARGB(255, 205, 12, 80);
+  /// Create Post Red 600 - alias to loginAccentRed
+  static const Color createPostRed600 = loginAccentRed;
 
-  /// Create Post Red 700 - darker red for create post buttons
-  static const Color createPostRed700 = Color.fromARGB(255, 205, 12, 80);
+  /// Create Post Red 700 - alias to loginAccentRed
+  static const Color createPostRed700 = loginAccentRed;
 
-  /// Create Post Red 800 - darkest red for hover states
-  static const Color createPostRed800 = Color.fromARGB(255, 205, 12, 80);
+  /// Create Post Red 800 - alias to loginAccentRed
+  static const Color createPostRed800 = loginAccentRed;
 
   /// Create Post Gray 300 - light gray for inactive elements
   static const Color createPostGray300 = Color.fromARGB(255, 235, 234, 229);
@@ -135,11 +136,12 @@ class AppColors {
   /// Success - used for active or success status indicators
   static const Color success = Color(0xFF10B981);
 
-  /// Toggle red - used for destructive toggle switches
-  static const Color toggleRed = Color(0xFFEF4444);
+  /// Toggle red - alias to loginAccentRed
+  static const Color toggleRed = loginAccentRed;
 
-  /// Danger - used for destructive actions like delete, deactivate, or logout buttons
-  static const Color danger = Color(0xFFEF4444);
+  /// Danger - alias to loginAccentRed
+  static const Color danger = loginAccentRed;
+
   static const Color grayshade200 = Color(0xFFEEEEEE);
 
   static const Color gray700 = Color(0xFF374151);
@@ -233,11 +235,11 @@ class AppColors {
   static const Color grey = Color(0xFF9E9E9E);
 
   // -- Semantic Status Colors --
-  /// Red - destructive actions, delete, error indicators
-  static const Color semanticRed = Color(0xFFF44336);
+  /// Red - alias to loginAccentRed
+  static const Color semanticRed = loginAccentRed;
 
-  /// Red shade 400 - dismiss background
-  static const Color redShade400 = Color(0xFFEF5350);
+  /// Red shade 400 - alias to loginAccentRed
+  static const Color redShade400 = loginAccentRed;
 
   /// Orange - warning, report indicators
   static const Color semanticOrange = Color(0xFFFF9800);
@@ -271,8 +273,8 @@ class AppColors {
   /// Bio text in edit profile
   static const Color editProfileBioDark = Color(0xE8131314);
 
-  /// Error text in edit profile
-  static const Color editProfileErrorRed = Color(0xFFE51D5C);
+  /// Error text in edit profile - alias to loginAccentRed
+  static const Color editProfileErrorRed = loginAccentRed;
 
   /// Hint text in edit profile fields
   static const Color editProfileHint = Color(0xFF4B4E53);
@@ -280,11 +282,11 @@ class AppColors {
   /// Camera icon on avatar change button
   static const Color cameraIconGrey = Color(0xFFA8ACB3);
 
-  /// Verification title accent red - login code page
-  static const Color verificationAccent = Color(0xFFDE375B);
+  /// Verification title accent red - alias to loginAccentRed
+  static const Color verificationAccent = loginAccentRed;
 
-  /// Lock icon background tint
-  static const Color lockIconBgTint = Color(0xFFD1255E);
+  /// Lock icon background tint - alias to loginAccentRed
+  static const Color lockIconBgTint = loginAccentRed;
 
   /// Pin input background
   static const Color pinInputBg = Color(0xFF666565);
@@ -292,11 +294,11 @@ class AppColors {
   /// Pin input border
   static const Color pinInputBorder = Color(0xFF797B7E);
 
-  /// Bottom nav active icon color
-  static const Color navActiveIcon = Color(0xFFE21D48);
+  /// Bottom nav active icon color - alias to loginAccentRed
+  static const Color navActiveIcon = loginAccentRed;
 
-  /// Bottom nav create button shadow
-  static const Color createButtonShadow = Color(0x59E21D48);
+  /// Bottom nav create button shadow - alias to loginAccentRed
+  static const Color createButtonShadow = loginAccentRed;
 
   /// Alert card background
   static const Color alertCardBg = Color(0xFFF5F5F7);

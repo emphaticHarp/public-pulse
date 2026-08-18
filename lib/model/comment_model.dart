@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class CommentModel {
   final String id;
 
@@ -28,21 +30,64 @@ class CommentModel {
     this.isPending = false,
   });
 
+  static String? resolveProfileImage(dynamic value) {
+    final avatar = value?.toString().trim() ?? '';
+
+    if (avatar.isEmpty) {
+      return null;
+    }
+
+    // Google avatar or any already-complete URL.
+    if (avatar.startsWith('http://') ||
+        avatar.startsWith('https://')) {
+      return avatar;
+    }
+
+    // User changed profile picture inside Public Pulse.
+    // avatar_path now contains a Supabase Storage path.
+    return Supabase.instance.client.storage
+        .from('avatars')
+        .getPublicUrl(avatar);
+  }
+
   factory CommentModel.fromMap(Map<String, dynamic> map) {
+    Map<String, dynamic>? profileData;
+
+    final rawProfile = map['profiles'];
+
+    if (rawProfile is Map) {
+      profileData = Map<String, dynamic>.from(rawProfile);
+    } else if (rawProfile is List && rawProfile.isNotEmpty) {
+      final first = rawProfile.first;
+
+      if (first is Map) {
+        profileData = Map<String, dynamic>.from(first);
+      }
+    }
+
+    final rawAvatar =
+        map['profile_image'] ??
+        profileData?['avatar_path'];
+
     return CommentModel(
-      id: map['id'] as String,
-      postId: map['post_id'] as String,
-      profileId: map['profile_id'] as String,
+      id: map['id'].toString(),
+      postId: map['post_id'].toString(),
+      profileId: map['profile_id'].toString(),
 
-      username: map['username'] ?? map['profiles']?['username'] ?? '',
+      username:
+          map['username']?.toString() ??
+          profileData?['username']?.toString() ??
+          '',
 
-      profileImage: map['profile_image'] ?? map['profiles']?['avatar_path'],
+      profileImage: resolveProfileImage(rawAvatar),
 
-      content: map['content'] ?? '',
+      content: map['content']?.toString() ?? '',
 
-      createdAt: DateTime.parse(map['created_at']),
+      createdAt: DateTime.parse(
+        map['created_at'].toString(),
+      ),
 
-      isPending: map['is_pending'] ?? false,
+      isPending: map['is_pending'] == true,
     );
   }
 

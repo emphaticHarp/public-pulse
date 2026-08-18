@@ -53,7 +53,7 @@ class PostDetailPage extends StatelessWidget {
                     ? Icons.favorite
                     : Icons.favorite_border,
                 likeIconColor: ctrl.isLiked.value
-                    ? AppColors.brand
+                    ? AppColors.loginAccentRed
                     : AppColors.gray900,
                 likeCount: ctrl.likeCount.value.toString(),
                 commentCount: post.commentCount.toString(),

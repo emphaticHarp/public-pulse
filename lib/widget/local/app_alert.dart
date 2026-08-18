@@ -26,7 +26,7 @@ class CustomAlert extends StatelessWidget {
     Color color = AppColors.loginAccentRed,
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
-    Color confirmColor = AppColors.semanticRed,
+    Color confirmColor = AppColors.loginAccentRed,
   }) async {
     final result = await Get.dialog<bool>(
       Dialog(

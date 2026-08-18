@@ -714,7 +714,7 @@ class HomeController extends GetxController {
         title: 'Error',
         message: 'Failed to delete post',
         icon: Icons.error_outline,
-        color: AppColors.semanticRed,
+        color: AppColors.loginAccentRed,
       );
 
       return;

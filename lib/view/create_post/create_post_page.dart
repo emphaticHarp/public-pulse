@@ -170,7 +170,7 @@ class _Header extends StatelessWidget {
             },
             icon: const Icon(
               Icons.chevron_left,
-              color: AppColors.createPostRed600,
+              color: AppColors.loginAccentRed,
               size: 24,
             ),
           ),
@@ -179,7 +179,7 @@ class _Header extends StatelessWidget {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppColors.createPostRed600,
+              color: AppColors.loginAccentRed,
             ),
           ),
           const SizedBox(width: 32), // spacer to balance the back button
@@ -331,14 +331,14 @@ class _MediaCarousel extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: index == current
-                            ? AppColors.createPostRed600
+                            ? AppColors.loginAccentRed
                             : AppColors.transparentFull,
                         width: 2.5,
                       ),
                       boxShadow: index == current
                           ? [
                               BoxShadow(
-                                color: AppColors.createPostRed600.withValues(
+                                color: AppColors.loginAccentRed.withValues(
                                   alpha: 0.3,
                                 ),
                                 blurRadius: 6,
@@ -393,12 +393,12 @@ class _EmptyState extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: AppColors.createPostRed600.withValues(alpha: 0.1),
+                  color: AppColors.loginAccentRed.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.add_a_photo_outlined,
-                  color: AppColors.createPostRed600,
+                  color: AppColors.loginAccentRed,
                   size: 40,
                 ),
               ),
@@ -534,7 +534,7 @@ class _InfoBanner extends StatelessWidget {
       padding: EdgeInsets.only(left: 20, right: 20, top: 16),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: AppColors.createPostRed600, size: 16),
+          Icon(Icons.info_outline, color: AppColors.loginAccentRed, size: 16),
           SizedBox(width: 8),
           Text(
             'You can add up to 10 photos',
@@ -563,14 +563,14 @@ class _CaptionSection extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.edit, color: AppColors.createPostRed600, size: 16),
+              Icon(Icons.edit, color: AppColors.loginAccentRed, size: 16),
               SizedBox(width: 8),
               Text(
                 'Add Caption',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.createPostRed600,
+                  color: AppColors.loginAccentRed,
                 ),
               ),
             ],
@@ -624,7 +624,7 @@ class _CaptionSection extends StatelessWidget {
                       color = AppColors.semanticOrange;
                     }
                     if (length >= controller.captionMaxLength) {
-                      color = AppColors.semanticRed;
+                      color = AppColors.loginAccentRed;
                     }
                     return Text(
                       '$length/${controller.captionMaxLength}',
@@ -662,14 +662,14 @@ class _VisibilitySection extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.public, color: AppColors.createPostRed600, size: 16),
+              Icon(Icons.public, color: AppColors.loginAccentRed, size: 16),
               SizedBox(width: 8),
               Text(
                 "Who can see this?",
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.createPostRed600,
+                  color: AppColors.loginAccentRed,
                 ),
               ),
             ],
@@ -694,14 +694,14 @@ class _VisibilitySection extends StatelessWidget {
                   children: [
                     RadioListTile<String>(
                       value: "PUBLIC",
-                      activeColor: AppColors.createPostRed600,
+                      activeColor: AppColors.loginAccentRed,
                       title: const Text("Public"),
                       subtitle: const Text("Everyone can view this post"),
                     ),
                     const Divider(height: 1),
                     RadioListTile<String>(
                       value: "PRIVATE",
-                      activeColor: AppColors.createPostRed600,
+                      activeColor: AppColors.loginAccentRed,
                       title: const Text("Followers Only"),
                       subtitle: const Text("Only your followers can view this"),
                     ),
@@ -753,7 +753,7 @@ class _UploadFooter extends StatelessWidget {
                   },
             style:
                 ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.createPostRed700,
+                  backgroundColor: AppColors.loginAccentRed,
                   foregroundColor: AppColors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -762,7 +762,7 @@ class _UploadFooter extends StatelessWidget {
                   elevation: 4,
                 ).copyWith(
                   overlayColor: WidgetStateProperty.all(
-                    AppColors.createPostRed800,
+                    AppColors.loginAccentRed,
                   ),
                 ),
             child: Obx(() {

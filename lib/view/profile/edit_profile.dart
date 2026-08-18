@@ -44,10 +44,12 @@ class EditProfilePage extends StatelessWidget {
                   file: controller.pickedAvatar.value,
                   url: controller.avatarUrl,
                 ),
-                coverAction: ChangePhotoButton(onTap: controller.pickCover),
+                coverAction: ChangePhotoButton(
+                  onTap: controller.pickCover,
+                ),
                 avatarAction: ChangePhotoButton(
                   onTap: controller.pickAvatar,
-                  size: 28,
+                  circular: true,
                 ),
               ),
               const SizedBox(height: 56),
@@ -57,7 +59,15 @@ class EditProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const _FieldLabel('Display Name'),
-                    _ReadOnlyField(controller.original.displayName ?? ''),
+                    TextField(
+                      controller: controller.displayNameCtrl,
+                      textCapitalization: TextCapitalization.words,
+                      style: AppTextStyles.inputText.copyWith(
+                        color: AppColors.editProfileTextDark,
+                      ),
+                      decoration: _fieldDecoration('Display Name'),
+                    ),
+
                     const SizedBox(height: 16),
                     const _FieldLabel('Username'),
                     TextField(
@@ -96,7 +106,7 @@ class EditProfilePage extends StatelessWidget {
                         child: Text(
                           controller.errorMessage.value,
                           style: AppTextStyles.linkText.copyWith(
-                            color: AppColors.editProfileErrorRed,
+                            color: AppColors.loginAccentRed,
                           ),
                         ),
                       ),
@@ -159,21 +169,4 @@ class _FieldLabel extends StatelessWidget {
   );
 }
 
-class _ReadOnlyField extends StatelessWidget {
-  final String value;
-  const _ReadOnlyField(this.value);
 
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    decoration: BoxDecoration(
-      color: AppColors.gray50,
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Text(
-      value,
-      style: AppTextStyles.inputText.copyWith(color: AppColors.gray500),
-    ),
-  );
-}

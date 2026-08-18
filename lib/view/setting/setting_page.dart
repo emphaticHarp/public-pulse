@@ -165,7 +165,7 @@ class SettingPage extends StatelessWidget {
                           padding: EdgeInsets.all(AppSpacing.lg),
                           child: Center(
                             child: CircularProgressIndicator(
-                              color: AppColors.danger,
+                              color: AppColors.loginAccentRed,
                             ),
                           ),
                         )

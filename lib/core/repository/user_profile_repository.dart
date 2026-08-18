@@ -61,6 +61,10 @@ class UserProfileRepository {
     });
   }
 
+  Future<String> getProfileIdFromUserId(String userId) {
+    return _getProfileIdFromUserId(userId);
+  }
+
   /// Fetches the target user's public profile.
   Future<ProfileModel> getUserProfile(String userId) async {
     final data = await _db
@@ -230,9 +234,7 @@ class UserProfileRepository {
 
     await Supabase.instance.client.rpc(
       'follow_user',
-      params: {
-        'p_following_profile_id': targetProfileId,
-      },
+      params: {'p_following_profile_id': targetProfileId},
     );
   }
 
@@ -251,9 +253,7 @@ class UserProfileRepository {
 
     await Supabase.instance.client.rpc(
       'unfollow_user',
-      params: {
-        'p_following_profile_id': targetProfileId,
-      },
+      params: {'p_following_profile_id': targetProfileId},
     );
   }
 }
