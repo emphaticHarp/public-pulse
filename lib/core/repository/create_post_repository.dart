@@ -9,10 +9,9 @@ class CreatePostRepository {
   static const String imageBucket = 'posts-images';
 
   static const String bunnyImageFolder = 'posts-images';
-
+  static const String bunnyThumbnailFolder = 'thumbnails';
 
   /// Log Supabase URL (masked) to verify env is loaded
- 
 
   Future<String> uploadImage({
     required File imageFile,
@@ -44,6 +43,25 @@ class CreatePostRepository {
 
     // IMPORTANT:
     // This is already the FULL Bunny CDN URL.
+    return bunnyUrl;
+  }
+
+  Future<String> uploadThumbnail({required File imageFile}) async {
+    debugPrint('[CREATE POST] Uploading thumbnail to Bunny CDN');
+
+    final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
+      imageFile,
+      bunnyThumbnailFolder,
+    );
+
+    if (bunnyUrl == null || bunnyUrl.isEmpty) {
+      throw Exception('Bunny thumbnail upload failed');
+    }
+
+    debugPrint(
+      '[CREATE POST] Bunny thumbnail uploaded successfully: $bunnyUrl',
+    );
+
     return bunnyUrl;
   }
 
@@ -116,7 +134,7 @@ class CreatePostRepository {
           'storage_path': item['storage_path'],
           'media_type': item['media_type'],
           'media_order': index + 1,
-          'thumbnail_path': null,
+          'thumbnail_path': item['thumbnail_path'],
           'width': item['width'],
           'height': item['height'],
         };

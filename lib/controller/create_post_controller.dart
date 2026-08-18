@@ -331,6 +331,53 @@ class CreatePostController extends GetxController {
         },
       );
 
+      // ============================================================
+      // UPLOAD THUMBNAIL TO BUNNY
+      // ============================================================
+
+      // ============================================================
+      // CREATE SMALL THUMBNAIL IN LESS THAN 5 KB
+      // ============================================================
+
+      String thumbnailPath = storagePath;
+
+      final thumbnailFile = await imageCompressor.createThumbnail(uploadFile);
+
+      if (thumbnailFile != null) {
+        debugPrint(
+          '🖼️ [BackgroundUpload] '
+          'Thumbnail size: '
+          '${thumbnailFile.lengthSync() / 1024} KB',
+        );
+
+        thumbnailPath = await repository.uploadThumbnail(
+          imageFile: thumbnailFile,
+        );
+
+        debugPrint(
+          '🟢 [BackgroundUpload] '
+          'Thumbnail uploaded: $thumbnailPath',
+        );
+
+        // Thumbnail is temporary.
+        try {
+          if (thumbnailFile.existsSync()) {
+            await thumbnailFile.delete();
+          }
+        } catch (e) {
+          debugPrint('🟡 Could not delete temporary thumbnail: $e');
+        }
+      } else {
+        debugPrint(
+          '🟡 Thumbnail generation failed. '
+          'Using main image URL as fallback.',
+        );
+      }
+      debugPrint(
+        '🟢 [BackgroundUpload] '
+        'Thumbnail upload completed: $thumbnailPath',
+      );
+
       debugPrint(
         '🟢 [BackgroundUpload] '
         'Storage upload completed: $storagePath',
@@ -338,6 +385,7 @@ class CreatePostController extends GetxController {
 
       mediaItems.add({
         'storage_path': storagePath,
+        'thumbnail_path': thumbnailPath,
         'media_type': 'IMAGE',
         'width': dimensions.width,
         'height': dimensions.height,
@@ -697,18 +745,12 @@ class CreatePostController extends GetxController {
                     return;
                   }
 
-                  pendingMedia.add(
-                    PendingMedia(
-                      originalPath: image.path,
-                    ),
-                  );
+                  pendingMedia.add(PendingMedia(originalPath: image.path));
 
                   // Show the newly captured photo
                   currentIndex.value = pendingMedia.length - 1;
 
-                  debugPrint(
-                    '📷 [MediaPicker] Photo captured: ${image.path}',
-                  );
+                  debugPrint('📷 [MediaPicker] Photo captured: ${image.path}');
 
                   debugPrint(
                     '📷 [MediaPicker] Total media count: ${pendingMedia.length}',
