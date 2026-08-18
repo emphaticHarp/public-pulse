@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:public_pulse/core/services/bunny_upload_service.dart';
 
 class PostModel {
   final String id;
@@ -159,9 +159,10 @@ class PostModel {
               return '';
             }
 
-            return Supabase.instance.client.storage
-                .from('posts-images')
-                .getPublicUrl(path);
+            return BunnyUploadService.instance.resolveMediaUrl(
+              path,
+              bucket: 'posts-images',
+            );
           })
           .where((url) => url.isNotEmpty)
           .toList(),
