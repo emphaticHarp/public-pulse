@@ -5,6 +5,7 @@ import '../../controller/setting_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_font.dart';
 import '../../widget/setting/setting_widgets.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
@@ -68,7 +69,9 @@ class SettingPage extends StatelessWidget {
                         : controller.referralCode,
                     onCopy: () {
                       if (controller.referralCode.isNotEmpty) {
-                        controller.copyReferralCode(controller.referralCode);
+                        controller.copyReferralCode(
+                          controller.referralCode,
+                        );
                       }
                     },
                     showDivider: false,
@@ -171,6 +174,46 @@ class SettingPage extends StatelessWidget {
                         ),
                 ),
               ],
+            ),
+
+            // APP VERSION + COMPANY
+            const SizedBox(height: 24),
+
+            Center(
+              child: FutureBuilder<PackageInfo>(
+                future: PackageInfo.fromPlatform(),
+                builder: (context, snapshot) {
+                  final version = snapshot.data?.version ?? '';
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        version.isNotEmpty
+                            ? 'Version $version'
+                            : 'Version',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      const Text(
+                        'Insyssky Softech Pvt Ltd',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
 
             const SizedBox(height: AppSpacing.section),

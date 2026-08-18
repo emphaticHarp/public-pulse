@@ -1,134 +1,50 @@
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mime/mime.dart';
+import 'package:public_pulse/core/services/bunny_upload_service.dart';
 
 class CreatePostRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
-  final Dio _dio = Dio();
 
   static const String imageBucket = 'posts-images';
 
-  String _storageUrl(String bucket) =>
-      '${dotenv.env['SUPABASE_URL']}/storage/v1/object/$bucket';
+  static const String bunnyImageFolder = 'posts-images';
+
 
   /// Log Supabase URL (masked) to verify env is loaded
-  void _logEnvCheck() {
-    final url = dotenv.env['SUPABASE_URL'];
-    final key = dotenv.env['SUPABASE_PUBLISHABLE_KEY'];
-    debugPrint(
-      '🔍 [CreatePostRepo] SUPABASE_URL loaded: ${url != null && url.isNotEmpty ? "YES (${url.substring(0, url.indexOf('.', url.indexOf('//') + 2) + 4)}...)" : "NO / EMPTY"}',
-    );
-    debugPrint(
-      '🔍 [CreatePostRepo] SUPABASE_PUBLISHABLE_KEY loaded: ${key != null && key.isNotEmpty ? "YES (length: ${key.length})" : "NO / EMPTY"}',
-    );
-  }
+ 
 
   Future<String> uploadImage({
     required File imageFile,
     required String fileName,
     required String bucket,
-    required void Function(int sent, int total) onProgress,
+    void Function(int sent, int total)? onProgress,
   }) async {
-    debugPrint('☁️ [CreatePostRepo] uploadImage() STARTED');
-    debugPrint('☁️ [CreatePostRepo] File: ${imageFile.path}');
-    debugPrint('☁️ [CreatePostRepo] FileName: $fileName');
-    debugPrint('☁️ [CreatePostRepo] Bucket: $bucket');
+    debugPrint('[CREATE POST] Uploading image to Bunny CDN');
 
-    _logEnvCheck();
+    // Optional initial progress.
+    final totalBytes = await imageFile.length();
 
-    final session = _supabase.auth.currentSession;
+    onProgress?.call(0, totalBytes);
 
-    if (session == null) {
-      debugPrint('🔴 [CreatePostRepo] User is NOT logged in. session is null');
-      throw Exception("User is not logged in.");
-    }
-
-    debugPrint(
-      '🟢 [CreatePostRepo] Session active. User ID: ${session.user.id}',
-    );
-    debugPrint(
-      '🟢 [CreatePostRepo] Access token length: ${session.accessToken.length}',
+    final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
+      imageFile,
+      bunnyImageFolder,
     );
 
-    final mimeType =
-        lookupMimeType(imageFile.path) ?? 'application/octet-stream';
-  
-
-    debugPrint("🟢 MIME TYPE = $mimeType");
-    debugPrint("🟢 Upload file path = ${imageFile.path}");
-
-    final headers = {
-      'Authorization': 'Bearer ${session.accessToken}',
-      'apikey': dotenv.env['SUPABASE_PUBLISHABLE_KEY']!,
-      'x-upsert': 'false',
-      'Content-Type': mimeType,
-    };
-
-    try {
-      final userId = session.user.id;
-      final storagePath = '$userId/$fileName';
-      debugPrint('☁️ [CreatePostRepo] Storage path: $storagePath');
-
-      final bytes = await imageFile.readAsBytes();
-      debugPrint(
-        '☁️ [CreatePostRepo] File read as bytes: ${bytes.length} bytes (${(bytes.length / 1024 / 1024).toStringAsFixed(2)} MB)',
-      );
-
-      final uploadUrl = '${_storageUrl(bucket)}/$storagePath';
-      debugPrint('☁️ [CreatePostRepo] Upload URL: $uploadUrl');
-      debugPrint('☁️ [CreatePostRepo] Starting HTTP PUT upload...');
-
-      final response = await _dio.put(
-        uploadUrl,
-        data: bytes,
-        options: Options(headers: headers),
-        onSendProgress: onProgress,
-      );
-
-      debugPrint(
-        '☁️ [CreatePostRepo] Upload response status: ${response.statusCode}',
-      );
-      debugPrint('☁️ [CreatePostRepo] Upload response data: ${response.data}');
-
-      if (response.statusCode == 200) {
-        debugPrint(
-          '🟢 [CreatePostRepo] uploadImage() SUCCESS - path: $storagePath',
-        );
-        return storagePath;
-      }
-
-      debugPrint(
-        '🔴 [CreatePostRepo] Upload failed with status: ${response.statusCode}',
-      );
-      throw Exception("Failed to upload image. Status: ${response.statusCode}");
-    } on DioException catch (e) {
-      debugPrint('🔴 [CreatePostRepo] DioException during upload!');
-      debugPrint('🔴 [CreatePostRepo] Dio error type: ${e.type}');
-      debugPrint('🔴 [CreatePostRepo] Dio error message: ${e.message}');
-      debugPrint(
-        '🔴 [CreatePostRepo] Dio response status: ${e.response?.statusCode}',
-      );
-      debugPrint('🔴 [CreatePostRepo] Dio response data: ${e.response?.data}');
-      debugPrint(
-        '🔴 [CreatePostRepo] Dio response headers: ${e.response?.headers}',
-      );
-      debugPrint(
-        '🔴 [CreatePostRepo] Dio request URL: ${e.requestOptions.uri}',
-      );
-      debugPrint(
-        '🔴 [CreatePostRepo] Dio request method: ${e.requestOptions.method}',
-      );
-      rethrow;
-    } catch (e, stackTrace) {
-      debugPrint('🔴 [CreatePostRepo] Unexpected error during upload: $e');
-      debugPrint('🔴 [CreatePostRepo] Error type: ${e.runtimeType}');
-      debugPrint('🔴 [CreatePostRepo] Stack trace:');
-      debugPrint('$stackTrace');
-      rethrow;
+    if (bunnyUrl == null || bunnyUrl.isEmpty) {
+      throw Exception('Bunny image upload failed');
     }
+
+    // MultipartRequest in BunnyUploadService does not currently expose
+    // upload progress, so mark it complete after successful upload.
+    onProgress?.call(totalBytes, totalBytes);
+
+    debugPrint('[CREATE POST] Bunny image uploaded successfully: $bunnyUrl');
+
+    // IMPORTANT:
+    // This is already the FULL Bunny CDN URL.
+    return bunnyUrl;
   }
 
   Future<String?> getCurrentProfileId() async {
