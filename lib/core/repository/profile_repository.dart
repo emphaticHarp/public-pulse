@@ -66,6 +66,7 @@ class ProfileRepository {
   }
 
   Future<ProfileModel> updateProfile({
+    String? displayName,
     String? username,
     String? bio,
     File? avatarFile,
@@ -82,8 +83,19 @@ class ProfileRepository {
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     };
 
-    if (username != null) updates['username'] = username;
-    updates['bio'] = (bio?.trim().isEmpty ?? true) ? null : bio!.trim();
+    if (displayName != null) {
+      updates['display_name'] = displayName.trim().isEmpty
+          ? null
+          : displayName.trim();
+    }
+
+    if (username != null) {
+      updates['username'] = username;
+    }
+
+    updates['bio'] = (bio?.trim().isEmpty ?? true)
+        ? null
+        : bio!.trim();
     if (avatarPath != null) updates['avatar_path'] = avatarPath;
     if (coverPath != null) updates['cover_path'] = coverPath;
 

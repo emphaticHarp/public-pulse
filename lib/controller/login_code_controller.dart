@@ -11,7 +11,21 @@ class LoginCodeController extends GetxController {
 
   final isLoading = false.obs;
 
+  final RxString codeError = ''.obs;
+  final RxInt shakeTrigger = 0.obs;
+
   final AuthService _authService = Get.find<AuthService>();
+
+  void clearCodeError() {
+    if (codeError.value.isNotEmpty) {
+      codeError.value = '';
+    }
+  }
+
+  void showCodeError(String message) {
+    codeError.value = message;
+    shakeTrigger.value++;
+  }
 
   Future<void> verifyCode() async {
     try {
@@ -19,25 +33,17 @@ class LoginCodeController extends GetxController {
 
       final code = pinController.text.trim().toUpperCase();
 
+      codeError.value = '';
+
       if (code.length != 6) {
-        CustomAlert.show(
-          title: 'Invalid Code',
-          message: 'Enter a 6-character code.',
-          icon: Icons.warning_amber_rounded,
-          color: AppColors.semanticOrange,
-        );
+        showCodeError('Enter the complete 6-character code');
         return;
       }
 
       final valid = await _authService.verifyLoginCode(code);
 
       if (!valid) {
-        CustomAlert.show(
-          title: 'Invalid Code',
-          message: 'Incorrect login code.',
-          icon: Icons.warning_amber_rounded,
-          color: AppColors.semanticOrange,
-        );
+        showCodeError('Incorrect code');
         return;
       }
 
@@ -65,7 +71,7 @@ class LoginCodeController extends GetxController {
         title: 'Error',
         message: 'Something went wrong.',
         icon: Icons.error_outline,
-        color: AppColors.semanticRed,
+        color: AppColors.loginAccentRed,
       );
     } finally {
       isLoading.value = false;

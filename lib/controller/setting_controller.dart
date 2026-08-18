@@ -96,7 +96,7 @@ class SettingController extends GetxController {
         return AppColors.semanticOrange;
       case 'banned':
       case 'deleted':
-        return AppColors.danger;
+        return AppColors.loginAccentRed;
       default:
         return AppColors.primaryText;
     }

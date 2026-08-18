@@ -71,10 +71,10 @@ class SettingItemBase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = isDestructive ? AppColors.danger : AppColors.primaryText;
-    final iconColor = isDestructive ? AppColors.danger : AppColors.iconColor;
+    final titleColor = isDestructive ? AppColors.loginAccentRed : AppColors.primaryText;
+    final iconColor = isDestructive ? AppColors.loginAccentRed : AppColors.iconColor;
     final iconBgColor = isDestructive
-        ? AppColors.danger.withValues(alpha: 0.1)
+        ? AppColors.loginAccentRed.withValues(alpha: 0.1)
         : AppColors.iconBackground;
 
     Widget content = Padding(
@@ -287,7 +287,7 @@ class SettingToggleItem extends StatelessWidget {
         value: value,
         onChanged: onChanged,
         activeThumbColor: AppColors.surface,
-        activeTrackColor: AppColors.toggleRed,
+        activeTrackColor: AppColors.loginAccentRed,
         inactiveThumbColor: AppColors.surface,
         inactiveTrackColor: AppColors.dividerColor,
       ),
@@ -335,7 +335,7 @@ class SettingNavItem extends StatelessWidget {
           Icon(
             Icons.chevron_right_rounded,
             color:
-                isDestructive ? AppColors.danger : AppColors.secondaryText,
+                isDestructive ? AppColors.loginAccentRed : AppColors.secondaryText,
             size: 20,
           ),
         ],

@@ -70,7 +70,7 @@ class OnboardingScreen extends StatelessWidget {
             if (leading.isNotEmpty) TextSpan(text: leading),
             TextSpan(
               text: lastWord,
-              style: const TextStyle(color: AppColors.accentRed),
+              style: const TextStyle(color: AppColors.loginAccentRed),
             ),
           ],
         ),
@@ -166,7 +166,7 @@ class OnboardingScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
                         color: active
-                            ? AppColors.accentRed
+                            ? AppColors.loginAccentRed
                             : AppColors.inactiveDot,
                       ),
                     );
@@ -182,7 +182,7 @@ class OnboardingScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: controller.getStarted,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentRed,
+                    backgroundColor: AppColors.loginAccentRed,
                     foregroundColor: AppColors.primaryWhite,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(

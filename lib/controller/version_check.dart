@@ -11,7 +11,7 @@ import 'package:public_pulse/view/auth/login_page.dart';
 import 'package:public_pulse/view/auth/onboarding_screen.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 import 'package:public_pulse/view/update/update_dialogue.dart';
-import 'package:public_pulse/widget/login/login_code_page.dart';
+import 'package:public_pulse/view/login/login_code_page.dart';
 
 class VersionCheckController extends GetxController {
   @override

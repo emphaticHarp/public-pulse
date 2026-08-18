@@ -252,7 +252,7 @@ class PostHeader extends StatelessWidget {
                           title: 'Delete Post?',
                           message: 'This post will be permanently removed.',
                           icon: Icons.delete_outline_rounded,
-                          color: AppColors.semanticRed,
+                          color: AppColors.loginAccentRed,
                           confirmText: 'Delete',
                         );
 
@@ -287,7 +287,7 @@ class PostHeader extends StatelessWidget {
                           title: 'Block',
                           message: 'Block feature coming soon',
                           icon: Icons.block_outlined,
-                          color: AppColors.semanticRed,
+                          color: AppColors.loginAccentRed,
                         );
 
                         return;
@@ -319,13 +319,13 @@ class PostHeader extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.delete_outline_rounded,
-                                  color: AppColors.semanticRed,
+                                  color: AppColors.loginAccentRed,
                                 ),
                                 SizedBox(width: 10),
                                 Text(
                                   'Delete Post',
                                   style: TextStyle(
-                                    color: AppColors.semanticRed,
+                                    color: AppColors.loginAccentRed,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -355,7 +355,7 @@ class PostHeader extends StatelessWidget {
                           value: 'block',
                           child: Row(
                             children: [
-                              Icon(Icons.block_outlined, color: AppColors.semanticRed),
+                              Icon(Icons.block_outlined, color: AppColors.loginAccentRed),
                               SizedBox(width: 10),
                               Text('Block'),
                             ],

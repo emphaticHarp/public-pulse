@@ -7,7 +7,7 @@ import '../model/post_model.dart';
 import '../core/repository/user_profile_repository.dart';
 import '../core/repository/profile_repository.dart';
 import '../core/services/current_user_service.dart';
-
+import 'package:public_pulse/controller/home_controller.dart';
 import 'followers_following_controller.dart';
 import '../view/profile/followers_following_page.dart';
 
@@ -95,8 +95,8 @@ class UserProfileController extends GetxController {
         _repo.getUserProfile(userId),
         _repo.isFollowing(userId),
         _repo.isFollowedBy(userId),
+        _repo.getProfileIdFromUserId(userId),
       ]);
-
       final loadedProfile = results[0] as ProfileModel;
 
       avatarUrl = loadedProfile.avatarPath != null
@@ -112,6 +112,21 @@ class UserProfileController extends GetxController {
       followingCount.value = loadedProfile.followingCount ?? 0;
       isFollowing.value = results[1] as bool;
       followsMe.value = results[2] as bool;
+
+      final targetProfileId = results[3] as String;
+
+      // Keep HomeController follow state synchronized.
+      if (Get.isRegistered<HomeController>()) {
+        final homeController = Get.find<HomeController>();
+
+        if (isFollowing.value) {
+          homeController.followingIds.add(targetProfileId);
+        } else {
+          homeController.followingIds.remove(targetProfileId);
+        }
+
+        homeController.followingIds.refresh();
+      }
 
       // Fetch full PostModel list for the grid (enables tap-to-detail).
       await _loadUserPosts();
@@ -136,11 +151,14 @@ class UserProfileController extends GetxController {
 
       final currentProfileId = await CurrentUserService.instance.getProfileId();
 
-      final rawPosts = await ProfileRepository.instance
-          .getUserPostsByProfileId(internalProfileId);
+      final rawPosts = await ProfileRepository.instance.getUserPostsByProfileId(
+        internalProfileId,
+      );
 
       photoPosts.assignAll(
-        rawPosts.map((data) => PostModel.fromJson(data, currentProfileId)).toList(),
+        rawPosts
+            .map((data) => PostModel.fromJson(data, currentProfileId))
+            .toList(),
       );
     } catch (e) {
       debugPrint('[USER_PROFILE] Post load error: $e');
@@ -160,7 +178,6 @@ class UserProfileController extends GetxController {
   // ─────────────────────────────────────────────
   // TOGGLE FOLLOW
   // ─────────────────────────────────────────────
-
   Future<void> toggleFollow() async {
     if (isFollowLoading.value) return;
 
@@ -169,13 +186,41 @@ class UserProfileController extends GetxController {
     final wasFollowing = isFollowing.value;
     final oldFollowerCount = followerCount.value;
 
-    // Optimistic UI.
-    isFollowing.value = !wasFollowing;
-    followerCount.value = wasFollowing
-        ? (followerCount.value - 1).clamp(0, 999999999)
-        : followerCount.value + 1;
-
     try {
+      final targetProfileId = await _repo.getProfileIdFromUserId(userId);
+
+      // ─────────────────────────────────────────
+      // OPTIMISTIC PROFILE UI
+      // ─────────────────────────────────────────
+
+      isFollowing.value = !wasFollowing;
+
+      followerCount.value = wasFollowing
+          ? (followerCount.value - 1).clamp(0, 999999999)
+          : followerCount.value + 1;
+
+      // ─────────────────────────────────────────
+      // SYNC HOME FOLLOW STATE
+      // ─────────────────────────────────────────
+
+      HomeController? homeController;
+
+      if (Get.isRegistered<HomeController>()) {
+        homeController = Get.find<HomeController>();
+
+        if (wasFollowing) {
+          homeController.followingIds.remove(targetProfileId);
+        } else {
+          homeController.followingIds.add(targetProfileId);
+        }
+
+        homeController.followingIds.refresh();
+      }
+
+      // ─────────────────────────────────────────
+      // SERVER
+      // ─────────────────────────────────────────
+
       if (wasFollowing) {
         await _repo.unfollowUser(userId);
       } else {
@@ -183,14 +228,31 @@ class UserProfileController extends GetxController {
       }
     } catch (e) {
       debugPrint('[USER_PROFILE] FOLLOW ERROR: $e');
-      // Rollback.
+
+      // Rollback profile UI
       isFollowing.value = wasFollowing;
       followerCount.value = oldFollowerCount;
+
+      // Rollback Home state too
+      try {
+        if (Get.isRegistered<HomeController>()) {
+          final homeController = Get.find<HomeController>();
+
+          final targetProfileId = await _repo.getProfileIdFromUserId(userId);
+
+          if (wasFollowing) {
+            homeController.followingIds.add(targetProfileId);
+          } else {
+            homeController.followingIds.remove(targetProfileId);
+          }
+
+          homeController.followingIds.refresh();
+        }
+      } catch (_) {}
     } finally {
       isFollowLoading.value = false;
     }
   }
-
   // ─────────────────────────────────────────────
   // TAB
   // ─────────────────────────────────────────────
@@ -204,16 +266,12 @@ class UserProfileController extends GetxController {
   void openFollowersFollowing(int initialTab) {
     if (!Get.isRegistered<FollowersFollowingController>(tag: ffTag)) {
       Get.put(
-        FollowersFollowingController(
-          userId: userId,
-          initialTab: initialTab,
-        ),
+        FollowersFollowingController(userId: userId, initialTab: initialTab),
         tag: ffTag,
       );
     }
 
-    final controller =
-        Get.find<FollowersFollowingController>(tag: ffTag);
+    final controller = Get.find<FollowersFollowingController>(tag: ffTag);
 
     controller.switchTab(initialTab);
 
@@ -226,10 +284,8 @@ class UserProfileController extends GetxController {
     }
 
     Get.to(
-      () => FollowersFollowingPage(
-        initialTab: initialTab,
-        controllerTag: ffTag,
-      ),
+      () =>
+          FollowersFollowingPage(initialTab: initialTab, controllerTag: ffTag),
     );
   }
 }

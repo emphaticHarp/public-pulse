@@ -23,7 +23,7 @@ class SplashScreenPage extends StatelessWidget {
               right: -60,
               child: _GlowCircle(
                 size: 220,
-                color: AppColors.accentRed.withValues(alpha: 0.05),
+                color: AppColors.loginAccentRed.withValues(alpha: 0.05),
               ),
             ),
 
@@ -32,7 +32,7 @@ class SplashScreenPage extends StatelessWidget {
               left: -70,
               child: _GlowCircle(
                 size: 260,
-                color: AppColors.accentRed.withValues(alpha: 0.04),
+                color: AppColors.loginAccentRed.withValues(alpha: 0.04),
               ),
             ),
 
@@ -51,7 +51,7 @@ class SplashScreenPage extends StatelessWidget {
                           children: [
                             TextSpan(
                               text: 'PUBLIC',
-                              style: TextStyle(color: AppColors.accentRed),
+                              style: TextStyle(color: AppColors.loginAccentRed),
                             ),
                             TextSpan(
                               text: ' PULSE',

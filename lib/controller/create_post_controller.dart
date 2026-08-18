@@ -212,7 +212,7 @@ class CreatePostController extends GetxController {
           title: 'Upload Failed',
           message: 'Could not upload your post. Please try again.',
           icon: Icons.cloud_off,
-          color: AppColors.semanticRed,
+          color: AppColors.loginAccentRed,
         );
       }
     });

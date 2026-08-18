@@ -62,7 +62,7 @@ class AppBottomNavBar extends StatelessWidget {
 
   Widget _navItem(_NavItemData item) {
     final bool isActive = currentIndex == item.index;
-    final Color color = isActive ? AppColors.navActiveIcon : AppColors.gray500;
+    final Color color = isActive ? AppColors.loginAccentRed : AppColors.gray500;
 
     return InkWell(
       onTap: () => onTap(item.index),
@@ -118,7 +118,7 @@ class AppBottomNavBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.createButtonShadow,
+                  color: AppColors.loginAccentRed,
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

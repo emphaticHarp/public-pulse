@@ -31,7 +31,7 @@ class NotificationPage extends StatelessWidget {
                 // Loading
                 if (controller.isLoading.value) {
                   return const Center(
-                    child: CircularProgressIndicator(color: AppColors.brand),
+                    child: CircularProgressIndicator(color: AppColors.loginAccentRed),
                   );
                 }
 
@@ -151,7 +151,7 @@ class NotificationPage extends StatelessWidget {
                                     : AppTextStyles.tabLabel)
                                 .copyWith(
                                   color: isActive
-                                      ? AppColors.brand
+                                      ? AppColors.loginAccentRed
                                       : AppColors.textSecondary,
                                 ),
                       ),
@@ -164,7 +164,7 @@ class NotificationPage extends StatelessWidget {
                         child: Container(
                           height: 3,
                           decoration: const BoxDecoration(
-                            color: AppColors.brand,
+                            color: AppColors.loginAccentRed,
                             borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(3),
                               topRight: Radius.circular(3),
@@ -374,8 +374,8 @@ class NotificationPage extends StatelessWidget {
                         controller.followBack(item.actorProfileId);
                       },
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.brand,
-                        side: const BorderSide(color: AppColors.brand),
+                        foregroundColor: AppColors.loginAccentRed,
+                        side: const BorderSide(color: AppColors.loginAccentRed),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),

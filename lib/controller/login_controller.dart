@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/services/auth_service.dart';
-import 'package:public_pulse/widget/login/login_code_page.dart';
+import 'package:public_pulse/view/login/login_code_page.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/core/services/initial_permission_service.dart';

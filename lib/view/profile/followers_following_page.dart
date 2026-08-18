@@ -56,10 +56,10 @@ class FollowersFollowingPage extends StatelessWidget {
         bottom: TabBar(
           controller: controller.tabController,
 
-          indicatorColor: AppColors.brand,
+          indicatorColor: AppColors.loginAccentRed,
           indicatorWeight: 2,
 
-          labelColor: AppColors.brand,
+          labelColor: AppColors.loginAccentRed,
           unselectedLabelColor: AppColors.textSecondary,
 
           labelStyle: AppTextStyles.tabLabelActive,
@@ -137,7 +137,7 @@ class _UserList extends StatelessWidget {
 
       if (loading && list.isEmpty) {
         return const Center(
-          child: CircularProgressIndicator(color: AppColors.brand),
+          child: CircularProgressIndicator(color: AppColors.loginAccentRed),
         );
       }
 
@@ -147,7 +147,7 @@ class _UserList extends StatelessWidget {
 
       if (!loading && list.isEmpty) {
         return RefreshIndicator(
-          color: AppColors.brand,
+          color: AppColors.loginAccentRed,
 
           onRefresh: () {
             return Get.find<FollowersFollowingController>(
@@ -182,7 +182,7 @@ class _UserList extends StatelessWidget {
       // =========================================================
 
       return RefreshIndicator(
-        color: AppColors.brand,
+        color: AppColors.loginAccentRed,
 
         onRefresh: () {
           return Get.find<FollowersFollowingController>(

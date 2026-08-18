@@ -81,7 +81,7 @@ class ProfilePage extends StatelessWidget {
         final profile = controller.profile.value;
         if (controller.isLoading.value || profile == null) {
           return const Center(
-            child: CircularProgressIndicator(color: AppColors.brand),
+            child: CircularProgressIndicator(color: AppColors.loginAccentRed),
           );
         }
 
@@ -266,7 +266,7 @@ class _TabContent extends StatelessWidget {
     if (loading && posts.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 40),
-        child: Center(child: CircularProgressIndicator(color: AppColors.brand)),
+        child: Center(child: CircularProgressIndicator(color: AppColors.loginAccentRed)),
       );
     }
 
