@@ -4,11 +4,14 @@ import 'package:public_pulse/core/theme/app_font.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
 import 'package:public_pulse/model/notification_model.dart';
+import 'package:public_pulse/view/main/main_page.dart';
 
 class NotificationPage extends StatelessWidget {
   NotificationPage({super.key});
 
   final NotificationController controller = Get.find<NotificationController>();
+
+  static const double _contentMaxWidth = 600;
 
   static const List<String> _tabs = ['All', 'Likes', 'Comments', 'Follows'];
 
@@ -16,70 +19,132 @@ class NotificationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final horizontalPadding = screenWidth < 360 ? 12.0 : 24.0;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
         top: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: _contentMaxWidth,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             _buildHeader(context),
             Obx(() => _buildTabs()),
             const SizedBox(height: 16),
             Expanded(
               child: Obx(() {
-                // Loading
+                // ============================================================
+                // LOADING
+                // ============================================================
+
                 if (controller.isLoading.value) {
                   return const Center(
-                    child: CircularProgressIndicator(color: AppColors.loginAccentRed),
+                    child: CircularProgressIndicator(
+                      color: AppColors.loginAccentRed,
+                    ),
                   );
                 }
 
-                // Error
+                // ============================================================
+                // ERROR
+                // Still allow swipe-down refresh
+                // ============================================================
+
                 if (controller.errorMessage.isNotEmpty) {
-                  return _buildStateMessage(
-                    icon: Icons.error_outline_rounded,
-                    title: "Something went wrong",
-                    subtitle: controller.errorMessage.value,
-                  );
-                }
-
-                // Empty
-                if (controller.hasNoNotifications) {
-                  return _buildStateMessage(
-                    icon: Icons.notifications_none_rounded,
-                    title: "No notifications yet",
-                    subtitle: "You'll see likes, comments and follows here.",
-                  );
-                }
-
-                // Normal notification list
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  return RefreshIndicator(
+                    color: AppColors.loginAccentRed,
+                    onRefresh: controller.refreshNotifications,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       children: [
-                        if (controller.newNotifications.isNotEmpty) ...[
-                          _buildSection("New", controller.newNotifications),
-                          const SizedBox(height: 32),
-                        ],
-                        if (controller.earlierNotifications.isNotEmpty)
-                          _buildSection(
-                            "Earlier",
-                            controller.earlierNotifications,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.55,
+                          child: _buildStateMessage(
+                            icon: Icons.error_outline_rounded,
+                            title: "Something went wrong",
+                            subtitle: controller.errorMessage.value,
                           ),
+                        ),
                       ],
+                    ),
+                  );
+                }
+
+                // ============================================================
+                // EMPTY
+                // Still allow swipe-down refresh
+                // ============================================================
+
+                if (controller.hasNoNotifications) {
+                  return RefreshIndicator(
+                    color: AppColors.loginAccentRed,
+                    onRefresh: controller.refreshNotifications,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.55,
+                          child: _buildStateMessage(
+                            icon: Icons.notifications_none_rounded,
+                            title: "No notifications yet",
+                            subtitle:
+                                "You'll see likes, comments and follows here.",
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // ============================================================
+                // NOTIFICATION LIST + PULL TO REFRESH
+                // ============================================================
+
+                return RefreshIndicator(
+                    color: AppColors.loginAccentRed,
+                  onRefresh: controller.refreshNotifications,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (controller.newNotifications.isNotEmpty) ...[
+                            _buildSection(
+                              "New",
+                              controller.newNotifications,
+                            ),
+                            const SizedBox(height: 32),
+                          ],
+
+                          if (controller.earlierNotifications.isNotEmpty)
+                            _buildSection(
+                              "Earlier",
+                              controller.earlierNotifications,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               }),
             ),
           ],
+          ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   // ---------------- Header ----------------
@@ -90,7 +155,15 @@ class NotificationPage extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Get.back(),
+            onTap: () async {
+              final didPop = await Navigator.of(context).maybePop();
+
+              // If NotificationPage is being shown as a main/tab page
+              // there may be no previous route to pop.
+              if (!didPop) {
+                Get.offAll(() => MainPage());
+              }
+            },
             child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Icon(
@@ -143,17 +216,24 @@ class NotificationPage extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     Center(
-                      child: Text(
-                        _tabs[index],
-                        style:
-                            (isActive
-                                    ? AppTextStyles.tabLabelActive
-                                    : AppTextStyles.tabLabel)
-                                .copyWith(
-                                  color: isActive
-                                      ? AppColors.loginAccentRed
-                                      : AppColors.textSecondary,
-                                ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _tabs[index],
+                            maxLines: 1,
+                            style:
+                                (isActive
+                                        ? AppTextStyles.tabLabelActive
+                                        : AppTextStyles.tabLabel)
+                                    .copyWith(
+                                      color: isActive
+                                          ? AppColors.loginAccentRed
+                                          : AppColors.textSecondary,
+                                    ),
+                          ),
+                        ),
                       ),
                     ),
                     if (isActive)
@@ -260,8 +340,16 @@ class NotificationPage extends StatelessWidget {
     NotificationModel item, {
     required bool isLast,
   }) {
+    final bool isCompact =
+        MediaQuery.sizeOf(Get.context!).width < 360;
+    final double avatarSize = isCompact ? 44 : 56;
+    final double postImageSize = isCompact ? 44 : 56;
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: EdgeInsets.symmetric(
+        vertical: isCompact ? 12 : 16,
+        horizontal: isCompact ? 8 : 16,
+      ),
       decoration: BoxDecoration(
         border: isLast
             ? null
@@ -276,41 +364,45 @@ class NotificationPage extends StatelessWidget {
           // AVATAR
           // ======================================================
           ClipRRect(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(avatarSize / 2),
             child: item.avatarUrl.isEmpty
                 ? Container(
-                    width: 56,
-                    height: 56,
+                    width: avatarSize,
+                    height: avatarSize,
                     decoration: const BoxDecoration(
                       color: AppColors.gray100,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.person, color: AppColors.gray400),
+                    child: Icon(
+                      Icons.person,
+                      color: AppColors.gray400,
+                      size: isCompact ? 22 : 28,
+                    ),
                   )
                 : Image.network(
                     item.avatarUrl,
-                    width: 56,
-                    height: 56,
+                    width: avatarSize,
+                    height: avatarSize,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        width: 56,
-                        height: 56,
+                        width: avatarSize,
+                        height: avatarSize,
                         decoration: const BoxDecoration(
                           color: AppColors.gray100,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.person,
                           color: AppColors.gray400,
-                          size: 28,
+                          size: isCompact ? 22 : 28,
                         ),
                       );
                     },
                   ),
           ),
 
-          const SizedBox(width: 12),
+          SizedBox(width: isCompact ? 8 : 12),
 
           // ======================================================
           // TEXT
@@ -338,7 +430,8 @@ class NotificationPage extends StatelessWidget {
                 // ------------------------------------------------
                 // COMMENT TEXT
                 // ------------------------------------------------
-               if (item.notificationType.trim().toUpperCase() == 'POST_COMMENT' &&
+                if (item.notificationType.trim().toUpperCase() ==
+                        'POST_COMMENT' &&
                     item.commentText != null &&
                     item.commentText!.trim().isNotEmpty) ...[
                   const SizedBox(height: 6),
@@ -364,25 +457,32 @@ class NotificationPage extends StatelessWidget {
                 // ------------------------------------------------
                 // FOLLOW BACK
                 // ------------------------------------------------
-              if (item.notificationType.trim().toUpperCase() == 'FOLLOW') ...[
+                if (item.notificationType.trim().toUpperCase() == 'FOLLOW') ...[
                   const SizedBox(height: 10),
 
                   SizedBox(
                     height: 34,
                     child: OutlinedButton(
                       onPressed: () {
-                        controller.followBack(item.actorProfileId);
+                        controller.followBack(
+                          item.actorProfileId,
+                        );
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.loginAccentRed,
-                        side: const BorderSide(color: AppColors.loginAccentRed),
+                        side: const BorderSide(
+                          color: AppColors.loginAccentRed,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isCompact ? 10 : 14,
+                        ),
                       ),
                       child: const Text(
                         'Follow Back',
+                        maxLines: 1,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -398,37 +498,37 @@ class NotificationPage extends StatelessWidget {
           // ======================================================
           // POST IMAGE
           // ======================================================
-          if (item.postImageUrl != null && item.postImageUrl!.isNotEmpty)
+
+          if (item.postImageUrl != null &&
+              item.postImageUrl!.isNotEmpty) ...[
+            SizedBox(
+              width: isCompact ? 6 : 10,
+            ),
+
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 item.postImageUrl!,
-                width: 56,
-                height: 56,
+                width: postImageSize,
+                height: postImageSize,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.gray100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
+                    width: postImageSize,
+                    height: postImageSize,
+                    color: AppColors.gray100,
+                    child: Icon(
                       Icons.broken_image,
                       color: AppColors.gray400,
-                      size: 24,
+                      size: isCompact ? 20 : 24,
                     ),
                   );
                 },
               ),
-            )
-          else
-            const SizedBox(width: 56),
+            ),
+          ],
         ],
       ),
     );
   }
-
- 
 }
