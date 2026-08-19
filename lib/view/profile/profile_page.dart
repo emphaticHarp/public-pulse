@@ -34,49 +34,6 @@ class ProfilePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surfaceDefault,
-      appBar: AppBar(
-        backgroundColor: AppColors.surfaceDefault,
-        surfaceTintColor: AppColors.transparentFull,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-
-        // ============================================================
-        // BACK BUTTON
-        // Only when own profile was opened from Explore
-        // ============================================================
-        automaticallyImplyLeading: false,
-
-        leading: openedFromExplore
-            ? IconButton(
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: AppColors.textPrimary,
-                ),
-                tooltip: 'Back',
-                onPressed: () {
-                  Get.back();
-                },
-              )
-            : null,
-
-        // ============================================================
-        // SETTINGS
-        // Show only on normal Profile tab
-        // ============================================================
-        actions: userId == null && !openedFromExplore
-            ? [
-                IconButton(
-                  icon: const Icon(
-                    Icons.settings_outlined,
-                    color: AppColors.textPrimary,
-                  ),
-                  tooltip: 'Settings',
-                  onPressed: _openSettings,
-                ),
-                const SizedBox(width: 4),
-              ]
-            : [],
-      ),
       body: Obx(() {
         final profile = controller.profile.value;
         if (controller.isLoading.value || profile == null) {
@@ -98,6 +55,34 @@ class ProfilePage extends StatelessWidget {
                     profileImage: resolveProfileImage(
                       url: controller.avatarUrl,
                     ),
+                    // ============================================================
+                    // BACK BUTTON overlay — only when opened from Explore
+                    // ============================================================
+                    leadingAction: openedFromExplore
+                        ? Positioned(
+                            top: 12,
+                            left: 12,
+                            child: _CoverIconButton(
+                              icon: Icons.arrow_back,
+                              onTap: () => Get.back(),
+                              tooltip: 'Back',
+                            ),
+                          )
+                        : null,
+                    // ============================================================
+                    // SETTINGS icon overlay — only on own Profile tab
+                    // ============================================================
+                    trailingAction: userId == null && !openedFromExplore
+                        ? Positioned(
+                            top: 12,
+                            right: 12,
+                            child: _CoverIconButton(
+                              icon: Icons.settings_outlined,
+                              onTap: _openSettings,
+                              tooltip: 'Settings',
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(height: 0),
                   Transform.translate(
@@ -218,6 +203,52 @@ class ProfilePage extends StatelessWidget {
       Get.put(SettingController());
     }
     Get.to(() => const SettingPage());
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Small icon button overlaid on the cover photo (settings / back).
+// Light gray frosted-circle background so it blends with any cover image.
+// ──────────────────────────────────────────────────────────────────────────────
+class _CoverIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  const _CoverIconButton({
+    required this.icon,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.22),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.30),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(icon, color: AppColors.primaryWhite, size: 20),
+        ),
+      ),
+    );
   }
 }
 

@@ -82,10 +82,7 @@ class ChangePhotoButton extends StatelessWidget {
           // Frosted / blurred camera button.
           child: ClipOval(
             child: BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: 8,
-                sigmaY: 8,
-              ),
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
               child: Container(
                 width: 42,
                 height: 42,
@@ -129,12 +126,20 @@ class ProfileHeaderImage extends StatelessWidget {
   final Widget? coverAction;
   final Widget? avatarAction;
 
+  /// Optional icon overlaid on the cover — top-left
+  final Widget? leadingAction;
+
+  /// Optional icon overlaid on the cover — top-right
+  final Widget? trailingAction;
+
   const ProfileHeaderImage({
     super.key,
     required this.coverImage,
     required this.profileImage,
     this.coverAction,
     this.avatarAction,
+    this.leadingAction,
+    this.trailingAction,
   });
 
   @override
@@ -147,7 +152,6 @@ class ProfileHeaderImage extends StatelessWidget {
           // ─────────────────────────────────────
           // COVER IMAGE
           // ─────────────────────────────────────
-
           SizedBox(
             height: 170,
             width: double.infinity,
@@ -180,6 +184,12 @@ class ProfileHeaderImage extends StatelessWidget {
               ],
             ),
           ),
+
+          // ─────────────────────────────────────
+          // ICON OVERLAYS (settings / back)
+          // ─────────────────────────────────────
+          if (leadingAction != null) leadingAction!,
+          if (trailingAction != null) trailingAction!,
 
           // ─────────────────────────────────────
           // PROFILE IMAGE
@@ -262,7 +272,9 @@ class ProfileTabSelector extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     children: ProfileTab.values.map((tab) {
       final isActive = tab == selected;
-      final color = isActive ? AppColors.loginAccentRed : AppColors.textSecondary;
+      final color = isActive
+          ? AppColors.loginAccentRed
+          : AppColors.textSecondary;
       return Expanded(
         child: GestureDetector(
           onTap: () => onChanged(tab),
@@ -282,7 +294,9 @@ class ProfileTabSelector extends StatelessWidget {
               ),
               Container(
                 height: 2,
-                color: isActive ? AppColors.loginAccentRed : AppColors.transparent,
+                color: isActive
+                    ? AppColors.loginAccentRed
+                    : AppColors.transparent,
               ),
             ],
           ),
