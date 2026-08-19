@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/controller/comment_controller.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/controller/profile_controller.dart';
 import 'package:public_pulse/core/repository/post_repository.dart';
 import 'package:public_pulse/model/post_model.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/view/comment/comment_sheet.dart';
 
 /// Minimal reactive state for the Post Detail page.
@@ -175,18 +175,28 @@ class PostDetailController extends GetxController {
   // Open the existing comment bottom sheet.
   Future<void> openComments() async {
     CommentController commentController;
+
     if (Get.isRegistered<CommentController>()) {
       commentController = Get.find<CommentController>();
     } else {
       commentController = Get.put(CommentController());
     }
 
-    await commentController.loadComments(post.id);
+    commentController.prepareComments(post.id);
 
     Get.bottomSheet(
       CommentSheet(postId: post.id),
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.transparentFull,
+      barrierColor: AppColors.overlayBlack50,
+      isDismissible: true,
+      enableDrag: true,
+      enterBottomSheetDuration: const Duration(milliseconds: 300),
+      exitBottomSheetDuration: const Duration(milliseconds: 220),
+    );
+
+    Future.microtask(
+      () => commentController.loadComments(post.id),
     );
   }
 }

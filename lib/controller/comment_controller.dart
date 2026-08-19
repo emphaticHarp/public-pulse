@@ -7,7 +7,7 @@ import '../core/repository/comment_repository.dart';
 import '../model/comment_model.dart';
 import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/core/cache/cache_manager.dart';
-import 'package:public_pulse/widget/local/app_alert.dart';
+import 'package:public_pulse/widget/local/app_alerts.dart';
 
 class CommentController extends GetxController {
   final CommentRepository _repository = CommentRepository();
