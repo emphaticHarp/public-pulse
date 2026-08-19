@@ -5,6 +5,7 @@ import 'package:public_pulse/core/services/auth_service.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 import 'package:public_pulse/widget/local/app_alert.dart';
 import 'package:public_pulse/core/services/permission_service.dart';
+import 'package:flutter/services.dart';
 
 class LoginCodeController extends GetxController {
   final pinController = TextEditingController();
@@ -44,9 +45,12 @@ class LoginCodeController extends GetxController {
 
       if (!valid) {
         showCodeError('Incorrect code');
+
+        // Slight vibration for incorrect code
+        HapticFeedback.lightImpact();
+
         return;
       }
-
       await _authService.activateCurrentUser(code);
 
       // ============================================================

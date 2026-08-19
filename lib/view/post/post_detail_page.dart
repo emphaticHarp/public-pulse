@@ -7,6 +7,7 @@ import 'package:public_pulse/widget/post/interaction_bar.dart';
 import 'package:public_pulse/widget/post/post_caption.dart';
 import 'package:public_pulse/widget/post/post_header.dart';
 import 'package:public_pulse/widget/post/post_media.dart';
+import 'package:tiktok_double_tap_like/tiktok_double_tap_like.dart';
 
 /// Full-screen detail view for a single post.
 /// Receives the already-loaded [PostModel] — zero extra Supabase requests.
@@ -44,7 +45,10 @@ class PostDetailPage extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Post media: single image or carousel
-            _PostMedia(post: post),
+            _PostMedia(
+              post: post,
+              controller: ctrl,
+            ),
 
             // Reactive action bar (like, comment, share, save)
             Obx(
@@ -67,10 +71,10 @@ class PostDetailPage extends StatelessWidget {
 
             // Caption and timestamp
             if ((post.caption ?? '').isNotEmpty) ...[
-              PostCaption(
-                username: post.username,
-                caption: post.caption!,
-              ),
+            PostCaption(
+              username: post.username,
+              caption: post.caption!,
+            ),
               const SizedBox(height: 6),
             ],
 
@@ -115,8 +119,26 @@ class PostDetailPage extends StatelessWidget {
 
 class _PostMedia extends StatelessWidget {
   final PostModel post;
+  final PostDetailController controller;
 
-  const _PostMedia({required this.post});
+  const _PostMedia({
+    required this.post,
+    required this.controller,
+  });
+
+  double get _aspectRatio {
+    if (post.mediaAspectRatios.isEmpty) {
+      return 4 / 5;
+    }
+
+    final ratio = post.mediaAspectRatios.first;
+
+    if (!ratio.isFinite || ratio <= 0) {
+      return 4 / 5;
+    }
+
+    return ratio;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,19 +146,38 @@ class _PostMedia extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final Widget media;
+
     if (post.isCarousel) {
-      return PostCarouselMedia(
+      media = PostCarouselMedia(
         imageUrls: post.mediaUrls,
         aspectRatios: post.mediaAspectRatios,
         postId: post.id,
       );
+    } else {
+      media = PostMedia(
+        imageUrl: post.mediaUrls.first,
+        aspectRatio: _aspectRatio,
+      );
     }
 
-    return PostMedia(
-      imageUrl: post.mediaUrls.first,
-      aspectRatio: post.mediaAspectRatios.isNotEmpty
-          ? post.mediaAspectRatios.first
-          : 4 / 5,
+    return AspectRatio(
+      aspectRatio: _aspectRatio,
+      child: DoubleTapLikeWidget(
+        onLike: (_) {
+          if (!controller.isLiked.value) {
+            controller.toggleLike();
+          }
+        },
+        likeWidget: const Icon(
+          Icons.favorite_rounded,
+          color: AppColors.loginAccentRed,
+          size: 100,
+        ),
+        likeWidth: 110,
+        likeHeight: 110,
+        child: media,
+      ),
     );
   }
 }

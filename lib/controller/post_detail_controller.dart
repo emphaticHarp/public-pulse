@@ -19,46 +19,132 @@ class PostDetailController extends GetxController {
   late final RxInt likeCount;
   late final RxBool isSaved;
 
+  final RxBool isLikeProcessing = false.obs;
+
   @override
   void onInit() {
     super.onInit();
+
+    // Use Home feed state when the same post exists there.
+    if (Get.isRegistered<HomeController>()) {
+      final home = Get.find<HomeController>();
+
+      final index = home.posts.indexWhere((p) => p.id == post.id);
+
+      if (index != -1) {
+        post.isLiked = home.posts[index].isLiked;
+        post.likeCount = home.posts[index].likeCount;
+        post.isSaved = home.posts[index].isSaved;
+      }
+    }
+
     isLiked = post.isLiked.obs;
     likeCount = post.likeCount.obs;
     isSaved = post.isSaved.obs;
   }
 
-  // Toggle like with optimistic UI, syncing to HomeController feed if active.
   Future<void> toggleLike() async {
-    final wasLiked = isLiked.value;
-    isLiked.value = !wasLiked;
-    likeCount.value += wasLiked ? 0 : 1;
-
-    // Sync in-memory PostModel so the profile grid reflects the change.
-    post.isLiked = isLiked.value;
-    post.likeCount = likeCount.value;
-
-    // Propagate to home feed list if available.
-    if (Get.isRegistered<HomeController>()) {
-      final home = Get.find<HomeController>();
-      final idx = home.posts.indexWhere((p) => p.id == post.id);
-      if (idx != -1) {
-        home.posts[idx].isLiked = isLiked.value;
-        home.posts[idx].likeCount = likeCount.value;
-        home.posts.refresh();
-      }
+    if (isLikeProcessing.value) {
+      return;
     }
 
-    final success = await _repo.toggleLike(
-      postId: post.id,
-      currentlyLiked: wasLiked,
-    );
+    isLikeProcessing.value = true;
 
-    if (!success) {
-      // Rollback on failure.
-      isLiked.value = wasLiked;
-      likeCount.value += wasLiked ? 1 : 0;
-      post.isLiked = wasLiked;
-      post.likeCount = likeCount.value;
+    try {
+      // ============================================================
+      // USE HOME CONTROLLER'S WORKING LIKE LOGIC
+      // ============================================================
+
+      if (Get.isRegistered<HomeController>()) {
+        final home = Get.find<HomeController>();
+
+        final index = home.posts.indexWhere((p) => p.id == post.id);
+
+        if (index != -1) {
+          final homePost = home.posts[index];
+
+          // Update Home optimistically immediately.
+          final oldLiked = homePost.isLiked;
+          final oldCount = homePost.likeCount;
+
+          homePost.isLiked = !oldLiked;
+          homePost.likeCount = homePost.isLiked
+              ? oldCount + 1
+              : oldCount > 0
+              ? oldCount - 1
+              : 0;
+
+          home.posts.refresh();
+
+          // Update Detail UI immediately.
+          post.isLiked = homePost.isLiked;
+          post.likeCount = homePost.likeCount;
+
+          isLiked.value = homePost.isLiked;
+          likeCount.value = homePost.likeCount;
+
+          // Sync to Supabase in background.
+          Future.microtask(() async {
+            final success = await _repo.toggleLike(
+              postId: post.id,
+              currentlyLiked: oldLiked,
+            );
+
+            if (!success) {
+              // Roll back only if DB update fails.
+              homePost.isLiked = oldLiked;
+              homePost.likeCount = oldCount;
+
+              post.isLiked = oldLiked;
+              post.likeCount = oldCount;
+
+              isLiked.value = oldLiked;
+              likeCount.value = oldCount;
+
+              home.posts.refresh();
+            }
+
+            isLikeProcessing.value = false;
+          });
+
+          return;
+        }
+      }
+
+      // ============================================================
+      // FALLBACK WHEN POST IS NOT IN HOME FEED
+      // ============================================================
+
+      final oldLiked = post.isLiked;
+      final oldCount = post.likeCount;
+
+      post.isLiked = !oldLiked;
+
+      if (post.isLiked) {
+        post.likeCount++;
+      } else {
+        post.likeCount = post.likeCount > 0 ? post.likeCount - 1 : 0;
+      }
+
+      isLiked.value = post.isLiked;
+      likeCount.value = post.likeCount;
+
+      final success = await _repo.toggleLike(
+        postId: post.id,
+        currentlyLiked: oldLiked,
+      );
+
+      if (!success) {
+        post.isLiked = oldLiked;
+        post.likeCount = oldCount;
+
+        isLiked.value = oldLiked;
+        likeCount.value = oldCount;
+      }
+    } catch (e) {
+      debugPrint('[POST DETAIL] Like error: $e');
+    } finally {
+      isLikeProcessing.value = false;
     }
   }
 
