@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:flutter/foundation.dart';
 import 'package:public_pulse/model/notification_model.dart';
 import 'package:public_pulse/core/repository/notification_repository.dart';
+import 'package:public_pulse/widget/local/app_alerts.dart';
 
 class NotificationController extends GetxController {
   // ==========================================================
@@ -145,11 +145,9 @@ class NotificationController extends GetxController {
 
       await fetchNotifications();
     } catch (e, stackTrace) {
-
-      Get.snackbar(
-        'Follow failed',
-        'Unable to follow this user. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
+      CustomAlert.error(
+        title: 'Follow failed',
+        message: 'Unable to follow this user. Please try again.',
       );
     }
   }

@@ -3,7 +3,7 @@ import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/controller/home_controller.dart';
-import 'package:public_pulse/widget/local/app_alert.dart';
+import 'package:public_pulse/widget/local/app_alerts.dart';
 import 'package:public_pulse/widget/post/follow_button.dart';
 import 'package:public_pulse/view/profile/user_profile_page.dart';
 

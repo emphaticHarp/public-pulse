@@ -278,7 +278,7 @@ class CommentLongPressMenu extends StatelessWidget {
       barrierColor: AppColors.overlayBlack55,
       barrierDismissible: true,
       barrierLabel: 'Dismiss comment menu',
-      transitionDuration: const Duration(milliseconds: 180),
+      transitionDuration: const Duration(milliseconds: 260),
       pageBuilder: (context, animation, secondaryAnimation) {
         return CommentContextMenuOverlay(
           tag: tag,
@@ -296,18 +296,20 @@ class CommentLongPressMenu extends StatelessWidget {
           onDelete: onDelete,
         );
       },
-      transitionBuilder: (context, animation, secondaryAnimation, page) {
+      transitionBuilder: (
+        context,
+        animation,
+        secondaryAnimation,
+        page,
+      ) {
         final curved = CurvedAnimation(
           parent: animation,
-          curve: Curves.fastOutSlowIn,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
         );
         return FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
-            alignment: Alignment.topCenter,
-            child: page,
-          ),
+          opacity: curved,
+          child: page,
         );
       },
     ).then((_) {
@@ -453,17 +455,9 @@ class CommentContextMenuOverlay extends StatelessWidget {
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () {
-                Get.back();
-              },
-              child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: 8,
-                  sigmaY: 8,
-                ),
-                child: Container(
-                  color: AppColors.overlayBlack18,
-                ),
+              onTap: Get.back,
+              child: Container(
+                color: AppColors.overlayBlack18,
               ),
             ),
           ),
@@ -868,8 +862,8 @@ class _CommentQuickMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOutBack,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
       tween: Tween<double>(
         begin: 0.0,
         end: 1.0,
@@ -880,10 +874,10 @@ class _CommentQuickMenu extends StatelessWidget {
           child: Transform.translate(
             offset: Offset(
               0,
-              16 * (1 - value),
+              8 * (1 - value),
             ),
             child: Transform.scale(
-              scale: 0.90 + (0.10 * value),
+              scale: 0.96 + (0.04 * value),
               alignment: Alignment.topLeft,
               child: child,
             ),

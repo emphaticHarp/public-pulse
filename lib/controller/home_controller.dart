@@ -10,7 +10,7 @@ import 'package:public_pulse/model/post_model.dart';
 import 'package:public_pulse/core/repository/post_repository.dart';
 import 'package:public_pulse/core/cache/cache_manager.dart';
 import 'package:public_pulse/core/repository/follow_repository.dart';
-import 'package:public_pulse/widget/local/app_alert.dart';
+import 'package:public_pulse/widget/local/app_alerts.dart';
 import 'package:public_pulse/controller/profile_controller.dart';
 
 class HomeController extends GetxController {

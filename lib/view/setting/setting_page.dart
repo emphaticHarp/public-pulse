@@ -76,13 +76,8 @@ class SettingPage extends StatelessWidget {
                         ),
                       ),
                       Obx(
-                        () => SettingCopyItem(
-                          icon: Icons.card_giftcard_rounded,
-                          title: 'Referral Code',
-                          subtitle: 'Share your referral code',
-                          valueText: controller.referralCode.isEmpty
-                              ? 'Not available'
-                              : controller.referralCode,
+                        () => _ReferralCodeCard(
+                          code: controller.referralCode,
                           onCopy: () {
                             if (controller.referralCode.isNotEmpty) {
                               controller.copyReferralCode(
@@ -90,7 +85,6 @@ class SettingPage extends StatelessWidget {
                               );
                             }
                           },
-                          showDivider: false,
                         ),
                       ),
                     ],
@@ -136,18 +130,20 @@ class SettingPage extends StatelessWidget {
                         onTap: controller.openPrivacyPolicy,
                         showDivider: true,
                       ),
+
                       SettingNavItem(
-                        icon: Icons.headset_mic_outlined,
-                        title: 'Help & Support',
-                        subtitle: 'Get help and contact support',
-                        onTap: controller.openHelpSupport,
+                        icon: Icons.description_outlined,
+                        title: 'Terms & Conditions',
+                        subtitle: 'Read our terms of service',
+                        onTap: controller.openTermsAndConditions,
                         showDivider: true,
                       ),
+
                       SettingNavItem(
-                        icon: Icons.info_outline_rounded,
-                        title: 'About Us',
-                        subtitle: 'Learn more about our app',
-                        onTap: controller.openAboutUs,
+                        icon: Icons.person_remove_outlined,
+                        title: 'Account Deletion Policy',
+                        subtitle: 'Learn about account deletion',
+                        onTap: controller.openAccountDeletionPolicy,
                         showDivider: false,
                       ),
                     ],
@@ -238,6 +234,172 @@ class SettingPage extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ReferralCodeCard extends StatelessWidget {
+  final String code;
+  final VoidCallback onCopy;
+
+  const _ReferralCodeCard({required this.code, required this.onCopy});
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasCode = code.trim().isNotEmpty;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.loginAccentRed.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.loginAccentRed.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // =====================================================
+          // TITLE
+          // =====================================================
+
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.loginAccentRed.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.card_giftcard_rounded,
+                  color: AppColors.loginAccentRed,
+                  size: 22,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Your Referral Code',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryText,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'Share this code to invite someone to Public Pulse',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // =====================================================
+          // CODE
+          // =====================================================
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.gray100),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    hasCode ? code : 'Not available',
+                    style: TextStyle(
+                      fontSize: hasCode ? 20 : 14,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: hasCode ? 2.5 : 0,
+                      color: hasCode
+                          ? AppColors.loginAccentRed
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+
+                if (hasCode)
+                  GestureDetector(
+                    onTap: onCopy,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 9,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.loginAccentRed,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.copy_rounded,
+                            size: 16,
+                            color: AppColors.white,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            'Copy',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          if (hasCode) ...[
+            const SizedBox(height: 10),
+
+            const Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 14,
+                  color: AppColors.textSecondary,
+                ),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'New users can use this code during login.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }

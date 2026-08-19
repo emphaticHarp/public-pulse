@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/core/services/auth_service.dart';
+import 'package:public_pulse/widget/local/app_alerts.dart';
+import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/view/login/login_code_page.dart';
 import 'package:public_pulse/view/main/main_page.dart';
 import 'package:public_pulse/controller/home_controller.dart';
@@ -30,7 +32,10 @@ class LoginController extends GetxController {
           final profile = await _authService.getCurrentProfile();
 
           if (profile == null) {
-            Get.snackbar("Error", "Unable to load your profile.");
+            CustomAlert.error(
+              title: 'Error',
+              message: 'Unable to load your profile.',
+            );
             return;
           }
 
@@ -70,9 +75,9 @@ class LoginController extends GetxController {
               break;
 
             case "blocked":
-              Get.snackbar(
-                "Account Blocked",
-                "Please contact the administrator.",
+              CustomAlert.error(
+                title: 'Account Blocked',
+                message: 'Please contact the administrator.',
               );
 
               await _authService.signOut();
@@ -114,13 +119,19 @@ class LoginController extends GetxController {
       final success = await _authService.signInWithGoogle();
 
       if (!success) {
-        Get.snackbar("Login Failed", "Google Sign-In was cancelled or failed.");
+        CustomAlert.error(
+          title: 'Login Failed',
+          message: 'Google Sign-In was cancelled or failed.',
+        );
       }
 
       // Do NOT navigate here.
       // onSignedIn() will handle navigation.
     } catch (e) {
-      Get.snackbar("Login Failed", e.toString());
+      CustomAlert.error(
+        title: 'Login Failed',
+        message: e.toString(),
+      );
     } finally {
       isGoogleLoading.value = false;
     }
@@ -134,9 +145,17 @@ class LoginController extends GetxController {
   Future<void> signInWithApple() async {
     try {
       isLoading.value = true;
-      Get.snackbar("Coming Soon", "Apple Sign-In will be available soon.");
+      CustomAlert.show(
+        title: 'Coming Soon',
+        message: 'Apple Sign-In will be available soon.',
+        icon: Icons.info_outline_rounded,
+        color: AppColors.loginAccentRed,
+      );
     } catch (e, stackTrace) {
-      Get.snackbar("Login Failed", "Unable to sign in.");
+      CustomAlert.error(
+        title: 'Login Failed',
+        message: 'Unable to sign in.',
+      );
     } finally {
       isLoading.value = false;
     }

@@ -12,7 +12,7 @@ import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/core/compression/image_compressor.dart';
 import 'package:public_pulse/core/compression/metadata/media_metadata.dart';
 import 'package:public_pulse/model/pending_media.dart';
-import 'package:public_pulse/widget/local/app_alert.dart';
+import 'package:public_pulse/widget/local/app_alerts.dart';
 import 'package:public_pulse/core/services/location_service.dart';
 import 'package:public_pulse/model/location_suggestion.dart';
 

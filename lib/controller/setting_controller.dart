@@ -12,6 +12,9 @@ import 'package:public_pulse/controller/home_controller.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/core/services/current_user_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:public_pulse/view/setting/legal_webview_page.dart';
+import 'package:public_pulse/widget/local/app_alerts.dart';
 
 /// All business logic for the Settings Page.
 /// UI must never contain raw logic — only call these methods.
@@ -62,8 +65,7 @@ class SettingController extends GetxController {
 
     _accountStatus.value = profile?.accountStatus ?? 'unknown';
     _referralCode.value = profile?.referCode ?? '';
-
-      }
+  }
 
   String get accountStatusText {
     switch (accountStatus.toLowerCase()) {
@@ -152,8 +154,7 @@ class SettingController extends GetxController {
             _syncProfileData();
           });
           _syncProfileData(); // Pull current value now that it exists.
-        } else {
-        }
+        } else {}
       }
     });
   }
@@ -233,78 +234,49 @@ class SettingController extends GetxController {
   /// Copies [code] to the system clipboard and shows a snackbar.
   void copyReferralCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
-    Get.snackbar(
-      'Copied!',
-      'Referral code $code copied to clipboard.',
-      snackPosition: SnackPosition.BOTTOM,
+
+    CustomAlert.show(
+      title: 'Referral Code Copied',
+      message: '$code copied to clipboard',
+      icon: Icons.copy_rounded,
+      color: AppColors.success,
       duration: const Duration(seconds: 2),
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
     );
   }
+
+  // section for showing the web view dialog for legal documents like privacy policy, terms and conditions, and account deletion policy
 
   // ── Information Placeholders ───────────────────────────────────────────────
-
   void openPrivacyPolicy() {
-    // Navigate to Privacy Policy WebView / page.
-    Get.snackbar(
-      'Coming Soon',
-      'Privacy Policy will be available soon.',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
+    Get.to(
+      () => LegalWebViewPage(
+        title: 'Privacy Policy',
+        url: dotenv.env['PRIVACY_POLICY_URL'] ?? '',
+      ),
     );
   }
 
-  void openHelpSupport() {
-    // Navigate to Help & Support page.
-    Get.snackbar(
-      'Coming Soon',
-      'Help & Support will be available soon.',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
+  void openTermsAndConditions() {
+    Get.to(
+      () => LegalWebViewPage(
+        title: 'Terms & Conditions',
+        url: dotenv.env['TERMS_AND_CONDITIONS_URL'] ?? '',
+      ),
     );
   }
 
-  void openAboutUs() {
-    // Navigate to About Us page.
-    Get.snackbar(
-      'Coming Soon',
-      'About Us will be available soon.',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
+  void openAccountDeletionPolicy() {
+    Get.to(
+      () => LegalWebViewPage(
+        title: 'Account Deletion Policy',
+        url: dotenv.env['ACCOUNT_DELETION_POLICY_URL'] ?? '',
+      ),
     );
   }
 
   // ── Account Actions ────────────────────────────────────────────────────────
 
-  /// Shows a confirmation dialog then deactivates the account (placeholder).
-  Future<void> deactivateAccount(BuildContext context) async {
-    final confirmed = await _showDestructiveDialog(
-      context,
-      title: 'Deactivate Account',
-      message:
-          'Are you sure you want to deactivate your account? You can reactivate it later by logging in.',
-      actionLabel: 'Deactivate',
-    );
-    if (!confirmed) return;
-    // Implement deactivation via Supabase when backend is ready.
-    Get.snackbar(
-      'Coming Soon',
-      'Account deactivation will be available soon.',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-    );
-  }
-
-  /// Shows a confirmation dialog then permanently deletes the account (placeholder).
+  /// Shows a confirmation dialog then permanently deletes the account.
   Future<void> deleteAccount(BuildContext context) async {
     if (isAccountActionLoading.value) return;
 
@@ -338,7 +310,6 @@ class SettingController extends GetxController {
     isAccountActionLoading.value = true;
 
     try {
-
       // Your RPC permanently deletes the account.
       await Supabase.instance.client.rpc('deactivate_account');
 
@@ -349,8 +320,7 @@ class SettingController extends GetxController {
       try {
         final authService = Get.find<AuthService>();
         await authService.signOut();
-      } catch (e) {
-      }
+      } catch (e) {}
 
       // ==========================================================
       // CLEAR CURRENT USER
@@ -397,16 +367,10 @@ class SettingController extends GetxController {
       // ==========================================================
 
       Get.offAll(() => LoginPage());
-
     } catch (e, stackTrace) {
-
-      Get.snackbar(
-        'Delete Failed',
-        'Unable to delete your account. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 3),
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
+      CustomAlert.error(
+        title: 'Delete Failed',
+        message: 'Unable to delete your account. Please try again.',
       );
     } finally {
       isAccountActionLoading.value = false;
@@ -436,7 +400,6 @@ class SettingController extends GetxController {
     isLoggingOut.value = true;
 
     try {
-
       // ----------------------------------------------------------
       // 1. Sign out from Supabase / Google
       // ----------------------------------------------------------
@@ -461,7 +424,6 @@ class SettingController extends GetxController {
         final profileController = Get.find<ProfileController>();
 
         await profileController.invalidateProfile();
-
       }
 
       // ----------------------------------------------------------
@@ -471,12 +433,10 @@ class SettingController extends GetxController {
         final homeController = Get.find<HomeController>();
 
         homeController.resetForLogout();
-
       }
 
       if (Get.isRegistered<NotificationController>()) {
         Get.delete<NotificationController>(force: true);
-
       }
 
       // ----------------------------------------------------------
@@ -484,16 +444,10 @@ class SettingController extends GetxController {
       // ----------------------------------------------------------
 
       Get.offAll(() => LoginPage());
-
     } catch (e, stackTrace) {
-
-      Get.snackbar(
-        'Logout Failed',
-        'Something went wrong. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 3),
-        margin: const EdgeInsets.all(16),
-        borderRadius: 12,
+      CustomAlert.error(
+        title: 'Logout Failed',
+        message: 'Something went wrong. Please try again.',
       );
     } finally {
       isLoggingOut.value = false;
@@ -502,9 +456,7 @@ class SettingController extends GetxController {
 
   // ── Private Helpers ────────────────────────────────────────────────────────
 
-  Future<bool> _showDeleteTypingDialog(
-    BuildContext context,
-  ) async {
+  Future<bool> _showDeleteTypingDialog(BuildContext context) async {
     bool canDelete = false;
 
     final result = await showDialog<bool>(
@@ -518,9 +470,7 @@ class SettingController extends GetxController {
                 borderRadius: BorderRadius.circular(20),
               ),
 
-              title: const Text(
-                'Confirm Account Deletion',
-              ),
+              title: const Text('Confirm Account Deletion'),
 
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -576,9 +526,7 @@ class SettingController extends GetxController {
                         }
                       : null,
 
-                  child: const Text(
-                    'Delete Account',
-                  ),
+                  child: const Text('Delete Account'),
                 ),
               ],
             );

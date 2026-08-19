@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:public_pulse/model/app_version_model.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
+import 'package:public_pulse/widget/local/app_alerts.dart';
 
 Future<void> showUpdateDialog(AppVersionModel update) async {
   await Get.dialog(
@@ -85,11 +86,12 @@ Future<void> showUpdateDialog(AppVersionModel update) async {
                         );
 
                         if (!launched) {
-                          Get.snackbar(
-                            "Update Failed",
-                            "Unable to open download link.",
-                            snackPosition: SnackPosition.BOTTOM,
+                          CustomAlert.error(
+                            title: 'Update Failed',
+                            message: 'Unable to open download link.',
                           );
+
+                          return;
                         }
 
                         if (!update.forceUpdate) {

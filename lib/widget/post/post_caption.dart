@@ -9,20 +9,26 @@ class PostCaption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = caption.trim();
+
+    // If caption is empty, show nothing.
+    if (text.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RichText(
-            text: TextSpan(
-              style: const TextStyle(fontSize: 14, color: AppColors.gray900),
-              children: [
-               TextSpan(text: caption),
-              ],
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(fontSize: 14, color: AppColors.gray900),
+          children: [
+            TextSpan(
+              text: '$username  ',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          ),
-        ],
+            TextSpan(text: text),
+          ],
+        ),
       ),
     );
   }
