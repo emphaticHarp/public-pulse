@@ -18,11 +18,7 @@ class PostCaption extends StatelessWidget {
             text: TextSpan(
               style: const TextStyle(fontSize: 14, color: AppColors.gray900),
               children: [
-                TextSpan(
-                  text: '$username  ',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(text: caption),
+               TextSpan(text: caption),
               ],
             ),
           ),
