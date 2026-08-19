@@ -451,9 +451,20 @@ class CommentContextMenuOverlay extends StatelessWidget {
       child: Stack(
         children: [
           Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(color: AppColors.overlayBlack18),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                Get.back();
+              },
+              child: BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: 8,
+                  sigmaY: 8,
+                ),
+                child: Container(
+                  color: AppColors.overlayBlack18,
+                ),
+              ),
             ),
           ),
           // Lifted, non-dimmed copy of the comment in its original spot.
@@ -857,14 +868,26 @@ class _CommentQuickMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutBack,
-      tween: Tween(begin: 0.88, end: 1),
-      builder: (context, scale, child) {
-        return Transform.scale(
-          scale: scale,
-          alignment: Alignment.topLeft,
-          child: child,
+      tween: Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(
+              0,
+              16 * (1 - value),
+            ),
+            child: Transform.scale(
+              scale: 0.90 + (0.10 * value),
+              alignment: Alignment.topLeft,
+              child: child,
+            ),
+          ),
         );
       },
       child: Material(

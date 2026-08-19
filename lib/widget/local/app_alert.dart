@@ -107,7 +107,6 @@ class CustomAlert extends StatelessWidget {
     // Safely get overlay context - may be null during early app initialization
     final overlayContext = Get.overlayContext;
     if (overlayContext == null) {
-      debugPrint('[CustomAlert] Overlay context is null, skipping alert: $title - $message');
       return;
     }
 

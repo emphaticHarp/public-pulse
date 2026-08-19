@@ -55,7 +55,6 @@ class ExploreController extends GetxController {
       final currentAuthUserId = Supabase.instance.client.auth.currentUser?.id;
 
       if (currentAuthUserId == null) {
-        debugPrint('[EXPLORE] No authenticated user');
 
         return false;
       }
@@ -66,7 +65,6 @@ class ExploreController extends GetxController {
       // ============================================================
 
       if (selectedId == currentAuthUserId) {
-        debugPrint('[EXPLORE] ✅ Selected ID matches auth user ID');
 
         return true;
       }
@@ -82,28 +80,15 @@ class ExploreController extends GetxController {
           .maybeSingle();
 
       if (currentProfile == null) {
-        debugPrint('[EXPLORE] Current profile row not found');
 
         return false;
       }
 
       final currentProfileId = currentProfile['id']?.toString();
 
-      debugPrint(
-        '[EXPLORE] Auth user id: '
-        '$currentAuthUserId',
-      );
-
-      debugPrint(
-        '[EXPLORE] Current profiles.id: '
-        '$currentProfileId',
-      );
-
-      debugPrint(
-        '[EXPLORE] Selected id: '
-        '$selectedId',
-      );
-
+      
+      
+      
       // ============================================================
       // CASE 2:
       // selectedId is profiles.id
@@ -111,15 +96,9 @@ class ExploreController extends GetxController {
 
       final isMine = currentProfileId != null && selectedId == currentProfileId;
 
-      debugPrint('[EXPLORE] Is my profile: $isMine');
-
       return isMine;
     } catch (e) {
-      debugPrint(
-        '[EXPLORE] '
-        'Profile ownership check failed: $e',
-      );
-
+      
       return false;
     }
   }
@@ -134,8 +113,6 @@ class ExploreController extends GetxController {
       ),
     );
 
-    debugPrint('[EXPLORE] Selected profile id: ${user.id}');
-
     final isMine = await _isCurrentUserProfile(user.id);
 
     // ============================================================
@@ -143,10 +120,8 @@ class ExploreController extends GetxController {
     // ============================================================
 
     if (isMine) {
-      debugPrint('[EXPLORE] ✅ Opening ProfilePage');
 
       if (isMine) {
-        debugPrint('[EXPLORE] ✅ Opening own ProfilePage');
 
         Get.to(() => const ProfilePage(openedFromExplore: true));
 
@@ -159,8 +134,6 @@ class ExploreController extends GetxController {
     // ============================================================
     // OTHER USER
     // ============================================================
-
-    debugPrint('[EXPLORE] Opening UserProfilePage');
 
     Get.to(() => UserProfilePage(userId: user.id));
   }
@@ -170,7 +143,6 @@ class ExploreController extends GetxController {
   // ============================================================
 
   Future<void> openRecentProfile(RecentSearchModel profile) async {
-    debugPrint('[EXPLORE] Recent profile id: ${profile.userId}');
 
     final isMine = await _isCurrentUserProfile(profile.userId);
 
@@ -179,10 +151,8 @@ class ExploreController extends GetxController {
     // ============================================================
 
     if (isMine) {
-      debugPrint('[EXPLORE] ✅ Opening ProfilePage from recent');
 
       if (isMine) {
-        debugPrint('[EXPLORE] ✅ Opening ProfilePage from recent');
 
         Get.to(() => const ProfilePage(openedFromExplore: true));
 
@@ -195,8 +165,6 @@ class ExploreController extends GetxController {
     // ============================================================
     // OTHER USER
     // ============================================================
-
-    debugPrint('[EXPLORE] Opening UserProfilePage from recent');
 
     Get.to(() => UserProfilePage(userId: profile.userId));
   }

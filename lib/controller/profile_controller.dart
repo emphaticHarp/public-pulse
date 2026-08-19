@@ -35,10 +35,6 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
 
-    debugPrint('🔥 ProfileController Created');
-    debugPrint('[PROFILE] userId = $userId');
-    debugPrint('[PROFILE] isMyProfile = $isMyProfile');
-
     ensureProfileLoaded();
   }
 
@@ -93,11 +89,7 @@ class ProfileController extends GetxController {
     final cachedProfile = CacheManager.getCachedUserProfile();
 
     if (cachedProfile != null) {
-      debugPrint('[PROFILE] Loaded own profile from Hive');
-      debugPrint(
-        '[PROFILE] Cached account status: ${cachedProfile.accountStatus}',
-      );
-
+      
       _applyProfileToState(cachedProfile);
 
       final cachedStatus =
@@ -115,26 +107,17 @@ class ProfileController extends GetxController {
         await loadMyPosts();
         await loadSavedPosts();
 
-        debugPrint(
-          '[PROFILE] Own profile cache initialization complete',
-        );
-
+        
         return;
       }
 
       // Old/incomplete cache.
       // Continue below and refresh profile from Supabase.
-      debugPrint(
-        '[PROFILE] Cached profile missing valid status '
-        '-> refreshing from Supabase',
-      );
-    }
+          }
 
     // ----------------------------------------------------------
     // SUPABASE
     // ----------------------------------------------------------
-
-    debugPrint('[PROFILE] No own profile cache -> Supabase');
 
     isLoading.value = true;
 
@@ -165,8 +148,6 @@ class ProfileController extends GetxController {
 
       _profileLoaded = true;
 
-      debugPrint('[PROFILE] Own profile fetched + cached');
-
       await loadMyPosts();
       await loadSavedPosts();
     } catch (e, stackTrace) {
@@ -174,8 +155,6 @@ class ProfileController extends GetxController {
 
       errorMessage.value = 'Failed to load profile.';
 
-      debugPrint('[PROFILE] Own profile load error: $e');
-      debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
     }
@@ -193,7 +172,6 @@ class ProfileController extends GetxController {
     final cachedProfile = CacheManager.getCachedProfileByUserId(targetUserId);
 
     if (cachedProfile != null) {
-      debugPrint('[PROFILE] Loaded other profile from cache: $targetUserId');
 
       _applyProfileToState(cachedProfile);
 
@@ -202,16 +180,12 @@ class ProfileController extends GetxController {
       // Load latest posts.
       await loadUserPosts(targetUserId);
 
-      debugPrint('[PROFILE] Other profile cache initialization complete');
-
       return;
     }
 
     // ----------------------------------------------------------
     // SUPABASE
     // ----------------------------------------------------------
-
-    debugPrint('[PROFILE] No cached other profile -> fetching $targetUserId');
 
     isLoading.value = true;
 
@@ -226,14 +200,11 @@ class ProfileController extends GetxController {
 
       await loadUserPosts(targetUserId);
 
-      debugPrint('[PROFILE] Other profile fetched + cached: $targetUserId');
     } catch (e, stackTrace) {
       _profileLoaded = false;
 
       errorMessage.value = 'Failed to load profile.';
 
-      debugPrint('[PROFILE] Other profile load error: $e');
-      debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
     }
@@ -263,8 +234,6 @@ class ProfileController extends GetxController {
       return;
     }
 
-    debugPrint('[PROFILE] Pull-to-refresh started | userId=$userId');
-
     try {
       final uid = currentProfile.id;
 
@@ -286,8 +255,6 @@ class ProfileController extends GetxController {
         await CacheManager.cacheProfileByUserId(updatedProfile);
 
         await loadUserPosts(userId!);
-
-        debugPrint('[PROFILE] Other profile refreshed: $userId');
 
         return;
       }
@@ -327,10 +294,7 @@ class ProfileController extends GetxController {
       await loadMyPosts();
       await loadSavedPosts();
 
-      debugPrint('[PROFILE] My profile refreshed');
     } catch (e, stackTrace) {
-      debugPrint('[PROFILE] Refresh failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
 
       errorMessage.value = 'Failed to refresh profile.';
     }
@@ -363,7 +327,6 @@ class ProfileController extends GetxController {
 
     errorMessage.value = '';
 
-    debugPrint('[PROFILE CACHE] Invalidated | userId=$userId');
   }
 
   // ============================================================
@@ -390,11 +353,7 @@ class ProfileController extends GetxController {
     if (cachedPosts.isNotEmpty) {
       photoPosts.assignAll(cachedPosts);
 
-      debugPrint(
-        '[PROFILE POSTS] Loaded '
-        '${photoPosts.length} posts from cache',
-      );
-    }
+          }
 
     // ----------------------------------------------------------
     // SERVER
@@ -411,13 +370,7 @@ class ProfileController extends GetxController {
 
       await CacheManager.cacheMyPosts(result);
 
-      debugPrint(
-        '[PROFILE POSTS] Server loaded '
-        '${photoPosts.length} posts',
-      );
-    } catch (e, stackTrace) {
-      debugPrint('[PROFILE POSTS] Error: $e');
-      debugPrintStack(stackTrace: stackTrace);
+          } catch (e, stackTrace) {
     } finally {
       isPostsLoading.value = false;
     }
@@ -444,18 +397,9 @@ class ProfileController extends GetxController {
       photoPosts.assignAll(posts);
 
       for (final post in posts) {
-        debugPrint(
-          '[PROFILE POSTS DEBUG] '
-          'post=${post.id} '
-          'media=${post.mediaUrls.length} '
-          'urls=${post.mediaUrls}',
-        );
-      }
+              }
 
-      debugPrint('[PROFILE POSTS] Loaded ${posts.length} posts for $userId');
     } catch (e, stackTrace) {
-      debugPrint('[PROFILE POSTS] Error loading user posts: $e');
-      debugPrintStack(stackTrace: stackTrace);
     } finally {
       isPostsLoading(false);
     }
@@ -480,11 +424,7 @@ class ProfileController extends GetxController {
     if (cachedPosts.isNotEmpty) {
       savedPosts.assignAll(cachedPosts);
 
-      debugPrint(
-        '[PROFILE SAVED] Loaded '
-        '${savedPosts.length} posts from cache',
-      );
-    }
+          }
 
     // ----------------------------------------------------------
     // SERVER
@@ -499,13 +439,7 @@ class ProfileController extends GetxController {
 
       await CacheManager.cacheSavedPosts(result);
 
-      debugPrint(
-        '[PROFILE SAVED] Server loaded '
-        '${savedPosts.length} saved posts',
-      );
-    } catch (e, stackTrace) {
-      debugPrint('[PROFILE SAVED] Error: $e');
-      debugPrintStack(stackTrace: stackTrace);
+          } catch (e, stackTrace) {
     } finally {
       isSavedPostsLoading.value = false;
     }
@@ -525,11 +459,9 @@ class ProfileController extends GetxController {
         savedPosts.insert(0, post);
       }
 
-      debugPrint('[PROFILE SAVED] Added ${post.id}');
     } else {
       savedPosts.removeWhere((item) => item.id == post.id);
 
-      debugPrint('[PROFILE SAVED] Removed ${post.id}');
     }
 
     savedPosts.refresh();
@@ -600,7 +532,6 @@ class ProfileController extends GetxController {
       await CacheManager.cacheProfileByUserId(updatedWithCounts);
     }
 
-    debugPrint('[PROFILE CACHE] Updated after profile edit');
   }
 
   // ============================================================
@@ -615,11 +546,7 @@ class ProfileController extends GetxController {
     final uid = currentProfile.id;
     final tag = 'ff_$uid';
 
-    debugPrint(
-      '[PROFILE] Opening Followers/Following '
-      'uid=$uid tab=$initialTab',
-    );
-
+    
     Get.to(
       () => FollowersFollowingPage(initialTab: initialTab, controllerTag: tag),
       binding: BindingsBuilder(() {
@@ -693,7 +620,6 @@ class ProfileController extends GetxController {
         }
       }
     } catch (e) {
-      debugPrint('[PROFILE] Failed to reload follow counts: $e');
     }
   }
 }

@@ -207,7 +207,6 @@ class _UserList extends StatelessWidget {
 
               onTap: () {
                 if (user.userId.isEmpty) {
-                  debugPrint('[FF_DEBUG] Cannot open profile: userId empty');
                   return;
                 }
 

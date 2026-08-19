@@ -73,7 +73,6 @@ Future<double> _getMediaAspectRatio(String path) {
         codec.dispose();
       }
     } catch (e) {
-      debugPrint('🖼️ [CreatePostPage] Failed to read image dimensions: $e');
 
       return 4 / 5;
     }
@@ -88,9 +87,7 @@ class CreatePostPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🖼️ [CreatePostPage] build() called');
     final CreatePostController controller = Get.find<CreatePostController>();
-    debugPrint('🟢 [CreatePostPage] CreatePostController found via Get.find');
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
@@ -119,7 +116,6 @@ class CreatePostPage extends StatelessWidget {
                               const _InfoBanner(),
                               _CaptionSection(controller: controller),
                               CreatePostLocationSection(controller: controller),
-                              _VisibilitySection(controller: controller),
                             ],
                           ),
                         ),
@@ -163,9 +159,7 @@ class _Header extends StatelessWidget {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             onPressed: () {
-              debugPrint('🖼️ [CreatePostPage] Back button pressed');
               Get.delete<CreatePostController>();
-              debugPrint('🔴 [CreatePostPage] CreatePostController deleted');
               Get.back();
             },
             icon: const Icon(
@@ -459,10 +453,9 @@ class _MediaPreviewCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-
-            //Portrait → full image 
-//Landscape → full image
-//Square → full image 
+            //Portrait → full image
+            //Landscape → full image
+            //Square → full image
             // Zoomable image
             InteractiveViewer(
               minScale: 1,
@@ -646,77 +639,6 @@ class _CaptionSection extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Visibility section
-// ---------------------------------------------------------------------------
-class _VisibilitySection extends StatelessWidget {
-  const _VisibilitySection({required this.controller});
-
-  final CreatePostController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.public, color: AppColors.loginAccentRed, size: 16),
-              SizedBox(width: 8),
-              Text(
-                "Who can see this?",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.loginAccentRed,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          Obx(
-            () => RadioGroup<String>(
-              groupValue: controller.visibility.value,
-              onChanged: (String? v) {
-                if (v != null) {
-                  controller.visibility.value = v;
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.gray100),
-                ),
-                child: Column(
-                  children: [
-                    RadioListTile<String>(
-                      value: "PUBLIC",
-                      activeColor: AppColors.loginAccentRed,
-                      title: const Text("Public"),
-                      subtitle: const Text("Everyone can view this post"),
-                    ),
-                    const Divider(height: 1),
-                    RadioListTile<String>(
-                      value: "PRIVATE",
-                      activeColor: AppColors.loginAccentRed,
-                      title: const Text("Followers Only"),
-                      subtitle: const Text("Only your followers can view this"),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Sticky footer with the "Upload Post" button
 // ---------------------------------------------------------------------------
 class _UploadFooter extends StatelessWidget {
@@ -740,16 +662,7 @@ class _UploadFooter extends StatelessWidget {
                 controller.pendingMedia.isEmpty || controller.isUploading.value
                 ? null
                 : () {
-                    debugPrint(
-                      '🖼️ [CreatePostPage] Upload Post button pressed',
-                    );
-                    debugPrint(
-                      '🖼️ [CreatePostPage] Media count: ${controller.pendingMedia.length}',
-                    );
-                    debugPrint(
-                      '🖼️ [CreatePostPage] Is uploading: ${controller.isUploading.value}',
-                    );
-                    controller.uploadPost();
+                                                                                controller.uploadPost();
                   },
             style:
                 ElevatedButton.styleFrom(

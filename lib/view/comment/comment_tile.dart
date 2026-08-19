@@ -41,9 +41,13 @@ class CommentTile extends StatelessWidget {
     final controller = Get.find<CommentController>();
     final isOwner = controller.currentProfileId == comment.profileId;
 
-    final tileContent = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+   final tileContent = Padding(
+  padding: const EdgeInsets.symmetric(
+    vertical: 10,
+  ),
+  child: Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
         CircleAvatar(
           radius: 18,
           backgroundImage:
@@ -111,11 +115,9 @@ class CommentTile extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(width: 10),
-
-        const Icon(Icons.favorite_border, size: 18, color: AppColors.grey),
       ],
-    );
+    ),
+  );
 
     if (comment.isPending) {
       return tileContent;

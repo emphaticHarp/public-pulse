@@ -10,7 +10,6 @@ class NotificationRepository {
       final user = _supabase.auth.currentUser;
 
       if (user == null) {
-        debugPrint('[NOTIFICATION] No logged-in user');
         return [];
       }
 
@@ -25,8 +24,6 @@ class NotificationRepository {
           .single();
 
       final profileId = profile['id'] as String;
-
-      debugPrint('[NOTIFICATION] Current profile id: $profileId');
 
       // ----------------------------------------------------------
       // NOTIFICATIONS
@@ -70,21 +67,9 @@ class NotificationRepository {
           .eq('recipient_profile_id', profileId)
           .order('created_at', ascending: false);
 
-      debugPrint(
-        '[NOTIFICATION] Supabase returned ${response.length} notifications',
-      );
-
+      
       for (final row in response) {
-        debugPrint(
-          '[NOTIFICATION DEBUG] '
-          'id=${row['id']} '
-          'type=${row['notification_type']} '
-          'created=${row['created_at']} '
-          'actor=${row['actor_profile_id']} '
-          'post=${row['post_id']} '
-          'comment=${row['comment_id']}',
-        );
-      }
+              }
 
       // ----------------------------------------------------------
       // TRANSFORM DATA FOR NotificationModel
@@ -123,19 +108,12 @@ class NotificationRepository {
 
           notifications.add(NotificationModel.fromJson(json));
         } catch (e, stackTrace) {
-          debugPrint(
-            '[NOTIFICATION] Failed to parse notification: '
-            '${raw['id']} | $e',
-          );
-
-          debugPrintStack(stackTrace: stackTrace);
+          
         }
       }
 
       return notifications;
     } catch (e, stackTrace) {
-      debugPrint('[NOTIFICATION] Error: $e');
-      debugPrintStack(stackTrace: stackTrace);
 
       return [];
     }
@@ -183,7 +161,6 @@ class NotificationRepository {
 
       if (ids is List &&
           ids.map((e) => e.toString()).contains(actorProfileId)) {
-        debugPrint('[FOLLOW BACK] Already following $actorProfileId');
         return;
       }
     }
@@ -252,6 +229,5 @@ class NotificationRepository {
       }
     }
 
-    debugPrint('[FOLLOW BACK] Successfully followed $actorProfileId');
   }
 }

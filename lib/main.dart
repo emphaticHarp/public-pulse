@@ -21,10 +21,7 @@ class LoggingHttpClient extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    debugPrint('[HTTP] ➡️ ${request.method} ${request.url}');
     final response = await _inner.send(request);
-    debugPrint('[HTTP] ⬅️ STATUS ${response.statusCode} for ${request.url}');
-    debugPrint('[HTTP] headers: ${response.headers}');
     return response;
   }
 }

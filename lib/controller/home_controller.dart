@@ -103,8 +103,6 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
 
-    debugPrint('[HOME] HomeController created');
-
     scrollController.addListener(_onScroll);
 
     // Listen for login/logout.
@@ -114,15 +112,11 @@ class HomeController extends GetxController {
         final session = data.session;
 
         if (session != null) {
-          debugPrint(
-            '[HOME] Login detected: ${data.event}',
-          );
-
+          
           _initializeAfterLogin();
         }
 
         if (data.event == AuthChangeEvent.signedOut) {
-          debugPrint('[HOME] Logout detected');
 
           _initializedUserId = null;
 
@@ -135,7 +129,6 @@ class HomeController extends GetxController {
     if (Supabase.instance.client.auth.currentUser != null) {
       _initializeAfterLogin();
     } else {
-      debugPrint('[HOME] Waiting for login');
       isLoading.value = false;
     }
   }
@@ -160,32 +153,16 @@ class HomeController extends GetxController {
     _initializingAfterLogin = true;
 
     try {
-      debugPrint(
-        '[HOME] Starting initialization for ${user.id}',
-      );
-
       await initializeForUser();
 
       _initializedUserId = user.id;
-
-      debugPrint(
-        '[HOME] Login initialization completed',
-      );
-    } catch (e, stackTrace) {
-      debugPrint(
-        '[HOME] Login initialization failed: $e',
-      );
-
-      debugPrintStack(
-        stackTrace: stackTrace,
-      );
+    } catch (e) {
     } finally {
       _initializingAfterLogin = false;
     }
   }
 
   void resetForLogout() {
-    debugPrint('[HOME] Resetting HomeController for logout');
 
     _initializedUserId = null;
 
@@ -209,7 +186,6 @@ class HomeController extends GetxController {
     isLoading.value = false;
     isLoadingMore.value = false;
 
-    debugPrint('[HOME] HomeController reset complete');
   }
 
   // ============================================================
@@ -223,17 +199,11 @@ class HomeController extends GetxController {
       final profileId = await _repository.getCurrentProfileId();
 
       if (profileId != null && profileId.isNotEmpty) {
-        debugPrint(
-          '[HOME] Profile ID found on attempt $attempt: $profileId',
-        );
-
+        
         return profileId;
       }
 
-      debugPrint(
-        '[HOME] Profile not ready. Attempt $attempt/$maxAttempts',
-      );
-
+      
       if (attempt < maxAttempts) {
         await Future.delayed(
           const Duration(milliseconds: 400),
@@ -245,7 +215,6 @@ class HomeController extends GetxController {
   }
 
   Future<void> initializeForUser() async {
-    debugPrint('[HOME] ===== INITIALIZING FOR CURRENT USER =====');
 
     isLoading.value = true;
 
@@ -258,10 +227,7 @@ class HomeController extends GetxController {
           await _getCurrentProfileIdWithRetry();
 
       if (currentProfileId == null) {
-        debugPrint(
-          '[HOME] Profile ID still unavailable after retries',
-        );
-
+        
         await loadPosts();
 
         return;
@@ -275,18 +241,11 @@ class HomeController extends GetxController {
 
       final hasCachedFeed = CacheManager.hasPostCache();
 
-      debugPrint('[HOME] Current profile: $currentProfileId');
-
-      debugPrint('[HOME] Cached feed owner: $cachedOwner');
-
       // ============================================================
       // DIFFERENT USER / OLD LEGACY CACHE
       // ============================================================
 
       if (hasCachedFeed && cachedOwner != currentProfileId) {
-        debugPrint('[HOME] Different cache owner detected');
-
-        debugPrint('[HOME] Clearing previous user feed cache');
 
         await CacheManager.clearPostCache();
 
@@ -315,11 +274,9 @@ class HomeController extends GetxController {
       // ============================================================
 
       if (posts.isEmpty) {
-        debugPrint('[HOME] No valid cache → fetching from server');
 
         await loadPosts();
       } else {
-        debugPrint('[HOME] Valid cache belongs to current user');
       }
 
       // ============================================================
@@ -328,11 +285,8 @@ class HomeController extends GetxController {
 
       await Future.wait([loadMyPosts(), loadFollowingIds()]);
 
-      debugPrint('[HOME] ===== USER INITIALIZATION COMPLETE =====');
     } catch (e, stackTrace) {
-      debugPrint('[HOME] initializeForUser error: $e');
 
-      debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
     }
@@ -359,11 +313,7 @@ class HomeController extends GetxController {
   void _logPostSource(String source, List<PostModel> postList) {
     final ids = postList.map((post) => post.id).toList();
 
-    debugPrint(
-      '[POST-TRACE] $source → '
-      '${postList.length} posts | IDs: $ids',
-    );
-  }
+      }
 
   // ============================================================
   // CACHE
@@ -373,11 +323,8 @@ class HomeController extends GetxController {
     final cachedPosts = CacheManager.getCachedPosts();
 
     if (cachedPosts.isEmpty) {
-      debugPrint('[CACHE] No cached posts found');
       return;
     }
-
-    debugPrint('[CACHE] Loading ${cachedPosts.length} posts from Hive');
 
     _logPostSource('[CACHE] Hive', cachedPosts);
 
@@ -394,11 +341,7 @@ class HomeController extends GetxController {
     // Cached feed is immediately available.
     isLoading.value = false;
 
-    debugPrint(
-      '[CACHE] Feed loaded from Hive '
-      '→ ${posts.length} posts',
-    );
-  }
+      }
 
   // ============================================================
   // INITIAL POSTS
@@ -406,7 +349,6 @@ class HomeController extends GetxController {
 
   Future<void> loadPosts() async {
     try {
-      debugPrint('[HOME] Fetching initial posts');
 
       final page = await _repository.getInitialPosts(limit: 10);
 
@@ -427,15 +369,12 @@ class HomeController extends GetxController {
         ..clear()
         ..addAll(page.posts.map((post) => post.id));
 
-      debugPrint('[HOME] Feed updated from server');
       await CacheManager.cachePosts(
         posts,
         nextCursor: nextCursor,
         hasMore: hasMore.value,
       );
     } catch (e, stackTrace) {
-      debugPrint('[HOME] loadPosts error: $e');
-      debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoading.value = false;
     }
@@ -447,10 +386,6 @@ class HomeController extends GetxController {
 
   Future<bool> refreshFeed() async {
     if (isLoading.value) return false;
-
-    debugPrint('[HOME] ===============================');
-    debugPrint('[HOME] MANUAL REFRESH');
-    debugPrint('[HOME] ===============================');
 
     isLoading.value = true;
 
@@ -477,12 +412,8 @@ class HomeController extends GetxController {
         hasMore: hasMore.value,
       );
 
-      debugPrint('[HOME] Refresh complete → ${posts.length} posts');
-
       return true;
     } catch (e, stackTrace) {
-      debugPrint('[HOME] refreshFeed error: $e');
-      debugPrintStack(stackTrace: stackTrace);
 
       return false;
     } finally {
@@ -500,13 +431,7 @@ class HomeController extends GetxController {
 
       myPosts.assignAll(fetchedPosts);
 
-      debugPrint(
-        '[HOME] My posts loaded '
-        '→ ${myPosts.length}',
-      );
-    } catch (e, stackTrace) {
-      debugPrint('[HOME] loadMyPosts error: $e');
-      debugPrintStack(stackTrace: stackTrace);
+          } catch (e, stackTrace) {
     }
   }
 
@@ -525,7 +450,6 @@ class HomeController extends GetxController {
       if (cached.isNotEmpty) {
         followingIds.assignAll(cached);
 
-        debugPrint('[FOLLOW] Loaded ${cached.length} IDs from cache');
       }
 
       // ----------------------------------------------------------
@@ -538,13 +462,7 @@ class HomeController extends GetxController {
 
       await CacheManager.cacheFollowingIds(server);
 
-      debugPrint(
-        '[FOLLOW] Server following IDs '
-        '→ ${server.length}',
-      );
-    } catch (e, stackTrace) {
-      debugPrint('[FOLLOW] loadFollowingIds error: $e');
-      debugPrintStack(stackTrace: stackTrace);
+          } catch (e, stackTrace) {
     }
   }
 
@@ -738,8 +656,6 @@ class HomeController extends GetxController {
         hasMore: hasMore.value,
       );
     } catch (e, stackTrace) {
-      debugPrint('[HOME] loadMorePosts error: $e');
-      debugPrintStack(stackTrace: stackTrace);
     } finally {
       isLoadingMore.value = false;
     }
@@ -775,7 +691,6 @@ class HomeController extends GetxController {
         hasMore: hasMore.value,
       );
     } catch (e) {
-      debugPrint('[HOME] refreshSinglePost error: $e');
     }
   }
 
@@ -922,8 +837,6 @@ class HomeController extends GetxController {
     posts.insert(0, tempPost);
     posts.refresh();
 
-    debugPrint('[HOME] Temporary uploading post added: $tempPostId');
-
     return tempPostId;
   }
 
@@ -932,7 +845,6 @@ class HomeController extends GetxController {
 
     posts.refresh();
 
-    debugPrint('[HOME] Temporary uploading post removed: $tempPostId');
   }
 
   void markUploadingPostFailed(String tempPostId) {
@@ -945,7 +857,6 @@ class HomeController extends GetxController {
 
     posts.refresh();
 
-    debugPrint('[HOME] Upload failed: $tempPostId');
   }
   // ============================================================
   // CLOSE
@@ -953,7 +864,6 @@ class HomeController extends GetxController {
 
   @override
   void onClose() {
-    debugPrint('[HOME] HomeController disposed');
 
     _authSubscription?.cancel();
 

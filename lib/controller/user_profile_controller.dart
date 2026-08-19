@@ -131,7 +131,6 @@ class UserProfileController extends GetxController {
       // Fetch full PostModel list for the grid (enables tap-to-detail).
       await _loadUserPosts();
     } catch (e) {
-      debugPrint('[USER_PROFILE] ERROR: $e');
     } finally {
       isLoading(false);
     }
@@ -161,7 +160,6 @@ class UserProfileController extends GetxController {
             .toList(),
       );
     } catch (e) {
-      debugPrint('[USER_PROFILE] Post load error: $e');
     }
   }
 
@@ -227,7 +225,6 @@ class UserProfileController extends GetxController {
         await _repo.followUser(userId);
       }
     } catch (e) {
-      debugPrint('[USER_PROFILE] FOLLOW ERROR: $e');
 
       // Rollback profile UI
       isFollowing.value = wasFollowing;

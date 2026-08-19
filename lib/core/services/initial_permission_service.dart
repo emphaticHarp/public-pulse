@@ -27,13 +27,11 @@ class InitialPermissionService {
     final completed = prefs.getBool(_completedKey(userId)) ?? false;
 
     if (completed) {
-      debugPrint('[PERMISSIONS] Initial permissions already completed');
       return;
     }
 
     await prefs.setBool(_requiredKey(userId), true);
 
-    debugPrint('[PERMISSIONS] New user marked for initial permissions');
   }
 
   // ============================================================
@@ -47,16 +45,11 @@ class InitialPermissionService {
 
     final completed = prefs.getBool(_completedKey(userId)) ?? false;
 
-    debugPrint('[PERMISSIONS] required=$required completed=$completed');
-
     // Existing user / already completed.
     if (!required || completed) {
-      debugPrint('[PERMISSIONS] Initial permission flow skipped');
 
       return;
     }
-
-    debugPrint('[PERMISSIONS] Starting initial permission flow');
 
     // Ask Android permissions.
     await PermissionService.requestInitialPermissions();
@@ -68,6 +61,5 @@ class InitialPermissionService {
 
     await prefs.setBool(_requiredKey(userId), false);
 
-    debugPrint('[PERMISSIONS] Initial permission flow completed');
   }
 }

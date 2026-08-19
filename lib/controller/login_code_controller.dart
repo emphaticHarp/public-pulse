@@ -47,7 +47,7 @@ class LoginCodeController extends GetxController {
         showCodeError('Incorrect code');
 
         // Slight vibration for incorrect code
-        HapticFeedback.lightImpact();
+        HapticFeedback.mediumImpact();
 
         return;
       }
@@ -57,13 +57,8 @@ class LoginCodeController extends GetxController {
       // FIRST-TIME APP PERMISSIONS
       // ============================================================
 
-      debugPrint(
-        '[LOGIN-CODE] User activated. Requesting initial permissions...',
-      );
-
+      
       await PermissionService.requestInitialPermissions();
-
-      debugPrint('[LOGIN-CODE] Initial permission flow completed');
 
       // ============================================================
       // OPEN MAIN APP

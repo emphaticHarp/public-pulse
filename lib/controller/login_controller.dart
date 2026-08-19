@@ -19,14 +19,9 @@ class LoginController extends GetxController {
   void onInit() {
     super.onInit();
 
-    debugPrint("LoginController.onInit: initializing");
-
     _authService.listenToAuthChanges(
       onSignedIn: (user) async {
-        debugPrint(
-          "LoginController.onSignedIn: callback fired for user=${user.id}",
-        );
-
+        
         if (_isCheckingUser.value) return;
 
         _isCheckingUser.value = true;
@@ -42,8 +37,6 @@ class LoginController extends GetxController {
           final status = (profile['status'] ?? 'pending')
               .toString()
               .toLowerCase();
-
-          debugPrint("User login status = $status");
 
           switch (status) {
             case "active":
@@ -97,11 +90,9 @@ class LoginController extends GetxController {
       },
     );
 
-    debugPrint("LoginController.onInit: auth listener registered");
   }
 
   Future<void> signInWithGoogle() async {
-    debugPrint("signInWithGoogle: button pressed");
 
     try {
       isGoogleLoading.value = true;
@@ -137,24 +128,17 @@ class LoginController extends GetxController {
 
   @override
   void onClose() {
-    debugPrint("LoginController.onClose: controller closing");
     super.onClose();
   }
 
   Future<void> signInWithApple() async {
-    debugPrint("signInWithApple: button pressed, starting flow");
     try {
       isLoading.value = true;
-      debugPrint("signInWithApple: isLoading set to true");
       Get.snackbar("Coming Soon", "Apple Sign-In will be available soon.");
-      debugPrint("signInWithApple: 'Coming Soon' snackbar shown");
     } catch (e, stackTrace) {
-      debugPrint("signInWithApple ERROR: $e");
-      debugPrint("signInWithApple: stackTrace = $stackTrace");
       Get.snackbar("Login Failed", "Unable to sign in.");
     } finally {
       isLoading.value = false;
-      debugPrint("signInWithApple: isLoading set to false");
     }
   }
 }

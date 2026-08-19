@@ -170,14 +170,9 @@ class ImageCompressor {
 
       await thumbnailFile.writeAsBytes(bestBytes, flush: true);
 
-      debugPrint(
-        '🖼️ Thumbnail created: '
-        '${bestBytes.length / 1024} KB',
-      );
-
+      
       return thumbnailFile;
     } catch (e) {
-      debugPrint('🔴 Thumbnail creation failed: $e');
 
       return null;
     }

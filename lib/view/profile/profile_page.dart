@@ -23,7 +23,6 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("📱 ProfilePage Build");
     final tag = userId ?? 'my_profile';
 
     if (!Get.isRegistered<ProfileController>(tag: tag)) {
@@ -356,7 +355,6 @@ class _TabContent extends StatelessWidget {
             gridImageUrl,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              debugPrint('[PROFILE THUMBNAIL ERROR] $gridImageUrl');
 
               return Container(
                 color: AppColors.greyShade200,

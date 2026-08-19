@@ -19,7 +19,6 @@ class CreatePostRepository {
     required String bucket,
     void Function(int sent, int total)? onProgress,
   }) async {
-    debugPrint('[CREATE POST] Uploading image to Bunny CDN');
 
     // Optional initial progress.
     final totalBytes = await imageFile.length();
@@ -39,15 +38,12 @@ class CreatePostRepository {
     // upload progress, so mark it complete after successful upload.
     onProgress?.call(totalBytes, totalBytes);
 
-    debugPrint('[CREATE POST] Bunny image uploaded successfully: $bunnyUrl');
-
     // IMPORTANT:
     // This is already the FULL Bunny CDN URL.
     return bunnyUrl;
   }
 
   Future<String> uploadThumbnail({required File imageFile}) async {
-    debugPrint('[CREATE POST] Uploading thumbnail to Bunny CDN');
 
     final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
       imageFile,
@@ -58,28 +54,19 @@ class CreatePostRepository {
       throw Exception('Bunny thumbnail upload failed');
     }
 
-    debugPrint(
-      '[CREATE POST] Bunny thumbnail uploaded successfully: $bunnyUrl',
-    );
-
+    
     return bunnyUrl;
   }
 
   Future<String?> getCurrentProfileId() async {
-    debugPrint('👤 [CreatePostRepo] getCurrentProfileId() STARTED');
 
     final user = _supabase.auth.currentUser;
-    debugPrint('👤 [CreatePostRepo] Current user: ${user?.id ?? "NULL"}');
 
     if (user == null) {
-      debugPrint('🔴 [CreatePostRepo] No current user found. Returning null.');
       return null;
     }
 
-    debugPrint(
-      '👤 [CreatePostRepo] Querying profiles table for user_id: ${user.id}',
-    );
-
+    
     try {
       final profile = await _supabase
           .from('profiles')
@@ -87,20 +74,13 @@ class CreatePostRepository {
           .eq('user_id', user.id)
           .maybeSingle();
 
-      debugPrint('👤 [CreatePostRepo] Profile query result: $profile');
-
       if (profile == null) {
-        debugPrint('🔴 [CreatePostRepo] No profile found for user ${user.id}');
         return null;
       }
 
       final profileId = profile['id'] as String;
-      debugPrint('🟢 [CreatePostRepo] Profile ID found: $profileId');
       return profileId;
     } catch (e, stackTrace) {
-      debugPrint('🔴 [CreatePostRepo] Error fetching profile: $e');
-      debugPrint('🔴 [CreatePostRepo] Stack trace:');
-      debugPrint('$stackTrace');
       return null;
     }
   }
@@ -152,7 +132,6 @@ class CreatePostRepository {
 
       return {'post_id': postId, 'media_ids': mediaIds};
     } catch (e) {
-      debugPrint("Media insert failed, rolling back post $postId: $e");
       await _supabase.from('posts').delete().eq('id', postId);
       rethrow;
     }

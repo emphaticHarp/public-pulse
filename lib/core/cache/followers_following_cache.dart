@@ -180,7 +180,6 @@ class FollowersFollowingCacheService {
 
       return {'followers': followers, 'following': following};
     } catch (e) {
-      debugPrint('[FF_CACHE] Cache read error: $e');
 
       _box.delete(profileId);
 

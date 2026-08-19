@@ -111,7 +111,6 @@ class CommentController extends GetxController {
 
       await CacheManager.cacheComments(postId, serverComments);
     } catch (e) {
-      debugPrint('[COMMENTS] Load error: $e');
     } finally {
       isLoading.value = false;
     }

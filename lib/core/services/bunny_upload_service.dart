@@ -15,13 +15,11 @@ class BunnyUploadService {
   Future<String?> uploadMedia(File file, String folder) async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      debugPrint('[BUNNY UPLOAD] No active session');
       return null;
     }
     final supabaseUrl = dotenv.env['SUPABASE_URL'];
 
     if (supabaseUrl == null || supabaseUrl.trim().isEmpty) {
-      debugPrint('[BUNNY UPLOAD] SUPABASE_URL missing');
       return null;
     }
 
@@ -46,14 +44,12 @@ class BunnyUploadService {
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode != 200) {
-        debugPrint('[BUNNY UPLOAD] Failed: ${response.body}');
         return null;
       }
 
       final data = jsonDecode(response.body);
       return data['url'] as String;
     } catch (e) {
-      debugPrint('[BUNNY UPLOAD] Error: $e');
       return null;
     }
   }

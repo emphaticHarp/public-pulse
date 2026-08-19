@@ -26,15 +26,7 @@ class FollowerModel {
 
     // Debug logging
     assert(() {
-      debugPrint('[FF_MODEL] fromJson - input json keys: ${json.keys.toList()}');
-      debugPrint(
-        '[FF_MODEL] fromJson - profiles key exists: ${json.containsKey("profiles")}',
-      );
-      debugPrint('[FF_MODEL] fromJson - profile: $profile');
-      debugPrint(
-        '[FF_MODEL] fromJson - parsed: userId=$userId, username=$username, displayName=$displayName, avatarPath=$avatarPath',
-      );
-      return true;
+            return true;
     }());
 
     return FollowerModel(

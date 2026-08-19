@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:public_pulse/model/notification_model.dart';
 import 'package:public_pulse/core/repository/notification_repository.dart';
 
-
 class NotificationController extends GetxController {
   // ==========================================================
   // TAB
@@ -144,13 +143,8 @@ class NotificationController extends GetxController {
     try {
       await _repository.followBack(actorProfileId);
 
-      debugPrint('[NOTIFICATION] Follow back successful: $actorProfileId');
-
       await fetchNotifications();
     } catch (e, stackTrace) {
-      debugPrint('[NOTIFICATION] Follow back failed: $e');
-
-      debugPrintStack(stackTrace: stackTrace);
 
       Get.snackbar(
         'Follow failed',

@@ -25,9 +25,6 @@ class CurrentUserService {
     _profileId = profileId;
     _cachedAuthUserId = currentAuthUserId;
 
-    debugPrint('[CURRENT USER] Profile ID cached: $_profileId');
-
-    debugPrint('[CURRENT USER] Cached auth user: $_cachedAuthUserId');
   }
 
   // ============================================================
@@ -38,7 +35,6 @@ class CurrentUserService {
     final user = _supabase.auth.currentUser;
 
     if (user == null) {
-      debugPrint('[CURRENT USER] No authenticated user');
 
       clear();
 
@@ -50,7 +46,6 @@ class CurrentUserService {
     // ============================================================
 
     if (_profileId != null && _cachedAuthUserId == user.id) {
-      debugPrint('[CURRENT USER] Using cached profile ID: $_profileId');
 
       return _profileId;
     }
@@ -60,10 +55,7 @@ class CurrentUserService {
     // ============================================================
 
     if (_cachedAuthUserId != null && _cachedAuthUserId != user.id) {
-      debugPrint(
-        '[CURRENT USER] Auth user changed. Clearing old profile cache.',
-      );
-
+      
       _profileId = null;
       _cachedAuthUserId = null;
     }
@@ -82,10 +74,7 @@ class CurrentUserService {
       final loadedProfileId = response?['id']?.toString();
 
       if (loadedProfileId == null) {
-        debugPrint(
-          '[CURRENT USER] Profile row not found for auth user: ${user.id}',
-        );
-
+        
         clear();
 
         return null;
@@ -94,15 +83,8 @@ class CurrentUserService {
       _profileId = loadedProfileId;
       _cachedAuthUserId = user.id;
 
-      debugPrint('[CURRENT USER] Profile ID loaded: $_profileId');
-
-      debugPrint('[CURRENT USER] Auth user: ${user.id}');
-
       return _profileId;
     } catch (e, stackTrace) {
-      debugPrint('[CURRENT USER] Failed to load profile ID: $e');
-
-      debugPrintStack(stackTrace: stackTrace);
 
       return null;
     }
@@ -113,7 +95,6 @@ class CurrentUserService {
   // ============================================================
 
   void clear() {
-    debugPrint('[CURRENT USER] Clearing cached profile ID');
 
     _profileId = null;
     _cachedAuthUserId = null;

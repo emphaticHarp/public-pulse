@@ -45,8 +45,7 @@ class CommentSheet extends StatelessWidget {
 
             Expanded(
               child: Obx(() {
-                if (controller.isLoading.value &&
-                    controller.comments.isEmpty) {
+                if (controller.isLoading.value && controller.comments.isEmpty) {
                   return const Center(
                     child: SizedBox(
                       width: 24,
@@ -69,7 +68,7 @@ class CommentSheet extends StatelessWidget {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   itemCount: controller.comments.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 14),
                   itemBuilder: (_, index) {

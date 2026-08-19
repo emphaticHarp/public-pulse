@@ -31,7 +31,6 @@ class LocationService {
     }
 
     try {
-      debugPrint('🔎 [LocationService] Searching: $searchText');
 
       final uri = Uri.https('api.geoapify.com', '/v1/geocode/autocomplete', {
         'text': searchText,
@@ -43,11 +42,7 @@ class LocationService {
 
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
-      debugPrint(
-        '📍 [LocationService] '
-        'Geoapify status: ${response.statusCode}',
-      );
-
+      
       if (response.statusCode != 200) {
         throw Exception(
           'Location search failed '
@@ -77,18 +72,10 @@ class LocationService {
           .where((item) => item.formattedAddress.isNotEmpty)
           .toList();
 
-      debugPrint(
-        '🟢 [LocationService] '
-        '${results.length} locations found',
-      );
-
+      
       return results;
     } catch (e) {
-      debugPrint(
-        '🔴 [LocationService] '
-        'Geoapify search failed: $e',
-      );
-
+      
       rethrow;
     }
   }
@@ -99,11 +86,7 @@ class LocationService {
 
   Future<LocationSuggestion> getCurrentLocation() async {
     try {
-      debugPrint(
-        '📍 [LocationService] '
-        'Getting current location...',
-      );
-
+      
       // ========================================================
       // 1. CHECK WHETHER GPS IS ENABLED
       // ========================================================
@@ -149,16 +132,8 @@ class LocationService {
         ),
       );
 
-      debugPrint(
-        '📍 [LocationService] '
-        'Latitude: ${position.latitude}',
-      );
-
-      debugPrint(
-        '📍 [LocationService] '
-        'Longitude: ${position.longitude}',
-      );
-
+      
+      
       // ========================================================
       // 4. CONVERT GPS TO READABLE ADDRESS
       // ========================================================
@@ -229,12 +204,7 @@ class LocationService {
         name = place.subLocality!.trim();
       }
 
-      debugPrint(
-        '🟢 [LocationService] '
-        'Current location resolved: '
-        '$formattedAddress',
-      );
-
+      
       return LocationSuggestion(
         name: name,
         formattedAddress: formattedAddress.isEmpty
@@ -244,11 +214,7 @@ class LocationService {
         longitude: position.longitude,
       );
     } catch (e) {
-      debugPrint(
-        '🔴 [LocationService] '
-        'Current location failed: $e',
-      );
-
+      
       rethrow;
     }
   }

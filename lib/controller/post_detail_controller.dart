@@ -142,7 +142,6 @@ class PostDetailController extends GetxController {
         likeCount.value = oldCount;
       }
     } catch (e) {
-      debugPrint('[POST DETAIL] Like error: $e');
     } finally {
       isLikeProcessing.value = false;
     }

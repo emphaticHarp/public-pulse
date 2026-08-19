@@ -20,7 +20,6 @@ class CommentRepository {
 
       return profile?['id'];
     } catch (e) {
-      debugPrint("getCurrentProfileId Error: $e");
       return null;
     }
   }
@@ -43,7 +42,6 @@ avatar_path
 
       return response;
     } catch (e) {
-      debugPrint("getCurrentProfile Error: $e");
       return null;
     }
   }
@@ -80,7 +78,6 @@ avatar_path
           .map<CommentModel>((e) => CommentModel.fromMap(e))
           .toList();
     } catch (e) {
-      debugPrint("getComments Error: $e");
       return [];
     }
   }
@@ -116,7 +113,6 @@ profiles!comments_profile_id_fkey(
 
       return CommentModel.fromMap(response);
     } catch (e) {
-      debugPrint("addComment Error: $e");
       return null;
     }
   }
@@ -145,7 +141,6 @@ profiles!comments_profile_id_fkey(
 
       return CommentModel.fromMap(response);
     } catch (e) {
-      debugPrint("updateComment Error: $e");
       return null;
     }
   }
@@ -156,7 +151,6 @@ profiles!comments_profile_id_fkey(
 
       return true;
     } catch (e) {
-      debugPrint("deleteComment Error: $e");
       return false;
     }
   }

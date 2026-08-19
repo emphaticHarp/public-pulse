@@ -16,7 +16,6 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("🏠 HomePage Build");
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(

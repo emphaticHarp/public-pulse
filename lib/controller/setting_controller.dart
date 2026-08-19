@@ -63,12 +63,7 @@ class SettingController extends GetxController {
     _accountStatus.value = profile?.accountStatus ?? 'unknown';
     _referralCode.value = profile?.referCode ?? '';
 
-    debugPrint(
-      '[Settings] Synced profile data: '
-      'status=${_accountStatus.value}, '
-      'referral=${_referralCode.value}',
-    );
-  }
+      }
 
   String get accountStatusText {
     switch (accountStatus.toLowerCase()) {
@@ -145,7 +140,6 @@ class SettingController extends GetxController {
       _profileWorker = ever(pc.profile, (_) {
         _syncProfileData();
       });
-      debugPrint('[Settings] Attached profile listener immediately');
       return;
     }
 
@@ -158,9 +152,7 @@ class SettingController extends GetxController {
             _syncProfileData();
           });
           _syncProfileData(); // Pull current value now that it exists.
-          debugPrint('[Settings] Attached profile listener (delayed)');
         } else {
-          debugPrint('[Settings] ProfileController still not registered');
         }
       }
     });
@@ -234,7 +226,6 @@ class SettingController extends GetxController {
   void togglePushNotifications(bool value) {
     isPushNotificationEnabled.value = value;
     // Integrate with platform notification service when ready.
-    debugPrint('[Settings] Push notifications: $value');
   }
 
   // ── Referral Code ─────────────────────────────────────────────────────────
@@ -256,7 +247,6 @@ class SettingController extends GetxController {
 
   void openPrivacyPolicy() {
     // Navigate to Privacy Policy WebView / page.
-    debugPrint('[Settings] Privacy Policy tapped');
     Get.snackbar(
       'Coming Soon',
       'Privacy Policy will be available soon.',
@@ -269,7 +259,6 @@ class SettingController extends GetxController {
 
   void openHelpSupport() {
     // Navigate to Help & Support page.
-    debugPrint('[Settings] Help & Support tapped');
     Get.snackbar(
       'Coming Soon',
       'Help & Support will be available soon.',
@@ -282,7 +271,6 @@ class SettingController extends GetxController {
 
   void openAboutUs() {
     // Navigate to About Us page.
-    debugPrint('[Settings] About Us tapped');
     Get.snackbar(
       'Coming Soon',
       'About Us will be available soon.',
@@ -306,7 +294,6 @@ class SettingController extends GetxController {
     );
     if (!confirmed) return;
     // Implement deactivation via Supabase when backend is ready.
-    debugPrint('[Settings] Deactivate Account confirmed');
     Get.snackbar(
       'Coming Soon',
       'Account deactivation will be available soon.',
@@ -351,14 +338,9 @@ class SettingController extends GetxController {
     isAccountActionLoading.value = true;
 
     try {
-      debugPrint('[Settings] ===============================');
-      debugPrint('[Settings] ACCOUNT DELETION START');
-      debugPrint('[Settings] ===============================');
 
       // Your RPC permanently deletes the account.
       await Supabase.instance.client.rpc('deactivate_account');
-
-      debugPrint('[Settings] Account deletion RPC completed');
 
       // ==========================================================
       // SIGN OUT
@@ -368,7 +350,6 @@ class SettingController extends GetxController {
         final authService = Get.find<AuthService>();
         await authService.signOut();
       } catch (e) {
-        debugPrint('[Settings] Sign-out after deletion skipped/failed: $e');
       }
 
       // ==========================================================
@@ -417,12 +398,7 @@ class SettingController extends GetxController {
 
       Get.offAll(() => LoginPage());
 
-      debugPrint('[Settings] ===============================');
-      debugPrint('[Settings] ACCOUNT DELETION COMPLETE');
-      debugPrint('[Settings] ===============================');
     } catch (e, stackTrace) {
-      debugPrint('[Settings] Account deletion failed: $e');
-      debugPrintStack(stackTrace: stackTrace);
 
       Get.snackbar(
         'Delete Failed',
@@ -460,9 +436,6 @@ class SettingController extends GetxController {
     isLoggingOut.value = true;
 
     try {
-      debugPrint('[Settings] ===============================');
-      debugPrint('[Settings] LOGOUT START');
-      debugPrint('[Settings] ===============================');
 
       // ----------------------------------------------------------
       // 1. Sign out from Supabase / Google
@@ -472,11 +445,7 @@ class SettingController extends GetxController {
 
       await authService.signOut();
 
-      debugPrint('[Settings] Auth sign-out complete');
-
       CurrentUserService.instance.clear();
-
-      debugPrint('[Settings] CurrentUserService cleared');
 
       // ----------------------------------------------------------
       // 2. Clear ALL user-specific Hive cache
@@ -493,7 +462,6 @@ class SettingController extends GetxController {
 
         await profileController.invalidateProfile();
 
-        debugPrint('[Settings] ProfileController invalidated');
       }
 
       // ----------------------------------------------------------
@@ -504,13 +472,11 @@ class SettingController extends GetxController {
 
         homeController.resetForLogout();
 
-        debugPrint('[Settings] HomeController reset');
       }
 
       if (Get.isRegistered<NotificationController>()) {
         Get.delete<NotificationController>(force: true);
 
-        debugPrint('[Settings] NotificationController removed');
       }
 
       // ----------------------------------------------------------
@@ -519,14 +485,7 @@ class SettingController extends GetxController {
 
       Get.offAll(() => LoginPage());
 
-      debugPrint('[Settings] Navigated to LoginPage');
-
-      debugPrint('[Settings] ===============================');
-      debugPrint('[Settings] LOGOUT COMPLETE');
-      debugPrint('[Settings] ===============================');
     } catch (e, stackTrace) {
-      debugPrint('[Settings] Logout error: $e');
-      debugPrintStack(stackTrace: stackTrace);
 
       Get.snackbar(
         'Logout Failed',

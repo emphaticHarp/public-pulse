@@ -46,11 +46,7 @@ class UserProfileRepository {
 
         final profileId = data['id'] as String;
 
-        debugPrint(
-          '[USER_PROFILE_REPO] Profile ID fetched: '
-          '$userId -> $profileId',
-        );
-
+        
         return profileId;
       } catch (e) {
         // Do not permanently cache a failed request.
@@ -103,8 +99,6 @@ class UserProfileRepository {
 
     for (final row in rows) {
       final mediaRaw = row['post_media'];
-
-      debugPrint('[USER_POSTS] post=${row['id']} media=$mediaRaw');
 
       if (mediaRaw is! List || mediaRaw.isEmpty) {
         continue;

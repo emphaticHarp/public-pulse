@@ -17,11 +17,8 @@ class FollowRepository {
     final profileId = await CurrentUserService.instance.getProfileId();
 
     if (profileId == null) {
-      debugPrint('[FOLLOW] Current profile ID is null');
       return {};
     }
-
-    debugPrint('[FOLLOW] Loading following IDs for profile: $profileId');
 
     final rows = await _followChunks
         .select('following_profile_ids')
@@ -37,8 +34,6 @@ class FollowRepository {
       }
     }
 
-    debugPrint('[FOLLOW] Loaded ${ids.length} following IDs');
-
     return ids;
   }
 
@@ -51,28 +46,20 @@ class FollowRepository {
       final myProfileId = await CurrentUserService.instance.getProfileId();
 
       if (myProfileId == null) {
-        debugPrint('[FOLLOW] Current profile ID is null');
         return false;
       }
 
       if (myProfileId == targetProfileId) {
-        debugPrint('[FOLLOW] Cannot follow yourself');
         return false;
       }
-
-      debugPrint('[FOLLOW] $myProfileId → $targetProfileId');
 
       await Supabase.instance.client.rpc(
         'follow_user',
         params: {'p_following_profile_id': targetProfileId},
       );
 
-      debugPrint('[FOLLOW] Follow completed');
-
       return true;
     } catch (e, stackTrace) {
-      debugPrint('[FOLLOW] Follow error: $e');
-      debugPrintStack(stackTrace: stackTrace);
 
       return false;
     }
@@ -87,28 +74,20 @@ class FollowRepository {
       final myProfileId = await CurrentUserService.instance.getProfileId();
 
       if (myProfileId == null) {
-        debugPrint('[FOLLOW] Current profile ID is null');
         return false;
       }
 
       if (myProfileId == targetProfileId) {
-        debugPrint('[FOLLOW] Cannot unfollow yourself');
         return false;
       }
-
-      debugPrint('[FOLLOW] Unfollow $myProfileId → $targetProfileId');
 
       await Supabase.instance.client.rpc(
         'unfollow_user',
         params: {'p_following_profile_id': targetProfileId},
       );
 
-      debugPrint('[FOLLOW] Unfollow completed');
-
       return true;
     } catch (e, stackTrace) {
-      debugPrint('[FOLLOW] Unfollow error: $e');
-      debugPrintStack(stackTrace: stackTrace);
 
       return false;
     }

@@ -4,7 +4,6 @@ import 'package:public_pulse/core/theme/app_font.dart';
 import 'package:get/get.dart';
 import 'package:public_pulse/controller/onboarding_controller.dart';
 
-
 const String kLogoAssetPath = 'assets/images/logo.webp';
 
 class _OnboardSlide {

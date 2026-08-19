@@ -106,7 +106,6 @@ class ProfileRepository {
   //function to upload avatar to bunny CDN
 
   Future<String> _uploadAvatarToBunny(File file) async {
-    debugPrint('[PROFILE] Compressing avatar');
 
     final compressed = await ImageCompressor().compressImage(
       file.absolute.path,
@@ -114,11 +113,7 @@ class ProfileRepository {
 
     final uploadFile = compressed ?? file;
 
-    debugPrint(
-      '[PROFILE] Avatar upload size: '
-      '${(await uploadFile.length()) / 1024} KB',
-    );
-
+    
     final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
       uploadFile,
       'avatars',
@@ -128,8 +123,6 @@ class ProfileRepository {
       throw Exception('Bunny avatar upload failed');
     }
 
-    debugPrint('[PROFILE] Avatar uploaded to Bunny: $bunnyUrl');
-
     // Delete only the temporary compressed file.
     if (compressed != null) {
       try {
@@ -137,7 +130,6 @@ class ProfileRepository {
           await compressed.delete();
         }
       } catch (e) {
-        debugPrint('[PROFILE] Temporary avatar cleanup failed: $e');
       }
     }
 
@@ -147,7 +139,6 @@ class ProfileRepository {
   //function to upload cover to bunny CDN
 
   Future<String> _uploadCoverToBunny(File file) async {
-    debugPrint('[PROFILE] Compressing cover image');
 
     final compressed = await ImageCompressor().compressImage(
       file.absolute.path,
@@ -155,11 +146,7 @@ class ProfileRepository {
 
     final uploadFile = compressed ?? file;
 
-    debugPrint(
-      '[PROFILE] Cover upload size: '
-      '${(await uploadFile.length()) / 1024} KB',
-    );
-
+    
     final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
       uploadFile,
       'covers',
@@ -169,15 +156,12 @@ class ProfileRepository {
       throw Exception('Bunny cover upload failed');
     }
 
-    debugPrint('[PROFILE] Cover uploaded to Bunny: $bunnyUrl');
-
     if (compressed != null) {
       try {
         if (await compressed.exists()) {
           await compressed.delete();
         }
       } catch (e) {
-        debugPrint('[PROFILE] Temporary cover cleanup failed: $e');
       }
     }
 
@@ -210,26 +194,20 @@ class ProfileRepository {
   // ── Followers / Following ─────────────────────────────────────────────────
 
   Future<List<FollowerModel>> getFollowers(String userId) async {
-    debugPrint('[FF_REPO] ===== GET FOLLOWERS =====');
     final profileId = await _getProfileIdFromUserId(userId);
-
-    debugPrint('[FF_REPO] actual profile_id = $profileId');
 
     final data = await _followChunks
         .select('profile_id, chunk, follower_profile_ids')
         .eq('profile_id', profileId)
         .order('chunk', ascending: true);
-    debugPrint('[FF_REPO] Chunk rows = $data');
 
     final Set<String> followerIds = {};
 
     for (final row in data) {
-      debugPrint('[FF_REPO] Row = $row');
 
       final ids = row['follower_profile_ids'];
 
       if (ids is List) {
-        debugPrint('[FF_REPO] follower_profile_ids = $ids');
 
         for (final id in ids) {
           if (id != null) {
@@ -239,9 +217,6 @@ class ProfileRepository {
       }
     }
 
-    debugPrint('[FF_REPO] Total follower IDs = ${followerIds.length}');
-    debugPrint('[FF_REPO] IDs = $followerIds');
-
     if (followerIds.isEmpty) {
       return [];
     }
@@ -249,8 +224,6 @@ class ProfileRepository {
     final profiles = await _db
         .select('user_id, username, display_name, avatar_path')
         .inFilter('id', followerIds.toList());
-
-    debugPrint('[FF_REPO] Profiles returned = $profiles');
 
     return profiles.map<FollowerModel>((row) {
       return FollowerModel(
@@ -269,10 +242,7 @@ class ProfileRepository {
   }
 
   Future<ProfileModel> getProfileByProfileId(String profileId) async {
-    debugPrint(
-      '[PROFILE_REPO] Loading profile by internal profile ID: $profileId',
-    );
-
+    
     final data = await _db.select().eq('id', profileId).single();
 
     final profile = ProfileModel.fromJson(data);
@@ -313,7 +283,6 @@ class ProfileRepository {
   Future<List<Map<String, dynamic>>> getUserPostsByProfileId(
     String profileId,
   ) async {
-    debugPrint('[PROFILE POSTS] Getting posts for profileId: $profileId');
 
     // ----------------------------------------------------------
     // 1. Get profile information
@@ -323,8 +292,6 @@ class ProfileRepository {
         .select('id, user_id, username, display_name, avatar_path, is_private')
         .eq('id', profileId)
         .single();
-
-    debugPrint('[PROFILE POSTS] Profile = ${profileData['username']}');
 
     // ----------------------------------------------------------
     // 2. Get posts + media
@@ -365,8 +332,6 @@ class ProfileRepository {
       ''')
         .eq('profile_id', profileId)
         .order('created_at', ascending: false);
-
-    debugPrint('[PROFILE POSTS] Supabase returned ${posts.length} posts');
 
     // ----------------------------------------------------------
     // 3. Transform Supabase response
@@ -403,16 +368,9 @@ class ProfileRepository {
       data['my_like'] = [];
       data['my_save'] = [];
 
-      debugPrint(
-        '[PROFILE POSTS] '
-        'post=${data['id']} '
-        'media=${(data['media'] as List).length}',
-      );
-
+      
       result.add(data);
     }
-
-    debugPrint('[PROFILE POSTS] Returning ${result.length} transformed posts');
 
     return result;
   }
@@ -421,27 +379,20 @@ class ProfileRepository {
   ///
   /// Pass [afterCursor] to advance; omit for page one.
   Future<List<FollowerModel>> getFollowing(String userId) async {
-    debugPrint('[FF_REPO] ===== GET FOLLOWING =====');
     final profileId = await _getProfileIdFromUserId(userId);
-
-    debugPrint('[FF_REPO] actual profile_id = $profileId');
 
     final data = await _followChunks
         .select('profile_id, chunk, following_profile_ids')
         .eq('profile_id', profileId)
         .order('chunk', ascending: true);
 
-    debugPrint('[FF_REPO] Chunk rows = $data');
-
     final Set<String> followingIds = {};
 
     for (final row in data) {
-      debugPrint('[FF_REPO] Row = $row');
 
       final ids = row['following_profile_ids'];
 
       if (ids is List) {
-        debugPrint('[FF_REPO] following_profile_ids = $ids');
 
         for (final id in ids) {
           if (id != null) {
@@ -451,9 +402,6 @@ class ProfileRepository {
       }
     }
 
-    debugPrint('[FF_REPO] Total following IDs = ${followingIds.length}');
-    debugPrint('[FF_REPO] IDs = $followingIds');
-
     if (followingIds.isEmpty) {
       return [];
     }
@@ -461,8 +409,6 @@ class ProfileRepository {
     final profiles = await _db
         .select('user_id, username, display_name, avatar_path')
         .inFilter('id', followingIds.toList());
-
-    debugPrint('[FF_REPO] Profiles returned = $profiles');
 
     return profiles.map<FollowerModel>((row) {
       return FollowerModel(
@@ -497,7 +443,6 @@ class ProfileRepository {
   // ─────────────────────────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> getUserPosts(String userId) async {
-    debugPrint('[PROFILE POSTS] Getting posts for user: $userId');
 
     // ----------------------------------------------------------
     // 1. Get target profile
@@ -516,8 +461,6 @@ class ProfileRepository {
         .single();
 
     final profileId = profileData['id'] as String;
-
-    debugPrint('[PROFILE POSTS] profileId = $profileId');
 
     // ----------------------------------------------------------
     // 2. Get posts + media
@@ -559,15 +502,8 @@ class ProfileRepository {
         .eq('profile_id', profileId)
         .order('created_at', ascending: false);
 
-    debugPrint('[PROFILE POSTS] Supabase returned ${posts.length} posts');
-
     for (final post in posts) {
-      debugPrint(
-        '[PROFILE RAW] '
-        'id=${post['id']} '
-        'post_media=${post['post_media']}',
-      );
-    }
+          }
 
     // ----------------------------------------------------------
     // 3. Convert to PostModel format
@@ -600,12 +536,7 @@ class ProfileRepository {
       data['my_like'] = [];
       data['my_save'] = [];
 
-      debugPrint(
-        '[PROFILE POSTS] '
-        'post=${data['id']} '
-        'media=${(data['media'] as List).length}',
-      );
-
+      
       result.add(data);
     }
 

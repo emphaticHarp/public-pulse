@@ -68,7 +68,6 @@ class CreatePostController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    debugPrint('🟢 [CreatePostController] onInit called');
     captionController.addListener(() {
       caption.value = captionController.text;
     });
@@ -76,7 +75,6 @@ class CreatePostController extends GetxController {
 
   @override
   void onClose() {
-    debugPrint('🔴 [CreatePostController] onClose called');
 
     _locationSearchDebounce?.cancel();
 
@@ -89,7 +87,6 @@ class CreatePostController extends GetxController {
 
   // Navigate to a specific page
   void animateToPage(int index) {
-    debugPrint('🔵 [CreatePostController] animateToPage($index)');
     pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
@@ -99,44 +96,30 @@ class CreatePostController extends GetxController {
 
   // Update current page index when page changes
   void onPageChanged(int index) {
-    debugPrint('🔵 [CreatePostController] onPageChanged($index)');
     currentIndex.value = index;
   }
 
   // Remove image at index
   void removeImageAt(int index) {
-    debugPrint(
-      '🟡 [CreatePostController] removeImageAt($index) - total: ${pendingMedia.length}',
-    );
-    if (index >= 0 && index < pendingMedia.length) {
+        if (index >= 0 && index < pendingMedia.length) {
       final removed = pendingMedia[index].originalPath;
-      debugPrint('🟡 [CreatePostController] Removed: $removed');
       pendingMedia.removeAt(index);
       if (currentIndex.value >= pendingMedia.length &&
           pendingMedia.isNotEmpty) {
         currentIndex.value = pendingMedia.length - 1;
       }
-      debugPrint(
-        '🟡 [CreatePostController] Remaining media: ${pendingMedia.length}',
-      );
-    } else {
-      debugPrint(
-        '🔴 [CreatePostController] removeImageAt($index) - INDEX OUT OF RANGE',
-      );
-    }
+          } else {
+          }
   }
 
   // Upload post
   void uploadPost() {
-    debugPrint('🚀 [CreatePostController] uploadPost() STARTED');
 
     if (pendingMedia.isEmpty) {
-      debugPrint('🔴 No media selected');
       return;
     }
 
     if (isUploading.value) {
-      debugPrint('🟡 Upload already running');
       return;
     }
 
@@ -175,8 +158,6 @@ class CreatePostController extends GetxController {
       visibility: visibilitySnapshot,
     );
 
-    debugPrint('🟢 Temporary uploading post created: $tempPostId');
-
     // ============================================================
     // LEAVE CREATE POST PAGE
     // ============================================================
@@ -198,11 +179,7 @@ class CreatePostController extends GetxController {
           homeController: homeController,
         );
 
-        debugPrint('🟢 Background upload completed');
       } catch (e, stackTrace) {
-        debugPrint('🔴 Background upload failed: $e');
-
-        debugPrintStack(stackTrace: stackTrace);
 
         // Keep the temporary post.
         // Change it into FAILED state.
@@ -248,7 +225,6 @@ class CreatePostController extends GetxController {
     required String tempPostId,
     required HomeController homeController,
   }) async {
-    debugPrint('📤 [BackgroundUpload] STARTED');
 
     final List<Map<String, dynamic>> mediaItems = [];
 
@@ -269,11 +245,7 @@ class CreatePostController extends GetxController {
         throw Exception('File does not exist: $originalPath');
       }
 
-      debugPrint(
-        '🗜️ [BackgroundUpload] '
-        'Compressing ${i + 1}/$totalFiles',
-      );
-
+      
       File uploadFile = originalFile;
 
       final compressedFile = await imageCompressor.compressImage(originalPath);
@@ -281,16 +253,8 @@ class CreatePostController extends GetxController {
       if (compressedFile != null) {
         uploadFile = compressedFile;
 
-        debugPrint(
-          '🗜️ Compression successful: '
-          '${compressedFile.lengthSync()} bytes',
-        );
-      } else {
-        debugPrint(
-          '🟡 Compression returned null. '
-          'Using original file.',
-        );
-      }
+              } else {
+              }
 
       // ============================================================
       // GET ACTUAL UPLOADED IMAGE DIMENSIONS
@@ -298,21 +262,12 @@ class CreatePostController extends GetxController {
 
       final dimensions = await _getImageDimensions(uploadFile);
 
-      debugPrint(
-        '📐 [BackgroundUpload] '
-        'Image ${i + 1}: '
-        '${dimensions.width} x ${dimensions.height}',
-      );
-
+      
       final originalName = uploadFile.path.split(RegExp(r'[/\\]')).last;
 
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_$originalName';
 
-      debugPrint(
-        '☁️ [BackgroundUpload] '
-        'Uploading $fileName',
-      );
-
+      
       final storagePath = await repository.uploadImage(
         imageFile: uploadFile,
         fileName: fileName,
@@ -323,11 +278,7 @@ class CreatePostController extends GetxController {
           final percent = ((sent / total) * 100).toInt();
 
           if (percent % 10 == 0) {
-            debugPrint(
-              '☁️ [BackgroundUpload] '
-              'Image ${i + 1}/$totalFiles: $percent%',
-            );
-          }
+                      }
         },
       );
 
@@ -344,45 +295,23 @@ class CreatePostController extends GetxController {
       final thumbnailFile = await imageCompressor.createThumbnail(uploadFile);
 
       if (thumbnailFile != null) {
-        debugPrint(
-          '🖼️ [BackgroundUpload] '
-          'Thumbnail size: '
-          '${thumbnailFile.lengthSync() / 1024} KB',
-        );
-
+        
         thumbnailPath = await repository.uploadThumbnail(
           imageFile: thumbnailFile,
         );
 
-        debugPrint(
-          '🟢 [BackgroundUpload] '
-          'Thumbnail uploaded: $thumbnailPath',
-        );
-
+        
         // Thumbnail is temporary.
         try {
           if (thumbnailFile.existsSync()) {
             await thumbnailFile.delete();
           }
         } catch (e) {
-          debugPrint('🟡 Could not delete temporary thumbnail: $e');
         }
       } else {
-        debugPrint(
-          '🟡 Thumbnail generation failed. '
-          'Using main image URL as fallback.',
-        );
-      }
-      debugPrint(
-        '🟢 [BackgroundUpload] '
-        'Thumbnail upload completed: $thumbnailPath',
-      );
-
-      debugPrint(
-        '🟢 [BackgroundUpload] '
-        'Storage upload completed: $storagePath',
-      );
-
+              }
+      
+      
       mediaItems.add({
         'storage_path': storagePath,
         'thumbnail_path': thumbnailPath,
@@ -411,8 +340,6 @@ class CreatePostController extends GetxController {
     // 3. CREATE POST
     // ============================================================
 
-    debugPrint('💾 [BackgroundUpload] Creating post...');
-
     final postResult = await repository.createPost(
       profileId: profileId,
       caption: caption,
@@ -425,11 +352,7 @@ class CreatePostController extends GetxController {
 
     final mediaIds = postResult['media_ids'] as List<String>;
 
-    debugPrint(
-      '🟢 [BackgroundUpload] '
-      'Post created: $postId',
-    );
-
+    
     // ============================================================
     // 4. METADATA
     // ============================================================
@@ -452,15 +375,10 @@ class CreatePostController extends GetxController {
       if (metadataRows.isNotEmpty) {
         await repository.insertMediaMetadata(metadataRows);
 
-        debugPrint('🟢 [BackgroundUpload] Metadata saved');
       }
     } catch (e) {
       // Metadata failure should NOT delete the post.
-      debugPrint(
-        '🟡 [BackgroundUpload] '
-        'Metadata failed: $e',
-      );
-    }
+          }
 
     // ============================================================
     // 5. REFRESH HOME
@@ -475,20 +393,13 @@ class CreatePostController extends GetxController {
       );
     }
 
-    debugPrint('🟢 [BackgroundUpload] Home feed refreshed');
-
     // ============================================================
     // 6. SUCCESS
     // ============================================================
 
     homeController.removeUploadingPost(tempPostId);
 
-    debugPrint(
-      '🟢 [BackgroundUpload] '
-      'Temporary uploading post removed',
-    );
-
-    debugPrint('🟢 [BackgroundUpload] Finished successfully');
+    
   }
 
   // ============================================================
@@ -499,8 +410,6 @@ class CreatePostController extends GetxController {
     _locationSearchDebounce?.cancel();
 
     final query = value.trim();
-
-    debugPrint('🔎 [CreatePostController] Location query: $query');
 
     if (query.length < 2) {
       locationSuggestions.clear();
@@ -523,7 +432,6 @@ class CreatePostController extends GetxController {
 
   Future<void> _searchLocations(String query) async {
     try {
-      debugPrint('🔎 [CreatePostController] Searching location: $query');
 
       final results = await locationService.searchLocations(query);
 
@@ -532,26 +440,14 @@ class CreatePostController extends GetxController {
       final currentQuery = locationSearchController.text.trim();
 
       if (currentQuery != query) {
-        debugPrint(
-          '🟡 [CreatePostController] '
-          'Ignoring outdated location result',
-        );
-
+        
         return;
       }
 
       locationSuggestions.assignAll(results);
 
-      debugPrint(
-        '🟢 [CreatePostController] '
-        '${results.length} locations found',
-      );
-    } catch (e) {
-      debugPrint(
-        '🔴 [CreatePostController] '
-        'Location search failed: $e',
-      );
-
+          } catch (e) {
+      
       locationSuggestions.clear();
     } finally {
       if (locationSearchController.text.trim() == query) {
@@ -572,20 +468,12 @@ class CreatePostController extends GetxController {
     isGettingCurrentLocation.value = true;
 
     try {
-      debugPrint(
-        '📍 [CreatePostController] '
-        'Getting current location...',
-      );
-
+      
       final selected = await locationService.getCurrentLocation();
 
       selectLocation(selected);
     } catch (e) {
-      debugPrint(
-        '🔴 [CreatePostController] '
-        'Current location failed: $e',
-      );
-
+      
       final message = e.toString().replaceFirst('Exception: ', '');
 
       CustomAlert.show(
@@ -604,16 +492,8 @@ class CreatePostController extends GetxController {
   // ============================================================
 
   void selectLocation(LocationSuggestion selected) {
-    debugPrint(
-      '📍 [CreatePostController] '
-      'Selected location name: ${selected.name}',
-    );
-
-    debugPrint(
-      '📍 [CreatePostController] '
-      'Selected full address: ${selected.formattedAddress}',
-    );
-
+    
+    
     // Full address → database
     location.value = selected.formattedAddress;
 
@@ -636,7 +516,6 @@ class CreatePostController extends GetxController {
   // ============================================================
 
   void clearLocation() {
-    debugPrint('📍 [CreatePostController] Location cleared');
 
     location.value = '';
     locationDisplayName.value = '';
@@ -647,11 +526,7 @@ class CreatePostController extends GetxController {
   // ============================================================
 
   void resetLocationPicker() {
-    debugPrint(
-      '📍 [CreatePostController] '
-      'Resetting location picker',
-    );
-
+    
     _locationSearchDebounce?.cancel();
 
     locationSearchController.clear();
@@ -663,7 +538,6 @@ class CreatePostController extends GetxController {
 
   // Show permission error
   void _showPermissionError(String permission) {
-    debugPrint('🔴 [CreatePostController] Permission error: $permission');
     CustomAlert.show(
       title: 'Permission Required',
       message: 'Please grant $permission permission.',
@@ -673,12 +547,7 @@ class CreatePostController extends GetxController {
   }
 
   void showMediaPicker() {
-    debugPrint('📸 [CreatePostController] showMediaPicker() called');
-    debugPrint(
-      '📸 [CreatePostController] Current media count: ${pendingMedia.length}',
-    );
-    if (pendingMedia.length >= 10) {
-      debugPrint('🟡 [CreatePostController] Media limit reached (10)');
+        if (pendingMedia.length >= 10) {
       CustomAlert.show(
         title: 'Limit reached',
         message: 'You can add up to 10 media items',
@@ -703,7 +572,6 @@ class CreatePostController extends GetxController {
                 leading: const Icon(Icons.camera_alt_rounded),
                 title: const Text("Take Photo"),
                 onTap: () async {
-                  debugPrint('📷 [MediaPicker] Take Photo selected');
 
                   Get.back();
 
@@ -713,8 +581,6 @@ class CreatePostController extends GetxController {
 
                   final granted =
                       await PermissionService.requestCameraPermission();
-
-                  debugPrint('📷 [MediaPicker] Camera permission: $granted');
 
                   if (!granted) {
                     _showPermissionError('Camera');
@@ -730,7 +596,6 @@ class CreatePostController extends GetxController {
                   );
 
                   if (image == null) {
-                    debugPrint('🟡 [MediaPicker] Camera cancelled');
                     return;
                   }
 
@@ -750,12 +615,7 @@ class CreatePostController extends GetxController {
                   // Show the newly captured photo
                   currentIndex.value = pendingMedia.length - 1;
 
-                  debugPrint('📷 [MediaPicker] Photo captured: ${image.path}');
-
-                  debugPrint(
-                    '📷 [MediaPicker] Total media count: ${pendingMedia.length}',
-                  );
-                },
+                                  },
               ),
 
               // ──────────────────────────────────────────────────────────
@@ -765,10 +625,7 @@ class CreatePostController extends GetxController {
                 leading: const Icon(Icons.photo_library_rounded),
                 title: const Text("Choose Photos from Gallery"),
                 onTap: () async {
-                  debugPrint(
-                    '🖼️ [MediaPicker] Choose Photos from Gallery selected',
-                  );
-
+                  
                   Get.back();
 
                   // ==========================================================
@@ -777,8 +634,6 @@ class CreatePostController extends GetxController {
 
                   final granted =
                       await PermissionService.requestGalleryPermission();
-
-                  debugPrint('🖼️ [MediaPicker] Gallery permission: $granted');
 
                   if (!granted) {
                     _showPermissionError('Gallery');
@@ -809,15 +664,10 @@ class CreatePostController extends GetxController {
                   final List<XFile> images = await picker.pickMultiImage();
 
                   if (images.isEmpty) {
-                    debugPrint('🟡 [MediaPicker] Image selection cancelled');
                     return;
                   }
 
-                  debugPrint(
-                    '🖼️ [MediaPicker] '
-                    '${images.length} images selected',
-                  );
-
+                  
                   // ==========================================================
                   // KEEP MAXIMUM 10 PHOTOS
                   // ==========================================================
@@ -833,16 +683,8 @@ class CreatePostController extends GetxController {
                   // Start carousel from first selected image.
                   currentIndex.value = 0;
 
-                  debugPrint(
-                    '🖼️ [MediaPicker] '
-                    '${selectedImages.length} images added',
-                  );
-
-                  debugPrint(
-                    '🖼️ [MediaPicker] '
-                    'Total media count: ${pendingMedia.length}',
-                  );
-
+                  
+                  
                   // User selected more than available slots.
                   if (images.length > remainingSlots) {
                     CustomAlert.show(

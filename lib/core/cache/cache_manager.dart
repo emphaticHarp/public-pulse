@@ -24,7 +24,6 @@ class CacheManager {
   static Future<void> setPostCacheOwnerProfileId(String profileId) async {
     await _postBox.put(_postCacheOwnerKey, profileId);
 
-    debugPrint('[CACHE] Post cache owner set: $profileId');
   }
 
   static bool hasPostCache() {
@@ -47,28 +46,18 @@ class CacheManager {
     await _postBox.put(CacheKeys.nextCursor, nextCursor);
     await _postBox.put(CacheKeys.hasMore, hasMore);
 
-    debugPrint(
-      '[CACHE] Saved to Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}',
-    );
-  }
+      }
 
   // Load cached posts if available.
   static List<PostModel> getCachedPosts() {
-    debugPrint('[CACHE] getCachedPosts: Starting...');
 
     final cached = _postBox.get(CacheKeys.posts);
 
     if (cached == null) {
-      debugPrint(
-        '[CACHE] getCachedPosts: cached is NULL, returning empty list',
-      );
-      return [];
+            return [];
     }
 
-    debugPrint(
-      '[CACHE] getCachedPosts: cached raw length = ${(cached as List).length}',
-    );
-
+    
     final List<PostModel> posts = [];
     for (int i = 0; i < cached.length; i++) {
       try {
@@ -76,14 +65,10 @@ class CacheManager {
         final post = PostModel.fromCache(postData);
         posts.add(post);
       } catch (e) {
-        debugPrint('[CACHE] getCachedPosts: ERROR parsing post $i: $e');
       }
     }
 
-    debugPrint(
-      '[CACHE] Loaded from Hive: ${posts.length} posts, ids: ${posts.map((e) => e.id).toList()}',
-    );
-    return posts;
+        return posts;
   }
 
   static bool getHasMore() {
@@ -96,9 +81,7 @@ class CacheManager {
 
   // Remove all cached posts.
   static Future<void> clearPostCache() async {
-    debugPrint('[CACHE] clearPostCache: Clearing all cached posts');
     await _postBox.clear();
-    debugPrint('[CACHE] clearPostCache: Cache cleared');
   }
 
   // ---------------- COMMENTS CACHE ----------------
@@ -171,7 +154,6 @@ class CacheManager {
       DateTime.now().millisecondsSinceEpoch,
     );
 
-    debugPrint('[PROFILE CACHE] Own profile saved');
   }
 
   static ProfileModel? getCachedUserProfile() {
@@ -191,18 +173,14 @@ class CacheManager {
       final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
 
       if (age > _profileCacheDuration.inMilliseconds) {
-        debugPrint('[PROFILE CACHE] Own profile expired');
 
         clearUserProfileCache();
 
         return null;
       }
 
-      debugPrint('[PROFILE CACHE] Loaded own profile');
-
       return ProfileModel.fromJson(Map<String, dynamic>.from(data));
     } catch (e) {
-      debugPrint('[PROFILE CACHE] Failed to read own profile: $e');
 
       return null;
     }
@@ -234,28 +212,24 @@ class CacheManager {
       DateTime.now().millisecondsSinceEpoch,
     );
 
-    debugPrint('[PROFILE CACHE] My posts cached: ${posts.length}');
   }
 
   static List<PostModel> getCachedMyPosts() {
     final data = _myPostsBox.get(CacheKeys.myPosts);
 
     if (data == null) {
-      debugPrint('[PROFILE CACHE] No cached my posts');
       return [];
     }
 
     final timestamp = _myPostsBox.get(CacheKeys.myPostsTimestamp);
 
     if (timestamp == null) {
-      debugPrint('[PROFILE CACHE] My posts timestamp missing');
       return [];
     }
 
     final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
 
     if (age > _profilePostsCacheDuration.inMilliseconds) {
-      debugPrint('[PROFILE CACHE] My posts cache expired');
 
       clearMyPostsCache();
 
@@ -273,15 +247,11 @@ class CacheManager {
 
           posts.add(PostModel.fromCache(postData));
         } catch (e) {
-          debugPrint('[PROFILE CACHE] My post parse error: $e');
         }
       }
 
-      debugPrint('[PROFILE CACHE] Loaded ${posts.length} my posts');
-
       return posts;
     } catch (e) {
-      debugPrint('[PROFILE CACHE] Failed loading my posts: $e');
 
       return [];
     }
@@ -290,7 +260,6 @@ class CacheManager {
   static Future<void> clearMyPostsCache() async {
     await _myPostsBox.clear();
 
-    debugPrint('[PROFILE CACHE] My posts cache cleared');
   }
 
   // ------------------------------------------------------------
@@ -309,14 +278,12 @@ class CacheManager {
       DateTime.now().millisecondsSinceEpoch,
     );
 
-    debugPrint('[PROFILE CACHE] Saved posts cached: ${posts.length}');
   }
 
   static List<PostModel> getCachedSavedPosts() {
     final data = _savedPostsBox.get(CacheKeys.savedPosts);
 
     if (data == null) {
-      debugPrint('[PROFILE CACHE] No cached saved posts');
 
       return [];
     }
@@ -324,7 +291,6 @@ class CacheManager {
     final timestamp = _savedPostsBox.get(CacheKeys.savedPostsTimestamp);
 
     if (timestamp == null) {
-      debugPrint('[PROFILE CACHE] Saved posts timestamp missing');
 
       return [];
     }
@@ -332,7 +298,6 @@ class CacheManager {
     final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
 
     if (age > _profilePostsCacheDuration.inMilliseconds) {
-      debugPrint('[PROFILE CACHE] Saved posts cache expired');
 
       clearSavedPostsCache();
 
@@ -350,15 +315,11 @@ class CacheManager {
 
           posts.add(PostModel.fromCache(postData));
         } catch (e) {
-          debugPrint('[PROFILE CACHE] Saved post parse error: $e');
         }
       }
 
-      debugPrint('[PROFILE CACHE] Loaded ${posts.length} saved posts');
-
       return posts;
     } catch (e) {
-      debugPrint('[PROFILE CACHE] Failed loading saved posts: $e');
 
       return [];
     }
@@ -367,7 +328,6 @@ class CacheManager {
   static Future<void> clearSavedPostsCache() async {
     await _savedPostsBox.clear();
 
-    debugPrint('[PROFILE CACHE] Saved posts cache cleared');
   }
 
   // ------------------------------------------------------------
@@ -378,13 +338,9 @@ class CacheManager {
     await _myPostsBox.clear();
     await _savedPostsBox.clear();
 
-    debugPrint('[PROFILE CACHE] My + saved posts caches cleared');
   }
 
   static Future<void> clearUserData() async {
-    debugPrint('[CACHE] ===============================');
-    debugPrint('[CACHE] CLEARING USER DATA');
-    debugPrint('[CACHE] ===============================');
 
     // Home feed
     await clearPostCache();
@@ -398,31 +354,22 @@ class CacheManager {
     // My posts
     try {
       await Hive.box(HiveBoxes.cachedMyPosts).clear();
-      debugPrint('[CACHE] My posts cleared');
     } catch (e) {
-      debugPrint('[CACHE] My posts clear error: $e');
     }
 
     // Saved posts
     try {
       await Hive.box(HiveBoxes.cachedSavedPosts).clear();
-      debugPrint('[CACHE] Saved posts cleared');
     } catch (e) {
-      debugPrint('[CACHE] Saved posts clear error: $e');
     }
 
     // Followers / Following
     try {
       await Hive.box(HiveBoxes.cachedFollowersFollowing).clear();
 
-      debugPrint('[CACHE] Followers/following cache cleared');
     } catch (e) {
-      debugPrint('[CACHE] Followers/following clear error: $e');
     }
 
-    debugPrint('[CACHE] ===============================');
-    debugPrint('[CACHE] USER DATA CLEARED');
-    debugPrint('[CACHE] ===============================');
   }
 
   // ============================================================
@@ -443,7 +390,6 @@ class CacheManager {
     final data = _profileBox.get(key);
 
     if (data == null) {
-      debugPrint('[PROFILE CACHE] No cached profile: $userId');
 
       return null;
     }
@@ -451,7 +397,6 @@ class CacheManager {
     final timestamp = _profileBox.get(_profileTimestampKey(userId));
 
     if (timestamp == null) {
-      debugPrint('[PROFILE CACHE] Missing timestamp: $userId');
 
       _profileBox.delete(key);
 
@@ -461,7 +406,6 @@ class CacheManager {
     final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
 
     if (age > _profileCacheDuration.inMilliseconds) {
-      debugPrint('[PROFILE CACHE] Other profile expired: $userId');
 
       clearCachedProfileByUserId(userId);
 
@@ -471,7 +415,6 @@ class CacheManager {
     try {
       return ProfileModel.fromJson(Map<String, dynamic>.from(data));
     } catch (e) {
-      debugPrint('[PROFILE CACHE] Failed to parse $userId: $e');
 
       return null;
     }
@@ -487,7 +430,6 @@ class CacheManager {
       DateTime.now().millisecondsSinceEpoch,
     );
 
-    debugPrint('[PROFILE CACHE] Cached other profile: $userId');
   }
 
   static Future<void> clearCachedProfileByUserId(String userId) async {
@@ -495,12 +437,10 @@ class CacheManager {
 
     await _profileBox.delete(_profileTimestampKey(userId));
 
-    debugPrint('[PROFILE CACHE] Cleared profile: $userId');
   }
 
   static Future<void> clearAllCachedProfiles() async {
     await _profileBox.clear();
 
-    debugPrint('[PROFILE CACHE] All other profiles cleared');
   }
 }

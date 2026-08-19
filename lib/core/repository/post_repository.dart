@@ -22,8 +22,6 @@ class PostRepository {
   // CURRENT PROFILE ID CACHE
   // ============================================================
 
-
-
   /// Gets the current user's profile ID.
   ///
   /// IMPORTANT:
@@ -37,17 +35,13 @@ class PostRepository {
 void clearCurrentProfileIdCache() {
   CurrentUserService.instance.clear();
 
-  debugPrint(
-    '[PROFILE-ID] Current user profile cache cleared',
-  );
-}
+  }
 
   // ============================================================
   // INITIAL POSTS
   // ============================================================
 
   Future<PostPage> getInitialPosts({int limit = 10}) async {
-    debugPrint('[REPO] getInitialPosts()');
 
     try {
       final currentProfileId = await getCurrentProfileId();
@@ -108,8 +102,6 @@ void clearCurrentProfileIdCache() {
           .order('created_at', ascending: false)
           .limit(limit);
 
-      debugPrint('[REPO] Initial response: ${response.length}');
-
       final posts = response
           .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
           .toList();
@@ -124,9 +116,6 @@ void clearCurrentProfileIdCache() {
         hasMore: posts.length == limit,
       );
     } catch (e, stackTrace) {
-      debugPrint('[ERROR] getInitialPosts: $e');
-
-      debugPrintStack(stackTrace: stackTrace);
 
       return PostPage(posts: [], nextCursor: null, hasMore: false);
     }
@@ -140,7 +129,6 @@ void clearCurrentProfileIdCache() {
     required String cursor,
     int limit = 10,
   }) async {
-    debugPrint('[REPO] getMorePosts()');
 
     try {
       final currentProfileId = await getCurrentProfileId();
@@ -201,8 +189,6 @@ void clearCurrentProfileIdCache() {
           .order('created_at', ascending: false)
           .limit(limit);
 
-      debugPrint('[REPO] More posts response: ${response.length}');
-
       final posts = response
           .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
           .toList();
@@ -217,9 +203,6 @@ void clearCurrentProfileIdCache() {
         hasMore: posts.length == limit,
       );
     } catch (e, stackTrace) {
-      debugPrint('[ERROR] getMorePosts: $e');
-
-      debugPrintStack(stackTrace: stackTrace);
 
       return PostPage(posts: [], nextCursor: null, hasMore: false);
     }
@@ -230,7 +213,6 @@ void clearCurrentProfileIdCache() {
   // ============================================================
 
   Future<List<PostModel>> getMyPosts() async {
-    debugPrint('[REPO] getMyPosts()');
 
     try {
       final currentProfileId = await getCurrentProfileId();
@@ -294,9 +276,6 @@ void clearCurrentProfileIdCache() {
           .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
           .toList();
     } catch (e, stackTrace) {
-      debugPrint('[ERROR] getMyPosts: $e');
-
-      debugPrintStack(stackTrace: stackTrace);
 
       return [];
     }
@@ -311,17 +290,13 @@ void clearCurrentProfileIdCache() {
   // ============================================================
 
   Future<List<PostModel>> getSavedPosts() async {
-    debugPrint('[REPO] getSavedPosts()');
 
     try {
       final currentProfileId = await getCurrentProfileId();
 
       if (currentProfileId == null) {
-        debugPrint('[REPO] No current profile ID');
         return [];
       }
-
-      debugPrint('[REPO] Loading saved posts for: $currentProfileId');
 
       final response = await _supabase
           .from('saved_posts')
@@ -373,25 +348,20 @@ void clearCurrentProfileIdCache() {
           .eq('profile_id', currentProfileId)
           .order('created_at', ascending: false);
 
-      debugPrint('[REPO] saved_posts rows returned: ${response.length}');
-
       final posts = <PostModel>[];
 
       for (final row in response) {
         final post = row['post'];
 
         if (post == null) {
-          debugPrint('[REPO] Saved row has no post');
           continue;
         }
 
         if (post['status'] != 'ACTIVE') {
-          debugPrint('[REPO] Skipping inactive post: ${post['id']}');
           continue;
         }
 
         if (post['deleted_at'] != null) {
-          debugPrint('[REPO] Skipping deleted post: ${post['id']}');
           continue;
         }
 
@@ -403,17 +373,11 @@ void clearCurrentProfileIdCache() {
 
           posts.add(postModel);
         } catch (e, stackTrace) {
-          debugPrint('[REPO] Failed to convert saved post ${post['id']}: $e');
-          debugPrintStack(stackTrace: stackTrace);
         }
       }
 
-      debugPrint('[REPO] Saved posts loaded successfully: ${posts.length}');
-
       return posts;
     } catch (e, stackTrace) {
-      debugPrint('[ERROR] getSavedPosts: $e');
-      debugPrintStack(stackTrace: stackTrace);
 
       return [];
     }
@@ -423,7 +387,6 @@ void clearCurrentProfileIdCache() {
   // ============================================================
 
   Future<List<PostModel>> getNewPosts({required String latestCreatedAt}) async {
-    debugPrint('[REPO] getNewPosts()');
 
     try {
       final currentProfileId = await getCurrentProfileId();
@@ -483,15 +446,10 @@ void clearCurrentProfileIdCache() {
           .gt('created_at', latestCreatedAt)
           .order('created_at', ascending: false);
 
-      debugPrint('[REPO] New posts response: ${response.length}');
-
       return response
           .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
           .toList();
     } catch (e, stackTrace) {
-      debugPrint('[ERROR] getNewPosts: $e');
-
-      debugPrintStack(stackTrace: stackTrace);
 
       return [];
     }
@@ -527,9 +485,6 @@ void clearCurrentProfileIdCache() {
 
       return true;
     } catch (e, stackTrace) {
-      debugPrint('[ERROR] toggleLike: $e');
-
-      debugPrintStack(stackTrace: stackTrace);
 
       return false;
     }
@@ -565,9 +520,6 @@ void clearCurrentProfileIdCache() {
 
       return true;
     } catch (e, stackTrace) {
-      debugPrint('[ERROR] toggleSave: $e');
-
-      debugPrintStack(stackTrace: stackTrace);
 
       return false;
     }
@@ -585,17 +537,11 @@ void clearCurrentProfileIdCache() {
           .eq('id', postId)
           .select();
 
-      debugPrint('[REPO] DELETE RESPONSE: $response');
-
       return response.isNotEmpty;
     } on PostgrestException catch (e) {
-      debugPrint('[REPO] DELETE POSTGRES ERROR: $e');
 
       return false;
     } catch (e, stackTrace) {
-      debugPrint('[REPO] DELETE ERROR: $e');
-
-      debugPrintStack(stackTrace: stackTrace);
 
       return false;
     }

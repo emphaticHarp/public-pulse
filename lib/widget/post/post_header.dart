@@ -83,10 +83,7 @@ class PostHeader extends StatelessWidget {
                           }
                           // Other user's post → open their public profile.
                           if (authorUserId.isEmpty) {
-                            debugPrint(
-                              '[POST_HEADER] authorUserId is empty. Cannot open profile.',
-                            );
-                            return;
+                                                        return;
                           }
 
                           Get.to(() => UserProfilePage(userId: authorUserId));
@@ -141,10 +138,7 @@ class PostHeader extends StatelessWidget {
 
                                       // Other user's post → open their profile.
                                       if (authorUserId.isEmpty) {
-                                        debugPrint(
-                                          '[POST_HEADER] authorUserId is empty. Cannot open profile.',
-                                        );
-                                        return;
+                                                                                return;
                                       }
 
                                       Get.to(

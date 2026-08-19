@@ -48,7 +48,6 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[MAIN] MainPage Build');
 
     return Obx(() {
       final index = controller.currentIndex.value;
@@ -65,11 +64,7 @@ class MainPage extends StatelessWidget {
           }
 
           if (controller.currentIndex.value != 0) {
-            debugPrint(
-              '[MAIN] Back pressed: '
-              '${controller.currentIndex.value} → 0',
-            );
-
+            
             controller.currentIndex.value = 0;
           }
         },
@@ -91,10 +86,7 @@ class MainPage extends StatelessWidget {
 
               controller.currentIndex.value = newIndex;
 
-              debugPrint(
-                '[MAIN] Tab changed: $index → $newIndex',
-              );
-            },
+                          },
           ),
         ),
       );

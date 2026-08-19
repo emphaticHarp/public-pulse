@@ -6,8 +6,6 @@ import 'package:public_pulse/core/theme/app_colors.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-
-
   // ── Heading Styles ────────────────────────────────────────────────────
   /// Splash logo text - large italic brand name
 static const TextStyle splashLogo = TextStyle(
