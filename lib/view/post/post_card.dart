@@ -93,6 +93,14 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ============================================================
+    // TEMPORARY UPLOADING POST
+    // ============================================================
+
+    if (isUploading) {
+      return const _UploadingPostIndicator();
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(
@@ -111,12 +119,7 @@ class PostCard extends StatelessWidget {
           // =====================================================
           // MEDIA
           // =====================================================
-          if (isUploading)
-            _UploadingMedia(
-              localMediaPaths: localMediaPaths,
-              isCarousel: isCarousel,
-            )
-          else if (uploadFailed)
+          if (uploadFailed)
             _UploadFailedMedia(
               localMediaPaths: localMediaPaths,
               isCarousel: isCarousel,
@@ -163,105 +166,43 @@ class PostCard extends StatelessWidget {
 }
 
 // ===============================================================
-// UPLOADING MEDIA
+// UPLOADING POST
 // ===============================================================
 
-class _UploadingMedia extends StatelessWidget {
-  final List<String> localMediaPaths;
-  final bool isCarousel;
-
-  const _UploadingMedia({
-    required this.localMediaPaths,
-    required this.isCarousel,
-  });
+class _UploadingPostIndicator extends StatelessWidget {
+  const _UploadingPostIndicator();
 
   @override
   Widget build(BuildContext context) {
-    if (localMediaPaths.isEmpty) {
-      return _mediaPlaceholder(child: const CircularProgressIndicator());
-    }
-
-    Widget media;
-
-    if (isCarousel && localMediaPaths.length > 1) {
-      media = SizedBox(
-        height: 350,
-        width: double.infinity,
-        child: PageView.builder(
-          itemCount: localMediaPaths.length,
-          itemBuilder: (context, index) {
-            return _safeImage(localMediaPaths[index]);
-          },
-        ),
-      );
-    } else {
-      media = _safeImage(localMediaPaths.first);
-    }
-
-    return Stack(
-      children: [
-        media,
-
-        Positioned.fill(
-          child: Container(
-            color: AppColors.overlayBlack45,
-            child: const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 35,
-                    height: 35,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      color: AppColors.white,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Uploading...',
-                    style: TextStyle(
-                      color: AppColors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      color: AppColors.surfaceDefault,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Your post is uploading...',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ),
-      ],
-    );
-  }
 
-  Widget _safeImage(String path) {
-    final file = File(path);
+          const SizedBox(height: 14),
 
-    if (!file.existsSync()) {
-      return _mediaPlaceholder(
-        child: const Icon(
-          Icons.image_not_supported_outlined,
-          size: 50,
-          color: AppColors.grey,
-        ),
-      );
-    }
-
-    return Image.file(
-      file,
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: 350,
-    );
-  }
-
-  Widget _mediaPlaceholder({required Widget child}) {
-    return Container(
-      height: 350,
-      width: double.infinity,
-      color: AppColors.greyShade200,
-      child: Center(child: child),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: const LinearProgressIndicator(
+              minHeight: 4,
+              backgroundColor: AppColors.gray100,
+              color: AppColors.loginAccentRed,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

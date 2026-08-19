@@ -3,6 +3,7 @@ import '../compression/image_compressor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/model/profile_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:public_pulse/core/services/bunny_upload_service.dart';
 
 /// Singleton repository for all profile-related Supabase operations.
 ///
@@ -10,10 +11,6 @@ import 'package:flutter/foundation.dart';
 class ProfileRepository {
   ProfileRepository._();
   static final ProfileRepository instance = ProfileRepository._();
-
-  // ── Bucket names ──────────────────────────────────────────────────────────
-  static const _avatarBucket = 'avatars';
-  static const _coverBucket = 'covers';
 
   // ── Supabase shortcuts ────────────────────────────────────────────────────
   final _db = Supabase.instance.client.from('profiles');
@@ -73,10 +70,11 @@ class ProfileRepository {
     File? coverFile,
   }) async {
     final avatarPath = avatarFile != null
-        ? await _uploadCompressed(avatarFile, bucket: _avatarBucket)
+        ? await _uploadAvatarToBunny(avatarFile)
         : null;
+
     final coverPath = coverFile != null
-        ? await _uploadCompressed(coverFile, bucket: _coverBucket)
+        ? await _uploadCoverToBunny(coverFile)
         : null;
 
     final updates = <String, dynamic>{
@@ -93,9 +91,7 @@ class ProfileRepository {
       updates['username'] = username;
     }
 
-    updates['bio'] = (bio?.trim().isEmpty ?? true)
-        ? null
-        : bio!.trim();
+    updates['bio'] = (bio?.trim().isEmpty ?? true) ? null : bio!.trim();
     if (avatarPath != null) updates['avatar_path'] = avatarPath;
     if (coverPath != null) updates['cover_path'] = coverPath;
 
@@ -107,28 +103,88 @@ class ProfileRepository {
     return ProfileModel.fromJson(data);
   }
 
-  // ── Storage helpers ───────────────────────────────────────────────────────
+  //function to upload avatar to bunny CDN
 
-  /// Compresses [file] and uploads it to [bucket], returning the storage path.
-  Future<String> _uploadCompressed(File file, {required String bucket}) async {
+  Future<String> _uploadAvatarToBunny(File file) async {
+    debugPrint('[PROFILE] Compressing avatar');
+
     final compressed = await ImageCompressor().compressImage(
       file.absolute.path,
     );
-    final bytes = await (compressed ?? file).readAsBytes();
 
-    final path = '$_uid/${DateTime.now().microsecondsSinceEpoch}.webp';
-    await _storage
-        .from(bucket)
-        .uploadBinary(
-          path,
-          bytes,
-          fileOptions: const FileOptions(
-            upsert: false,
-            contentType: 'image/webp',
-          ),
-        );
-    return path;
+    final uploadFile = compressed ?? file;
+
+    debugPrint(
+      '[PROFILE] Avatar upload size: '
+      '${(await uploadFile.length()) / 1024} KB',
+    );
+
+    final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
+      uploadFile,
+      'avatars',
+    );
+
+    if (bunnyUrl == null || bunnyUrl.isEmpty) {
+      throw Exception('Bunny avatar upload failed');
+    }
+
+    debugPrint('[PROFILE] Avatar uploaded to Bunny: $bunnyUrl');
+
+    // Delete only the temporary compressed file.
+    if (compressed != null) {
+      try {
+        if (await compressed.exists()) {
+          await compressed.delete();
+        }
+      } catch (e) {
+        debugPrint('[PROFILE] Temporary avatar cleanup failed: $e');
+      }
+    }
+
+    return bunnyUrl;
   }
+
+  //function to upload cover to bunny CDN
+
+  Future<String> _uploadCoverToBunny(File file) async {
+    debugPrint('[PROFILE] Compressing cover image');
+
+    final compressed = await ImageCompressor().compressImage(
+      file.absolute.path,
+    );
+
+    final uploadFile = compressed ?? file;
+
+    debugPrint(
+      '[PROFILE] Cover upload size: '
+      '${(await uploadFile.length()) / 1024} KB',
+    );
+
+    final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
+      uploadFile,
+      'covers',
+    );
+
+    if (bunnyUrl == null || bunnyUrl.isEmpty) {
+      throw Exception('Bunny cover upload failed');
+    }
+
+    debugPrint('[PROFILE] Cover uploaded to Bunny: $bunnyUrl');
+
+    if (compressed != null) {
+      try {
+        if (await compressed.exists()) {
+          await compressed.delete();
+        }
+      } catch (e) {
+        debugPrint('[PROFILE] Temporary cover cleanup failed: $e');
+      }
+    }
+
+    return bunnyUrl;
+  }
+
+  // ── Storage helpers ───────────────────────────────────────────────────────
 
   final _urlCache = <String, String>{};
 
@@ -136,7 +192,7 @@ class ProfileRepository {
   ///
   /// Already-absolute URLs (http/https) are returned unchanged so that
   /// OAuth avatar URLs work without modification.
-  String resolveUrl(String path, {String bucket = _avatarBucket}) {
+  String resolveUrl(String path, {String bucket = 'avatars'}) {
     // Return absolute URLs (Google OAuth, CDN, etc.) unchanged.
     // Checks 'http' prefix to handle both:
     //   • https://  (normal)
@@ -148,7 +204,7 @@ class ProfileRepository {
 
   /// Evicts [path] from the URL cache so the next [resolveUrl] call produces
   /// a fresh URL (call this after uploading a new avatar or cover image).
-  void invalidateUrl(String path, {String bucket = _avatarBucket}) =>
+  void invalidateUrl(String path, {String bucket = 'avatars'}) =>
       _urlCache.remove('$bucket/$path');
 
   // ── Followers / Following ─────────────────────────────────────────────────
