@@ -459,78 +459,193 @@ class SettingController extends GetxController {
   Future<bool> _showDeleteTypingDialog(BuildContext context) async {
     bool canDelete = false;
 
-    final result = await showDialog<bool>(
+    final result = await showGeneralDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
+      barrierLabel: 'Confirm account deletion',
+      barrierColor: AppColors.overlayBlack18,
+      transitionDuration: const Duration(milliseconds: 260),
 
-              title: const Text('Confirm Account Deletion'),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return SafeArea(
+          child: Material(
+            color: AppColors.transparentFull,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: StatefulBuilder(
+                    builder: (context, setState) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(26),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.shadowBlack26,
+                              blurRadius: 28,
+                              offset: const Offset(0, 12),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.loginAccentRed.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: AppColors.loginAccentRed,
+                                    size: 23,
+                                  ),
+                                ),
 
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'To permanently delete your account, type DELETE below.',
-                  ),
+                                const SizedBox(width: 12),
 
-                  const SizedBox(height: 16),
+                                const Expanded(
+                                  child: Text(
+                                    'Confirm Account Deletion',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
 
-                  TextField(
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(
-                      hintText: 'Type DELETE',
-                      border: OutlineInputBorder(),
-                    ),
+                            const SizedBox(height: 14),
 
-                    onChanged: (value) {
-                      setState(() {
-                        canDelete = value.trim() == 'DELETE';
-                      });
+                            const Text(
+                              'Type DELETE below to permanently delete your account.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                                height: 1.35,
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            TextField(
+                              autofocus: true,
+                              textCapitalization: TextCapitalization.characters,
+                              decoration: InputDecoration(
+                                hintText: 'Type DELETE',
+                                filled: true,
+                                fillColor: AppColors.gray100,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 13,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.loginAccentRed,
+                                    width: 1.5,
+                                  ),
+                                ),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  canDelete =
+                                      value.trim().toUpperCase() == 'DELETE';
+                                });
+                              },
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    onPressed: () {
+                                      FocusScope.of(context).unfocus();
+                                      Navigator.of(context).pop(false);
+                                    },
+                                    child: const Text(
+                                      'Cancel',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(width: 8),
+
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: canDelete
+                                        ? () {
+                                            FocusScope.of(context).unfocus();
+                                            Navigator.of(context).pop(true);
+                                          }
+                                        : null,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.loginAccentRed,
+                                      foregroundColor: AppColors.white,
+                                      disabledBackgroundColor:
+                                          AppColors.gray100,
+                                      disabledForegroundColor:
+                                          AppColors.gray400,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Delete Account',
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
                     },
                   ),
-                ],
+                ),
               ),
+            ),
+          ),
+        );
+      },
 
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    // Remove keyboard focus before closing dialog.
-                    FocusScope.of(ctx).unfocus();
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
 
-                    Navigator.of(ctx).pop(false);
-                  },
-                  child: const Text('Cancel'),
-                ),
-
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.loginAccentRed,
-                    foregroundColor: AppColors.white,
-                  ),
-
-                  onPressed: canDelete
-                      ? () {
-                          // Important:
-                          // close keyboard/focus before removing dialog.
-                          FocusScope.of(ctx).unfocus();
-
-                          Navigator.of(ctx).pop(true);
-                        }
-                      : null,
-
-                  child: const Text('Delete Account'),
-                ),
-              ],
-            );
-          },
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
+            child: child,
+          ),
         );
       },
     );
@@ -546,29 +661,13 @@ class SettingController extends GetxController {
     required String message,
     required String actionLabel,
   }) async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Theme.of(ctx).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(actionLabel),
-          ),
-        ],
-      ),
+    return CustomAlert.showCenterConfirm(
+      title: title,
+      message: message,
+      icon: Icons.warning_amber_rounded,
+      color: AppColors.loginAccentRed,
+      confirmText: actionLabel,
+      cancelText: 'Cancel',
     );
-    return result ?? false;
   }
 }

@@ -104,7 +104,7 @@ class CustomAlert {
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
   }) async {
-   final context = Get.context;
+    final context = Get.context;
 
     if (context == null) {
       return false;
@@ -164,6 +164,74 @@ class CustomAlert {
               alignment: Alignment.topCenter,
               child: child,
             ),
+          ),
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  static Future<bool> showCenterConfirm({
+    required String title,
+    required String message,
+    IconData icon = Icons.warning_amber_rounded,
+    Color color = AppColors.loginAccentRed,
+    String confirmText = 'Confirm',
+    String cancelText = 'Cancel',
+  }) async {
+    final context = Get.context;
+
+    if (context == null) {
+      return false;
+    }
+
+    final result = await showGeneralDialog<bool>(
+      context: context,
+
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+
+      barrierColor: AppColors.overlayBlack18,
+
+      transitionDuration: const Duration(milliseconds: 260),
+
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return SafeArea(
+          child: Material(
+            color: AppColors.transparentFull,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: _DynamicIslandConfirm(
+                    title: title,
+                    message: message,
+                    icon: icon,
+                    color: color,
+                    confirmText: confirmText,
+                    cancelText: cancelText,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.90, end: 1.0).animate(curved),
+            child: child,
           ),
         );
       },
@@ -286,7 +354,7 @@ class _DynamicIslandAlertState extends State<_DynamicIslandAlert>
                           vertical: 13,
                         ),
                         decoration: BoxDecoration(
-                      color: AppColors.white,
+                          color: AppColors.white,
                           borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(
