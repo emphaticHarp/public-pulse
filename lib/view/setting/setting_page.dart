@@ -10,10 +10,20 @@ import 'package:package_info_plus/package_info_plus.dart';
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
 
+  static const double _contentMaxWidth = 600;
+
   @override
   Widget build(BuildContext context) {
     // Ensuring the controller is registered. Assuming it is injected elsewhere.
     final controller = Get.find<SettingController>();
+
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    final horizontalPadding = screenWidth < 360
+        ? 12.0
+        : screenWidth < 600
+            ? 20.0
+            : 24.0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -37,14 +47,22 @@ class SettingPage extends StatelessWidget {
         ),
         centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: AppSpacing.md,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: SafeArea(
+        top: false,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: _contentMaxWidth,
+            ),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: AppSpacing.md,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
             // ACCOUNT SECTION
             const SettingSectionHeader(title: 'Account'),
             SettingCardGroup(
@@ -202,7 +220,7 @@ class SettingPage extends StatelessWidget {
                       const SizedBox(height: 6),
 
                       const Text(
-                        'Insyssky Softech Pvt Ltd',
+                        'Insyssky Softtech Pvt Ltd',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,
@@ -220,6 +238,9 @@ class SettingPage extends StatelessWidget {
           ],
         ),
       ),
+    ),
+  ),
+),
     );
   }
 }
