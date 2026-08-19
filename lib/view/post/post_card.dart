@@ -84,14 +84,10 @@ class PostCard extends StatelessWidget {
     required this.caption,
   });
 
-  Widget _doubleTapLike({
-    required Widget child,
-    required double aspectRatio,
-  }) {
-    final safeRatio =
-        aspectRatio.isFinite && aspectRatio > 0
-            ? aspectRatio
-            : 4 / 5;
+  Widget _doubleTapLike({required Widget child, required double aspectRatio}) {
+    final safeRatio = aspectRatio.isFinite && aspectRatio > 0
+        ? aspectRatio
+        : 4 / 5;
 
     return AspectRatio(
       aspectRatio: safeRatio,
@@ -139,7 +135,7 @@ class PostCard extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -163,10 +159,9 @@ class PostCard extends StatelessWidget {
             )
           else if (isCarousel)
             _doubleTapLike(
-              aspectRatio:
-                  mediaAspectRatios.isNotEmpty
-                      ? mediaAspectRatios.first
-                      : 4 / 5,
+              aspectRatio: mediaAspectRatios.isNotEmpty
+                  ? mediaAspectRatios.first
+                  : 4 / 5,
               child: PostCarouselMedia(
                 imageUrls: imageUrls ?? const [],
                 aspectRatios: mediaAspectRatios,
@@ -175,16 +170,14 @@ class PostCard extends StatelessWidget {
             )
           else if (imageUrl != null)
             _doubleTapLike(
-              aspectRatio:
-                  mediaAspectRatios.isNotEmpty
-                      ? mediaAspectRatios.first
-                      : 4 / 5,
+              aspectRatio: mediaAspectRatios.isNotEmpty
+                  ? mediaAspectRatios.first
+                  : 4 / 5,
               child: PostMedia(
                 imageUrl: imageUrl!,
-                aspectRatio:
-                    mediaAspectRatios.isNotEmpty
-                        ? mediaAspectRatios.first
-                        : 4 / 5,
+                aspectRatio: mediaAspectRatios.isNotEmpty
+                    ? mediaAspectRatios.first
+                    : 4 / 5,
               ),
             )
           else

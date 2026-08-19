@@ -19,6 +19,8 @@ class ExploreController extends GetxController {
 
   final RxList<ProfileModel> searchResults = <ProfileModel>[].obs;
 
+  int _searchRequestId = 0;
+
   String avatarUrl(String? avatarPath) {
     if (avatarPath == null || avatarPath.isEmpty) return '';
 
@@ -26,14 +28,26 @@ class ExploreController extends GetxController {
   }
 
   Future<void> onSearchChanged(String value) async {
-    searchText.value = value;
+    final query = value.trim();
 
-    if (value.trim().isEmpty) {
+    searchText.value = query;
+
+    final requestId = ++_searchRequestId;
+
+    // Do not search before 3 characters
+    if (query.length < 3) {
       searchResults.clear();
       return;
     }
 
-    searchResults.assignAll(await _repository.searchUsers(value));
+    final results = await _repository.searchUsers(query);
+
+    // Ignore old search results if user typed something newer
+    if (requestId != _searchRequestId) {
+      return;
+    }
+
+    searchResults.assignAll(results);
   }
 
   Future<bool> _isCurrentUserProfile(String selectedId) async {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/core/services/auth_service.dart';
 import 'package:public_pulse/core/cache/hive_boxes.dart';
 import 'package:public_pulse/core/cache/cache_manager.dart';
@@ -319,24 +319,122 @@ class SettingController extends GetxController {
 
   /// Shows a confirmation dialog then permanently deletes the account (placeholder).
   Future<void> deleteAccount(BuildContext context) async {
-    final confirmed = await _showDestructiveDialog(
+    if (isAccountActionLoading.value) return;
+
+    // ============================================================
+    // STEP 1 - NORMAL CONFIRMATION
+    // ============================================================
+
+    final firstConfirmed = await _showDestructiveDialog(
       context,
-      title: 'Delete Account',
+      title: 'Delete Account?',
       message:
-          'This action is PERMANENT and cannot be undone. All your data will be erased.',
-      actionLabel: 'Delete',
+          'Your account and data will be permanently deleted. '
+          'This action cannot be undone.',
+      actionLabel: 'Continue',
     );
-    if (!confirmed) return;
-    // Implement permanent deletion via Supabase when backend is ready.
-    debugPrint('[Settings] Delete Account confirmed');
-    Get.snackbar(
-      'Coming Soon',
-      'Account deletion will be available soon.',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-      margin: const EdgeInsets.all(16),
-      borderRadius: 12,
-    );
+
+    if (!firstConfirmed) return;
+
+    // ============================================================
+    // STEP 2 - TYPE DELETE
+    // ============================================================
+
+    final deleteConfirmed = await _showDeleteTypingDialog(context);
+
+    if (!deleteConfirmed) return;
+
+    // ============================================================
+    // DELETE ACCOUNT
+    // ============================================================
+
+    isAccountActionLoading.value = true;
+
+    try {
+      debugPrint('[Settings] ===============================');
+      debugPrint('[Settings] ACCOUNT DELETION START');
+      debugPrint('[Settings] ===============================');
+
+      // Your RPC permanently deletes the account.
+      await Supabase.instance.client.rpc('deactivate_account');
+
+      debugPrint('[Settings] Account deletion RPC completed');
+
+      // ==========================================================
+      // SIGN OUT
+      // ==========================================================
+
+      try {
+        final authService = Get.find<AuthService>();
+        await authService.signOut();
+      } catch (e) {
+        debugPrint('[Settings] Sign-out after deletion skipped/failed: $e');
+      }
+
+      // ==========================================================
+      // CLEAR CURRENT USER
+      // ==========================================================
+
+      CurrentUserService.instance.clear();
+
+      // ==========================================================
+      // CLEAR HIVE CACHE
+      // ==========================================================
+
+      await CacheManager.clearUserData();
+
+      // ==========================================================
+      // RESET PROFILE
+      // ==========================================================
+
+      if (Get.isRegistered<ProfileController>()) {
+        final profileController = Get.find<ProfileController>();
+
+        await profileController.invalidateProfile();
+      }
+
+      // ==========================================================
+      // RESET HOME
+      // ==========================================================
+
+      if (Get.isRegistered<HomeController>()) {
+        final homeController = Get.find<HomeController>();
+
+        homeController.resetForLogout();
+      }
+
+      // ==========================================================
+      // REMOVE NOTIFICATION CONTROLLER
+      // ==========================================================
+
+      if (Get.isRegistered<NotificationController>()) {
+        Get.delete<NotificationController>(force: true);
+      }
+
+      // ==========================================================
+      // GO TO LOGIN
+      // ==========================================================
+
+      Get.offAll(() => LoginPage());
+
+      debugPrint('[Settings] ===============================');
+      debugPrint('[Settings] ACCOUNT DELETION COMPLETE');
+      debugPrint('[Settings] ===============================');
+    } catch (e, stackTrace) {
+      debugPrint('[Settings] Account deletion failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      Get.snackbar(
+        'Delete Failed',
+        'Unable to delete your account. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+        margin: const EdgeInsets.all(16),
+        borderRadius: 12,
+      );
+    } finally {
+      isAccountActionLoading.value = false;
+    }
   }
 
   // ── Logout ────────────────────────────────────────────────────────────────
@@ -444,6 +542,94 @@ class SettingController extends GetxController {
   }
 
   // ── Private Helpers ────────────────────────────────────────────────────────
+
+  Future<bool> _showDeleteTypingDialog(
+    BuildContext context,
+  ) async {
+    bool canDelete = false;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+
+              title: const Text(
+                'Confirm Account Deletion',
+              ),
+
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'To permanently delete your account, type DELETE below.',
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  TextField(
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: const InputDecoration(
+                      hintText: 'Type DELETE',
+                      border: OutlineInputBorder(),
+                    ),
+
+                    onChanged: (value) {
+                      setState(() {
+                        canDelete = value.trim() == 'DELETE';
+                      });
+                    },
+                  ),
+                ],
+              ),
+
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    // Remove keyboard focus before closing dialog.
+                    FocusScope.of(ctx).unfocus();
+
+                    Navigator.of(ctx).pop(false);
+                  },
+                  child: const Text('Cancel'),
+                ),
+
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.loginAccentRed,
+                    foregroundColor: AppColors.white,
+                  ),
+
+                  onPressed: canDelete
+                      ? () {
+                          // Important:
+                          // close keyboard/focus before removing dialog.
+                          FocusScope.of(ctx).unfocus();
+
+                          Navigator.of(ctx).pop(true);
+                        }
+                      : null,
+
+                  child: const Text(
+                    'Delete Account',
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    return result ?? false;
+  }
 
   /// Shows a Material 3 confirmation dialog for destructive actions.
   /// Returns `true` when the user confirms, `false` on cancel/dismiss.
