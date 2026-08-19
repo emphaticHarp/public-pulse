@@ -89,6 +89,12 @@ class HomeController extends GetxController {
 
   final Set<String> _previouslyLoadedPostIds = {};
 
+  StreamSubscription<AuthState>? _authSubscription;
+
+  String? _initializedUserId;
+
+  bool _initializingAfterLogin = false;
+
   // ============================================================
   // INIT
   // ============================================================
@@ -99,21 +105,89 @@ class HomeController extends GetxController {
 
     debugPrint('[HOME] HomeController created');
 
+    scrollController.addListener(_onScroll);
+
+    // Listen for login/logout.
+    _authSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen(
+      (data) {
+        final session = data.session;
+
+        if (session != null) {
+          debugPrint(
+            '[HOME] Login detected: ${data.event}',
+          );
+
+          _initializeAfterLogin();
+        }
+
+        if (data.event == AuthChangeEvent.signedOut) {
+          debugPrint('[HOME] Logout detected');
+
+          _initializedUserId = null;
+
+          resetForLogout();
+        }
+      },
+    );
+
+    // User may already be logged in.
+    if (Supabase.instance.client.auth.currentUser != null) {
+      _initializeAfterLogin();
+    } else {
+      debugPrint('[HOME] Waiting for login');
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _initializeAfterLogin() async {
     final user = Supabase.instance.client.auth.currentUser;
 
     if (user == null) {
-      debugPrint('[HOME] No authenticated user');
-      isLoading.value = false;
       return;
     }
 
-    scrollController.addListener(_onScroll);
+    // Already initialized for this logged-in user.
+    if (_initializedUserId == user.id) {
+      return;
+    }
 
-    initializeForUser();
+    // Prevent duplicate auth events from loading Home twice.
+    if (_initializingAfterLogin) {
+      return;
+    }
+
+    _initializingAfterLogin = true;
+
+    try {
+      debugPrint(
+        '[HOME] Starting initialization for ${user.id}',
+      );
+
+      await initializeForUser();
+
+      _initializedUserId = user.id;
+
+      debugPrint(
+        '[HOME] Login initialization completed',
+      );
+    } catch (e, stackTrace) {
+      debugPrint(
+        '[HOME] Login initialization failed: $e',
+      );
+
+      debugPrintStack(
+        stackTrace: stackTrace,
+      );
+    } finally {
+      _initializingAfterLogin = false;
+    }
   }
 
   void resetForLogout() {
     debugPrint('[HOME] Resetting HomeController for logout');
+
+    _initializedUserId = null;
 
     currentIndex.value = 0;
 
@@ -142,6 +216,34 @@ class HomeController extends GetxController {
   // HOME INITIALIZATION
   // ============================================================
 
+  Future<String?> _getCurrentProfileIdWithRetry() async {
+    const maxAttempts = 5;
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      final profileId = await _repository.getCurrentProfileId();
+
+      if (profileId != null && profileId.isNotEmpty) {
+        debugPrint(
+          '[HOME] Profile ID found on attempt $attempt: $profileId',
+        );
+
+        return profileId;
+      }
+
+      debugPrint(
+        '[HOME] Profile not ready. Attempt $attempt/$maxAttempts',
+      );
+
+      if (attempt < maxAttempts) {
+        await Future.delayed(
+          const Duration(milliseconds: 400),
+        );
+      }
+    }
+
+    return null;
+  }
+
   Future<void> initializeForUser() async {
     debugPrint('[HOME] ===== INITIALIZING FOR CURRENT USER =====');
 
@@ -152,12 +254,15 @@ class HomeController extends GetxController {
       // CURRENT USER
       // ============================================================
 
-      final currentProfileId = await _repository.getCurrentProfileId();
+      final currentProfileId =
+          await _getCurrentProfileIdWithRetry();
 
       if (currentProfileId == null) {
-        debugPrint('[HOME] No current profile ID');
+        debugPrint(
+          '[HOME] Profile ID still unavailable after retries',
+        );
 
-        posts.clear();
+        await loadPosts();
 
         return;
       }
@@ -849,6 +954,8 @@ class HomeController extends GetxController {
   @override
   void onClose() {
     debugPrint('[HOME] HomeController disposed');
+
+    _authSubscription?.cancel();
 
     scrollController.removeListener(_onScroll);
     scrollController.dispose();
