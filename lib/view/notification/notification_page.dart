@@ -358,7 +358,7 @@ class NotificationPage extends StatelessWidget {
               ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // ======================================================
           // AVATAR
@@ -410,12 +410,13 @@ class NotificationPage extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 RichText(
                   text: TextSpan(
                     style: AppTextStyles.notificationText.copyWith(
                       color: AppColors.textPrimary,
-                      height: 1.1,
+                      height: 1.3,
                     ),
                     children: [
                       TextSpan(
@@ -454,43 +455,7 @@ class NotificationPage extends StatelessWidget {
                   ),
                 ),
 
-                // ------------------------------------------------
-                // FOLLOW BACK
-                // ------------------------------------------------
-                if (item.notificationType.trim().toUpperCase() == 'FOLLOW') ...[
-                  const SizedBox(height: 10),
 
-                  SizedBox(
-                    height: 34,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        controller.followBack(
-                          item.actorProfileId,
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.loginAccentRed,
-                        side: const BorderSide(
-                          color: AppColors.loginAccentRed,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isCompact ? 10 : 14,
-                        ),
-                      ),
-                      child: const Text(
-                        'Follow Back',
-                        maxLines: 1,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
