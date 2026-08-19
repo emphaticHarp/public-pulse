@@ -61,7 +61,7 @@ class PostHeader extends StatelessWidget {
 
     final HomeController homeController = Get.find<HomeController>();
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: 5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
