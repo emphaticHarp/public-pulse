@@ -56,6 +56,7 @@ class NotificationRepository {
               post_media(
                 id,
                 storage_path,
+                thumbnail_path,
                 media_type,
                 media_order
               )

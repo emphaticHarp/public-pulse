@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class InteractionBar extends StatelessWidget {
+class InteractionBar extends StatefulWidget {
   final IconData likeIcon;
   final Color likeIconColor;
   final String likeCount;
@@ -31,6 +31,54 @@ class InteractionBar extends StatelessWidget {
   });
 
   @override
+  State<InteractionBar> createState() => _InteractionBarState();
+}
+
+class _InteractionBarState extends State<InteractionBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _likeAnimationController;
+  late final Animation<double> _likeScaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _likeAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+
+    _likeScaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 1.30,
+        ).chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.30,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 50,
+      ),
+    ]).animate(_likeAnimationController);
+  }
+
+  void _handleLikeTap() {
+    _likeAnimationController.forward(from: 0);
+
+    widget.onLikeTap?.call();
+  }
+
+  @override
+  void dispose() {
+    _likeAnimationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -40,15 +88,40 @@ class InteractionBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Like button
+              // =================================================
+              // LIKE
+              // =================================================
+
               GestureDetector(
-                onTap: onLikeTap,
+                onTap: _handleLikeTap,
+                behavior: HitTestBehavior.opaque,
                 child: Row(
                   children: [
-                    Icon(likeIcon, size: 26, color: likeIconColor),
+                    ScaleTransition(
+                      scale: _likeScaleAnimation,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 150),
+                        transitionBuilder: (child, animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          );
+                        },
+                        child: Icon(
+                          widget.likeIcon,
+                          key: ValueKey(
+                            '${widget.likeIcon}-${widget.likeIconColor}',
+                          ),
+                          size: 26,
+                          color: widget.likeIconColor,
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(width: 6),
+
                     Text(
-                      likeCount,
+                      widget.likeCount,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -60,15 +133,18 @@ class InteractionBar extends StatelessWidget {
 
               const SizedBox(width: 24),
 
-              // Comment button
+              // =================================================
+              // COMMENT
+              // =================================================
               GestureDetector(
-                onTap: onCommentTap,
+                onTap: widget.onCommentTap,
+                behavior: HitTestBehavior.opaque,
                 child: Row(
                   children: [
                     const Icon(Icons.chat_bubble_outline, size: 26),
                     const SizedBox(width: 6),
                     Text(
-                      commentCount,
+                      widget.commentCount,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -80,18 +156,18 @@ class InteractionBar extends StatelessWidget {
 
               const SizedBox(width: 24),
 
-              // Share button
+              // =================================================
+              // SHARE
+              // =================================================
               GestureDetector(
-                onTap: onShareTap,
+                onTap: widget.onShareTap,
+                behavior: HitTestBehavior.opaque,
                 child: Row(
                   children: [
-                    Transform.rotate(
-                      angle: 0,
-                      child: const Icon(Icons.send_outlined, size: 26),
-                    ),
+                    const Icon(Icons.send_outlined, size: 26),
                     const SizedBox(width: 6),
                     Text(
-                      shareCount,
+                      widget.shareCount,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -103,11 +179,15 @@ class InteractionBar extends StatelessWidget {
             ],
           ),
 
-          if (showBookmark)
+          // =====================================================
+          // BOOKMARK
+          // =====================================================
+          if (widget.showBookmark)
             GestureDetector(
-              onTap: onBookmarkTap,
+              onTap: widget.onBookmarkTap,
+              behavior: HitTestBehavior.opaque,
               child: Icon(
-                isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                widget.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                 size: 28,
               ),
             ),

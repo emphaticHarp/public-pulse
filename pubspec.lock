@@ -1325,6 +1325,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.12"
+  tiktok_double_tap_like:
+    dependency: "direct main"
+    description:
+      name: tiktok_double_tap_like
+      sha256: "277d234eb9fa5d3b84a5fd5c9e6fee75d8c38b24957c8cc206346708867cfb2a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.5+2"
   typed_data:
     dependency: transitive
     description:
