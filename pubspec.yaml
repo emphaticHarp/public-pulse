@@ -95,6 +95,7 @@ dependencies:
   # Convert coordinates to addresses and vice versa
   geocoding: ^4.0.0
   http_parser: ^4.1.2
+  tiktok_double_tap_like: ^1.0.5+2
 dev_dependencies:
   flutter_test:
     sdk: flutter

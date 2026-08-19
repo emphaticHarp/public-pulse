@@ -6,6 +6,7 @@ import 'package:public_pulse/widget/post/post_media.dart';
 import 'package:public_pulse/widget/post/interaction_bar.dart';
 import 'package:public_pulse/widget/post/post_caption.dart';
 import 'package:public_pulse/core/theme/app_colors.dart';
+import 'package:tiktok_double_tap_like/tiktok_double_tap_like.dart';
 
 class PostCard extends StatelessWidget {
   final String profileImage;
@@ -27,6 +28,7 @@ class PostCard extends StatelessWidget {
 
   final IconData likeIcon;
   final Color likeIconColor;
+  final bool isLiked;
 
   final String likeCount;
   final String commentCount;
@@ -63,6 +65,7 @@ class PostCard extends StatelessWidget {
 
     required this.likeIcon,
     required this.likeIconColor,
+    required this.isLiked,
 
     required this.likeCount,
     required this.commentCount,
@@ -80,6 +83,40 @@ class PostCard extends StatelessWidget {
 
     required this.caption,
   });
+
+  Widget _doubleTapLike({
+    required Widget child,
+    required double aspectRatio,
+  }) {
+    final safeRatio =
+        aspectRatio.isFinite && aspectRatio > 0
+            ? aspectRatio
+            : 4 / 5;
+
+    return AspectRatio(
+      aspectRatio: safeRatio,
+      child: DoubleTapLikeWidget(
+        onLike: (likeCount) {
+          // Double tap should LIKE only.
+          // Never unlike an already-liked post.
+          if (!isLiked) {
+            onLikeTap?.call();
+          }
+        },
+
+        likeWidget: const Icon(
+          Icons.favorite_rounded,
+          color: AppColors.loginAccentRed,
+          size: 100,
+        ),
+
+        likeWidth: 110,
+        likeHeight: 110,
+
+        child: child,
+      ),
+    );
+  }
 
   String? get displayLocation {
     final value = location?.trim();
@@ -125,17 +162,30 @@ class PostCard extends StatelessWidget {
               isCarousel: isCarousel,
             )
           else if (isCarousel)
-            PostCarouselMedia(
-              imageUrls: imageUrls ?? const [],
-              aspectRatios: mediaAspectRatios,
-              postId: postId,
+            _doubleTapLike(
+              aspectRatio:
+                  mediaAspectRatios.isNotEmpty
+                      ? mediaAspectRatios.first
+                      : 4 / 5,
+              child: PostCarouselMedia(
+                imageUrls: imageUrls ?? const [],
+                aspectRatios: mediaAspectRatios,
+                postId: postId,
+              ),
             )
           else if (imageUrl != null)
-            PostMedia(
-              imageUrl: imageUrl!,
-              aspectRatio: mediaAspectRatios.isNotEmpty
-                  ? mediaAspectRatios.first
-                  : 4 / 5,
+            _doubleTapLike(
+              aspectRatio:
+                  mediaAspectRatios.isNotEmpty
+                      ? mediaAspectRatios.first
+                      : 4 / 5,
+              child: PostMedia(
+                imageUrl: imageUrl!,
+                aspectRatio:
+                    mediaAspectRatios.isNotEmpty
+                        ? mediaAspectRatios.first
+                        : 4 / 5,
+              ),
             )
           else
             const SizedBox.shrink(),

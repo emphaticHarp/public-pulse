@@ -1,5 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 class NotificationModel {
   final String id;
 
@@ -66,12 +64,31 @@ class NotificationModel {
       final firstMedia = media.first;
 
       if (firstMedia is Map) {
-        final storagePath = firstMedia['storage_path'];
+        // Prefer Bunny thumbnail because notification image is very small.
+        final thumbnailPath =
+            firstMedia['thumbnail_path']?.toString().trim();
 
-        if (storagePath != null && storagePath.toString().isNotEmpty) {
-          postImageUrl = Supabase.instance.client.storage
-              .from('posts-images')
-              .getPublicUrl(storagePath.toString());
+        final storagePath =
+            firstMedia['storage_path']?.toString().trim();
+
+        // ============================================================
+        // 1. BUNNY THUMBNAIL
+        // ============================================================
+
+        if (thumbnailPath != null &&
+            thumbnailPath.isNotEmpty &&
+            thumbnailPath.startsWith('http')) {
+          postImageUrl = thumbnailPath;
+        }
+
+        // ============================================================
+        // 2. FALLBACK TO BUNNY FULL POST IMAGE
+        // ============================================================
+
+        else if (storagePath != null &&
+            storagePath.isNotEmpty &&
+            storagePath.startsWith('http')) {
+          postImageUrl = storagePath;
         }
       }
     }
@@ -80,22 +97,15 @@ class NotificationModel {
     // AVATAR
     // ==========================================================
 
-    final avatarPath = actor['avatar_path']?.toString().trim();
+    final avatarPath =
+        actor['avatar_path']?.toString().trim();
 
     String avatarUrl = '';
 
-    if (avatarPath != null && avatarPath.isNotEmpty) {
-      // Google / external image URL
-      if (avatarPath.startsWith('http://') ||
-          avatarPath.startsWith('https://')) {
-        avatarUrl = avatarPath;
-      }
-      // Supabase Storage path
-      else {
-        avatarUrl = Supabase.instance.client.storage
-            .from('avatars')
-            .getPublicUrl(avatarPath);
-      }
+    if (avatarPath != null &&
+        avatarPath.isNotEmpty &&
+        avatarPath.startsWith('http')) {
+      avatarUrl = avatarPath;
     }
     // ==========================================================
     // COMMENT TEXT

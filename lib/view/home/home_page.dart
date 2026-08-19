@@ -200,6 +200,7 @@ class HomePage extends StatelessWidget {
                               likeIconColor: post.isLiked
                                   ? AppColors.loginAccentRed
                                   : AppColors.gray900,
+                              isLiked: post.isLiked,
                               likeCount: post.likeCount.toString(),
                               commentCount: post.commentCount.toString(),
                               shareCount: post.shareCount.toString(),
