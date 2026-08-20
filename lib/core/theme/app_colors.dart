@@ -5,7 +5,7 @@ class AppColors {
 
   // ── Primary Brand Colors ──────────────────────────────────────────────
   /// Login accent red - the single red used across the entire app
-  static const Color loginAccentRed = Color.fromRGBO(217, 33, 52, 0.83);
+  static const Color loginAccentRed = Color.fromRGBO(91, 94, 201, 1.0);
 
   /// Onboarding/Splash accent red - alias to loginAccentRed
   static const Color accentRed = loginAccentRed;

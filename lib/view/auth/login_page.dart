@@ -9,7 +9,7 @@ class LoginPage extends StatelessWidget {
 
   final controller = Get.find<LoginController>();
 
-  static const String kBackgroundImagePath = 'assets/images/login_bg.jpg';
+  static const String kBackgroundImagePath = 'assets/images/login_bg.webp';
 
   @override
   Widget build(BuildContext context) {
