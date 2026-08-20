@@ -40,13 +40,13 @@ class NotificationRepository {
             is_read,
             created_at,
 
-            actor:profiles!notifications_actor_profile_id_fkey(
-              id,
-              username,
-              display_name,
-              avatar_path
-            ),
-
+          actor:profiles!notifications_actor_profile_id_fkey(
+  id,
+  username,
+  display_name,
+  avatar_path,
+  avatar_thumbnail_path
+),
             post:posts(
               id,
               post_media(

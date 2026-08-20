@@ -91,13 +91,27 @@ class NotificationModel {
 
     // ==========================================================
     // AVATAR
+    // Prefer avatar thumbnail for small notification avatar.
+    // Fall back to the normal avatar for older profiles.
     // ==========================================================
+
+    final avatarThumbnailPath = actor['avatar_thumbnail_path']
+        ?.toString()
+        .trim();
 
     final avatarPath = actor['avatar_path']?.toString().trim();
 
     String avatarUrl = '';
 
-    if (avatarPath != null &&
+    // 1. Prefer small Bunny avatar thumbnail.
+    if (avatarThumbnailPath != null &&
+        avatarThumbnailPath.isNotEmpty &&
+        avatarThumbnailPath.startsWith('http')) {
+      avatarUrl = avatarThumbnailPath;
+    }
+    // 2. Fallback to normal avatar.
+    // This can be Bunny CDN or Google profile URL.
+    else if (avatarPath != null &&
         avatarPath.isNotEmpty &&
         avatarPath.startsWith('http')) {
       avatarUrl = avatarPath;

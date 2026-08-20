@@ -154,28 +154,28 @@ class _InteractionBarState extends State<InteractionBar>
                 ),
               ),
 
-              const SizedBox(width: 24),
+              // const SizedBox(width: 24),
 
               // =================================================
               // SHARE
               // =================================================
-              GestureDetector(
-                onTap: widget.onShareTap,
-                behavior: HitTestBehavior.opaque,
-                child: Row(
-                  children: [
-                    const Icon(Icons.send_outlined, size: 26),
-                    const SizedBox(width: 6),
-                    Text(
-                      widget.shareCount,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // GestureDetector(
+              //   onTap: widget.onShareTap,
+              //   behavior: HitTestBehavior.opaque,
+              //   child: Row(
+              //     children: [
+              //       const Icon(Icons.send_outlined, size: 26),
+              //       const SizedBox(width: 6),
+              //       Text(
+              //         widget.shareCount,
+              //         style: const TextStyle(
+              //           fontSize: 14,
+              //           fontWeight: FontWeight.w600,
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
             ],
           ),
 

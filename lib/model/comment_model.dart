@@ -64,7 +64,16 @@ class CommentModel {
       }
     }
 
-    final rawAvatar = map['profile_image'] ?? profileData?['avatar_path'];
+    final thumbnailAvatar = profileData?['avatar_thumbnail_path']
+        ?.toString()
+        .trim();
+    final optimisticAvatar = map['profile_image']?.toString().trim();
+    final normalAvatar = profileData?['avatar_path']?.toString().trim();
+    final rawAvatar = thumbnailAvatar != null && thumbnailAvatar.isNotEmpty
+        ? thumbnailAvatar
+        : optimisticAvatar != null && optimisticAvatar.isNotEmpty
+        ? optimisticAvatar
+        : normalAvatar;
 
     return CommentModel(
       id: map['id'].toString(),

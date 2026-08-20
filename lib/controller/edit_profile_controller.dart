@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:public_pulse/core/compression/image_compressor.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/theme/app_colors.dart';
 import '../model/profile_model.dart';
 import '../core/repository/profile_repository.dart';
@@ -28,14 +28,9 @@ class EditProfileController extends GetxController {
   final errorMessage = ''.obs;
   final isSaving = false.obs;
 
-  // ============================================================
-  // DISPLAY NAME - ONE TIME CHANGE
-  // ============================================================
-
+  // Display Name lock comes directly from database.
   final isDisplayNameLocked = true.obs;
   final isDisplayNameLockLoading = true.obs;
-
-  String get _displayNameLockKey => 'display_name_changed_${original.id}';
 
   final pickedAvatar = Rxn<File>();
   final pickedCover = Rxn<File>();
@@ -59,19 +54,7 @@ class EditProfileController extends GetxController {
     // Show existing bio so user can edit it.
     bioCtrl.text = original.bio ?? '';
 
-    _loadDisplayNameLock();
-  }
-
-  Future<void> _loadDisplayNameLock() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      isDisplayNameLocked.value = prefs.getBool(_displayNameLockKey) ?? false;
-    } catch (_) {
-      isDisplayNameLocked.value = true;
-    } finally {
-      isDisplayNameLockLoading.value = false;
-    }
+    _checkDisplayNameLock();
   }
 
   @override
@@ -81,6 +64,22 @@ class EditProfileController extends GetxController {
     bioCtrl.dispose();
 
     super.onClose();
+  }
+
+  Future<void> _checkDisplayNameLock() async {
+    isDisplayNameLockLoading.value = true;
+
+    try {
+      final count = await _repo.getDisplayNameChangeCount();
+
+      isDisplayNameLocked.value = count >= 1;
+    } catch (_) {
+      // Fail-safe: if database check fails,
+      // don't allow a possible second display-name change.
+      isDisplayNameLocked.value = true;
+    } finally {
+      isDisplayNameLockLoading.value = false;
+    }
   }
 
   Future<void> pickAvatar() => _pick(pickedAvatar);
@@ -124,12 +123,6 @@ class EditProfileController extends GetxController {
 
     final displayNameChanged = newDisplayName != oldDisplayName;
 
-    // User has already used the one-time change.
-    if (displayNameChanged && isDisplayNameLocked.value) {
-      errorMessage('Your display name has already been changed once.');
-      return;
-    }
-
     isSaving(true);
 
     try {
@@ -151,8 +144,11 @@ class EditProfileController extends GetxController {
       }
 
       final updated = await _repo.updateProfile(
-        // Update display name only if it actually changed.
-        displayName: displayNameChanged ? newDisplayName : null,
+        // Update display name only if it actually changed and not locked.
+        displayName:
+            !isDisplayNameLocked.value && displayNameChanged
+            ? newDisplayName
+            : null,
 
         username: username == original.username ? null : username,
 
@@ -163,25 +159,22 @@ class EditProfileController extends GetxController {
         coverFile: pickedCover.value,
       );
 
-      // ==========================================================
-      // LOCK DISPLAY NAME ONLY AFTER SUCCESSFUL UPDATE
-      // ==========================================================
-
-      if (displayNameChanged) {
-        final prefs = await SharedPreferences.getInstance();
-
-        await prefs.setBool(_displayNameLockKey, true);
-
-        isDisplayNameLocked.value = true;
-      }
-
       ProfileController.to.applyUpdatedProfile(updated);
 
       Get.back();
+    } on PostgrestException catch (e) {
+      final message = e.message.toLowerCase();
+      if (message.contains('display name') ||
+          message.contains('display_name')) {
+        isDisplayNameLocked.value = true;
+        errorMessage(
+          'Your display name has already been changed once and is now locked.',
+        );
+        return;
+      }
+      errorMessage('Failed to save profile. Please try again.');
     } catch (_) {
-      errorMessage(
-        'Failed to save. Please check your connection and try again.',
-      );
+      errorMessage('Failed to save profile. Please try again.');
     } finally {
       isSaving(false);
     }

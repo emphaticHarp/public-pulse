@@ -52,6 +52,28 @@ class CommentController extends GetxController {
         .getPublicUrl(avatar);
   }
 
+  String _getCurrentProfileAvatar() {
+    if (_currentProfile == null) {
+      return '';
+    }
+
+    final thumbnail =
+        _currentProfile!['avatar_thumbnail_path']?.toString().trim() ?? '';
+    final avatar = _currentProfile!['avatar_path']?.toString().trim() ?? '';
+
+    // Prefer the small thumbnail.
+    if (thumbnail.isNotEmpty) {
+      return _resolveAvatarUrl(thumbnail);
+    }
+
+    // Fallback for older users / Google avatars.
+    if (avatar.isNotEmpty) {
+      return _resolveAvatarUrl(avatar);
+    }
+
+    return '';
+  }
+
   Future<void> _loadCurrentProfile() async {
     if (_currentProfile != null) return;
 
@@ -148,9 +170,7 @@ class CommentController extends GetxController {
       postId: currentPostId!,
       profileId: _currentProfile!['id'],
       username: _currentProfile!['username'],
-      profileImage: _resolveAvatarUrl(
-        _currentProfile!['avatar_path']?.toString(),
-      ),
+      profileImage: _getCurrentProfileAvatar(),
       content: text,
       createdAt: DateTime.now(),
       isPending: true,
