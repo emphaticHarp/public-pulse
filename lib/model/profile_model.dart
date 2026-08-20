@@ -52,6 +52,7 @@ class ProfileModel {
   final int? postCount;
   final String? accountStatus;
   final String? referCode;
+  final int displayNameChangeCount;
 
   const ProfileModel({
     required this.id,
@@ -68,6 +69,7 @@ class ProfileModel {
     this.postCount,
     this.accountStatus,
     this.referCode,
+    this.displayNameChangeCount = 0,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) => ProfileModel(
@@ -85,6 +87,8 @@ class ProfileModel {
     postCount: (json['post_count'] as num?)?.toInt(),
     accountStatus: (json['status'] ?? json['account_status'])?.toString(),
     referCode: json['refer_code']?.toString(),
+    displayNameChangeCount:
+        (json['display_name_change_count'] as num?)?.toInt() ?? 0,
   );
 
   static DateTime? _parseDate(dynamic value) =>
@@ -105,6 +109,7 @@ class ProfileModel {
     'post_count': postCount,
     'status': accountStatus,
     'refer_code': referCode,
+    'display_name_change_count': displayNameChangeCount,
   };
 
   ProfileModel copyWith({
@@ -115,6 +120,7 @@ class ProfileModel {
     String? avatarThumbnailPath,
     String? coverPath,
     DateTime? updatedAt,
+    int? displayNameChangeCount,
   }) => ProfileModel(
     id: id,
     username: username ?? this.username,
@@ -125,6 +131,8 @@ class ProfileModel {
     coverPath: coverPath ?? this.coverPath,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    displayNameChangeCount:
+        displayNameChangeCount ?? this.displayNameChangeCount,
     followerCount: followerCount,
     followingCount: followingCount,
     postCount: postCount,
@@ -149,7 +157,8 @@ class ProfileModel {
           followerCount == other.followerCount &&
           followingCount == other.followingCount &&
           accountStatus == other.accountStatus &&
-          referCode == other.referCode);
+          referCode == other.referCode &&
+          displayNameChangeCount == other.displayNameChangeCount);
 
   /// Override hashCode to ensure that two ProfileModel instances with the same values are equal.
   @override
@@ -168,5 +177,6 @@ class ProfileModel {
     postCount,
     accountStatus,
     referCode,
+    displayNameChangeCount,
   );
 }

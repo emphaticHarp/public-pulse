@@ -58,30 +58,39 @@ class EditProfilePage extends StatelessWidget {
                   children: [
                     const _FieldLabel('Display Name'),
 
-                    TextField(
-                      controller: controller.displayNameCtrl,
-
-                      // Lock after the one allowed change.
-                      readOnly:
-                          controller.isDisplayNameLockLoading.value ||
-                          controller.isDisplayNameLocked.value,
-
-                      textCapitalization: TextCapitalization.words,
-
-                      style: AppTextStyles.inputText.copyWith(
-                        color: controller.isDisplayNameLocked.value
-                            ? AppColors.gray500
-                            : AppColors.editProfileTextDark,
-                      ),
-
-                      decoration: _fieldDecoration('Display Name').copyWith(
-                        suffixIcon: controller.isDisplayNameLocked.value
-                            ? const Icon(
-                                Icons.lock_outline_rounded,
-                                color: AppColors.gray400,
-                                size: 20,
-                              )
-                            : null,
+                    Obx(
+                      () => TextField(
+                        controller: controller.displayNameCtrl,
+                        readOnly:
+                            controller.isDisplayNameLockLoading.value ||
+                            controller.isDisplayNameLocked.value,
+                        textCapitalization: TextCapitalization.words,
+                        style: AppTextStyles.inputText.copyWith(
+                          color: controller.isDisplayNameLocked.value
+                              ? AppColors.gray500
+                              : AppColors.editProfileTextDark,
+                        ),
+                        decoration: _fieldDecoration('Display Name').copyWith(
+                          suffixIcon: controller.isDisplayNameLockLoading.value
+                              ? const Padding(
+                                  padding: EdgeInsets.all(14),
+                                  child: SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.gray400,
+                                    ),
+                                  ),
+                                )
+                              : controller.isDisplayNameLocked.value
+                                  ? const Icon(
+                                      Icons.lock_outline_rounded,
+                                      color: AppColors.gray400,
+                                      size: 20,
+                                    )
+                                  : null,
+                        ),
                       ),
                     ),
 
@@ -120,7 +129,7 @@ class EditProfilePage extends StatelessWidget {
                           Expanded(
                             child: Text(
                               controller.isDisplayNameLocked.value
-                                  ? 'You have already changed your display name once. It can no longer be edited.'
+                                  ? 'Your display name has already been changed once and is permanently locked.'
                                   : 'You can change your display name only once. After saving the new name, it cannot be changed again.',
                               style: AppTextStyles.bodyMedium.copyWith(
                                 fontSize: 12,

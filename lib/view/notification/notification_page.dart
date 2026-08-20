@@ -5,6 +5,7 @@ import 'package:public_pulse/core/theme/app_colors.dart';
 import 'package:public_pulse/controller/notification_controller.dart';
 import 'package:public_pulse/model/notification_model.dart';
 import 'package:public_pulse/view/main/main_page.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class NotificationPage extends StatelessWidget {
   NotificationPage({super.key});
@@ -376,12 +377,19 @@ class NotificationPage extends StatelessWidget {
                       size: isCompact ? 22 : 28,
                     ),
                   )
-                : Image.network(
-                    item.avatarUrl,
+                : CachedNetworkImage(
+                    imageUrl: item.avatarUrl,
                     width: avatarSize,
                     height: avatarSize,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
+                    placeholder: (_, _) {
+                      return Container(
+                        width: avatarSize,
+                        height: avatarSize,
+                        color: AppColors.gray100,
+                      );
+                    },
+                    errorWidget: (_, _, _) {
                       return Container(
                         width: avatarSize,
                         height: avatarSize,
@@ -463,12 +471,19 @@ class NotificationPage extends StatelessWidget {
 
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                item.postImageUrl!,
+              child: CachedNetworkImage(
+                imageUrl: item.postImageUrl!,
                 width: postImageSize,
                 height: postImageSize,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
+                placeholder: (_, _) {
+                  return Container(
+                    width: postImageSize,
+                    height: postImageSize,
+                    color: AppColors.gray100,
+                  );
+                },
+                errorWidget: (_, _, _) {
                   return Container(
                     width: postImageSize,
                     height: postImageSize,

@@ -182,6 +182,7 @@ class PostHeader extends StatelessWidget {
                                                   ? thumbnailAvatarUrl
                                                   : avatarUrl;
                                               showPostLocationMap(
+                                                postId: postId,
                                                 locationName: location!,
                                                 latitude: locationLatitude!,
                                                 longitude: locationLongitude!,
@@ -238,6 +239,10 @@ class PostHeader extends StatelessWidget {
                     authorId,
                   );
 
+                  if (!isOwner && !isFollowing) {
+                    return const SizedBox.shrink();
+                  }
+
                   return PopupMenuButton<String>(
                     elevation: 12,
                     color: AppColors.white,
@@ -285,6 +290,7 @@ class PostHeader extends StatelessWidget {
                         return;
                       }
 
+                      /*
                       // --------------------------------------------------------
                       // REPORT
                       // --------------------------------------------------------
@@ -314,6 +320,7 @@ class PostHeader extends StatelessWidget {
 
                         return;
                       }
+                      */
 
                       // --------------------------------------------------------
                       // UNFOLLOW
@@ -362,6 +369,7 @@ class PostHeader extends StatelessWidget {
                       // --------------------------------------------------------
 
                       return [
+                        /*
                         const PopupMenuItem<String>(
                           value: 'report',
                           child: Row(
@@ -389,6 +397,7 @@ class PostHeader extends StatelessWidget {
                             ],
                           ),
                         ),
+                        */
 
                         // Only show Unfollow when currently following.
                         if (isFollowing)

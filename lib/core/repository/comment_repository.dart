@@ -34,7 +34,8 @@ class CommentRepository {
           .select('''
 id,
 username,
-avatar_path
+avatar_path,
+avatar_thumbnail_path
 ''')
           .eq('user_id', user.id)
           .single();
@@ -67,7 +68,8 @@ content,
 created_at,
 profiles!comments_profile_id_fkey(
 username,
-avatar_path
+avatar_path,
+avatar_thumbnail_path
 )
 ''')
           .eq('post_id', postId)
@@ -105,7 +107,8 @@ content,
 created_at,
 profiles!comments_profile_id_fkey(
   username,
-  avatar_path
+  avatar_path,
+  avatar_thumbnail_path
 )
 ''')
           .single();
@@ -133,7 +136,8 @@ content,
 created_at,
 profiles!comments_profile_id_fkey(
   username,
-  avatar_path
+  avatar_path,
+  avatar_thumbnail_path
 )
 ''')
           .single();

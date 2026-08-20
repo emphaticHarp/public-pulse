@@ -21,6 +21,15 @@ class ProfileRepository {
 
   // ── Profile CRUD ──────────────────────────────────────────────────────────
 
+  Future<int> getDisplayNameChangeCount() async {
+    final data = await _db
+        .select('display_name_change_count')
+        .eq('user_id', _uid)
+        .single();
+
+    return (data['display_name_change_count'] as num?)?.toInt() ?? 0;
+  }
+
   /// Fetches the currently authenticated user's profile.
   Future<ProfileModel> getProfile() async {
     final data = await _db.select().eq('user_id', _uid).single();
