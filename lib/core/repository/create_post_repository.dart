@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/core/services/bunny_upload_service.dart';
 
@@ -19,7 +18,6 @@ class CreatePostRepository {
     required String bucket,
     void Function(int sent, int total)? onProgress,
   }) async {
-
     // Optional initial progress.
     final totalBytes = await imageFile.length();
 
@@ -44,7 +42,6 @@ class CreatePostRepository {
   }
 
   Future<String> uploadThumbnail({required File imageFile}) async {
-
     final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
       imageFile,
       bunnyThumbnailFolder,
@@ -54,19 +51,16 @@ class CreatePostRepository {
       throw Exception('Bunny thumbnail upload failed');
     }
 
-    
     return bunnyUrl;
   }
 
   Future<String?> getCurrentProfileId() async {
-
     final user = _supabase.auth.currentUser;
 
     if (user == null) {
       return null;
     }
 
-    
     try {
       final profile = await _supabase
           .from('profiles')
@@ -80,7 +74,8 @@ class CreatePostRepository {
 
       final profileId = profile['id'] as String;
       return profileId;
-    } catch (e, stackTrace) {
+    } catch (_) {
+      // Intentionally ignored.
       return null;
     }
   }
@@ -89,6 +84,8 @@ class CreatePostRepository {
     required String profileId,
     String? caption,
     String? location,
+    double? locationLatitude,
+    double? locationLongitude,
     required String visibility,
     required List<Map<String, dynamic>> mediaItems,
   }) async {
@@ -98,6 +95,8 @@ class CreatePostRepository {
           'profile_id': profileId,
           'caption': caption,
           'location_name': location,
+          'latitude': locationLatitude,
+          'longitude': locationLongitude,
           'visibility': visibility,
         })
         .select('id')

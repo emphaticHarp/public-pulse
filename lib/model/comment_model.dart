@@ -38,8 +38,7 @@ class CommentModel {
     }
 
     // Google avatar or any already-complete URL.
-    if (avatar.startsWith('http://') ||
-        avatar.startsWith('https://')) {
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
       return avatar;
     }
 
@@ -65,9 +64,7 @@ class CommentModel {
       }
     }
 
-    final rawAvatar =
-        map['profile_image'] ??
-        profileData?['avatar_path'];
+    final rawAvatar = map['profile_image'] ?? profileData?['avatar_path'];
 
     return CommentModel(
       id: map['id'].toString(),
@@ -83,9 +80,7 @@ class CommentModel {
 
       content: map['content']?.toString() ?? '',
 
-      createdAt: DateTime.parse(
-        map['created_at'].toString(),
-      ),
+      createdAt: DateTime.parse(map['created_at'].toString()),
 
       isPending: map['is_pending'] == true,
     );

@@ -28,123 +28,121 @@ class NotificationPage extends StatelessWidget {
         top: false,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: _contentMaxWidth,
-            ),
+            constraints: const BoxConstraints(maxWidth: _contentMaxWidth),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-            _buildHeader(context),
-            Obx(() => _buildTabs()),
-            const SizedBox(height: 16),
-            Expanded(
-              child: Obx(() {
-                // ============================================================
-                // LOADING
-                // ============================================================
+                _buildHeader(context),
+                Obx(() => _buildTabs()),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: Obx(() {
+                    // ============================================================
+                    // LOADING
+                    // ============================================================
 
-                if (controller.isLoading.value) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.loginAccentRed,
-                    ),
-                  );
-                }
-
-                // ============================================================
-                // ERROR
-                // Still allow swipe-down refresh
-                // ============================================================
-
-                if (controller.errorMessage.isNotEmpty) {
-                  return RefreshIndicator(
-                    color: AppColors.loginAccentRed,
-                    onRefresh: controller.refreshNotifications,
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.55,
-                          child: _buildStateMessage(
-                            icon: Icons.error_outline_rounded,
-                            title: "Something went wrong",
-                            subtitle: controller.errorMessage.value,
-                          ),
+                    if (controller.isLoading.value) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.loginAccentRed,
                         ),
-                      ],
-                    ),
-                  );
-                }
+                      );
+                    }
 
-                // ============================================================
-                // EMPTY
-                // Still allow swipe-down refresh
-                // ============================================================
+                    // ============================================================
+                    // ERROR
+                    // Still allow swipe-down refresh
+                    // ============================================================
 
-                if (controller.hasNoNotifications) {
-                  return RefreshIndicator(
-                    color: AppColors.loginAccentRed,
-                    onRefresh: controller.refreshNotifications,
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.55,
-                          child: _buildStateMessage(
-                            icon: Icons.notifications_none_rounded,
-                            title: "No notifications yet",
-                            subtitle:
-                                "You'll see likes, comments and follows here.",
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                // ============================================================
-                // NOTIFICATION LIST + PULL TO REFRESH
-                // ============================================================
-
-                return RefreshIndicator(
-                    color: AppColors.loginAccentRed,
-                  onRefresh: controller.refreshNotifications,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (controller.newNotifications.isNotEmpty) ...[
-                            _buildSection(
-                              "New",
-                              controller.newNotifications,
+                    if (controller.errorMessage.isNotEmpty) {
+                      return RefreshIndicator(
+                        color: AppColors.loginAccentRed,
+                        onRefresh: controller.refreshNotifications,
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.55,
+                              child: _buildStateMessage(
+                                icon: Icons.error_outline_rounded,
+                                title: "Something went wrong",
+                                subtitle: controller.errorMessage.value,
+                              ),
                             ),
-                            const SizedBox(height: 32),
                           ],
+                        ),
+                      );
+                    }
 
-                          if (controller.earlierNotifications.isNotEmpty)
-                            _buildSection(
-                              "Earlier",
-                              controller.earlierNotifications,
+                    // ============================================================
+                    // EMPTY
+                    // Still allow swipe-down refresh
+                    // ============================================================
+
+                    if (controller.hasNoNotifications) {
+                      return RefreshIndicator(
+                        color: AppColors.loginAccentRed,
+                        onRefresh: controller.refreshNotifications,
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.55,
+                              child: _buildStateMessage(
+                                icon: Icons.notifications_none_rounded,
+                                title: "No notifications yet",
+                                subtitle:
+                                    "You'll see likes, comments and follows here.",
+                              ),
                             ),
-                        ],
+                          ],
+                        ),
+                      );
+                    }
+
+                    // ============================================================
+                    // NOTIFICATION LIST + PULL TO REFRESH
+                    // ============================================================
+
+                    return RefreshIndicator(
+                      color: AppColors.loginAccentRed,
+                      onRefresh: controller.refreshNotifications,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (controller.newNotifications.isNotEmpty) ...[
+                                _buildSection(
+                                  "New",
+                                  controller.newNotifications,
+                                ),
+                                const SizedBox(height: 32),
+                              ],
+
+                              if (controller.earlierNotifications.isNotEmpty)
+                                _buildSection(
+                                  "Earlier",
+                                  controller.earlierNotifications,
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }),
+                    );
+                  }),
+                ),
+              ],
             ),
-          ],
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   // ---------------- Header ----------------
@@ -340,8 +338,7 @@ class NotificationPage extends StatelessWidget {
     NotificationModel item, {
     required bool isLast,
   }) {
-    final bool isCompact =
-        MediaQuery.sizeOf(Get.context!).width < 360;
+    final bool isCompact = MediaQuery.sizeOf(Get.context!).width < 360;
     final double avatarSize = isCompact ? 44 : 56;
     final double postImageSize = isCompact ? 44 : 56;
 
@@ -454,7 +451,6 @@ class NotificationPage extends StatelessWidget {
                     color: AppColors.slate400,
                   ),
                 ),
-
               ],
             ),
           ),
@@ -462,12 +458,8 @@ class NotificationPage extends StatelessWidget {
           // ======================================================
           // POST IMAGE
           // ======================================================
-
-          if (item.postImageUrl != null &&
-              item.postImageUrl!.isNotEmpty) ...[
-            SizedBox(
-              width: isCompact ? 6 : 10,
-            ),
+          if (item.postImageUrl != null && item.postImageUrl!.isNotEmpty) ...[
+            SizedBox(width: isCompact ? 6 : 10),
 
             ClipRRect(
               borderRadius: BorderRadius.circular(8),

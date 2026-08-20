@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import 'package:public_pulse/model/profile_model.dart';
@@ -89,11 +88,9 @@ class ProfileController extends GetxController {
     final cachedProfile = CacheManager.getCachedUserProfile();
 
     if (cachedProfile != null) {
-      
       _applyProfileToState(cachedProfile);
 
-      final cachedStatus =
-          cachedProfile.accountStatus?.trim().toLowerCase();
+      final cachedStatus = cachedProfile.accountStatus?.trim().toLowerCase();
 
       final hasValidStatus =
           cachedStatus != null &&
@@ -107,13 +104,12 @@ class ProfileController extends GetxController {
         await loadMyPosts();
         await loadSavedPosts();
 
-        
         return;
       }
 
       // Old/incomplete cache.
       // Continue below and refresh profile from Supabase.
-          }
+    }
 
     // ----------------------------------------------------------
     // SUPABASE
@@ -150,11 +146,10 @@ class ProfileController extends GetxController {
 
       await loadMyPosts();
       await loadSavedPosts();
-    } catch (e, stackTrace) {
+    } catch (e) {
       _profileLoaded = false;
 
       errorMessage.value = 'Failed to load profile.';
-
     } finally {
       isLoading.value = false;
     }
@@ -172,7 +167,6 @@ class ProfileController extends GetxController {
     final cachedProfile = CacheManager.getCachedProfileByUserId(targetUserId);
 
     if (cachedProfile != null) {
-
       _applyProfileToState(cachedProfile);
 
       _profileLoaded = true;
@@ -199,12 +193,10 @@ class ProfileController extends GetxController {
       _profileLoaded = true;
 
       await loadUserPosts(targetUserId);
-
-    } catch (e, stackTrace) {
+    } catch (e) {
       _profileLoaded = false;
 
       errorMessage.value = 'Failed to load profile.';
-
     } finally {
       isLoading.value = false;
     }
@@ -293,9 +285,7 @@ class ProfileController extends GetxController {
 
       await loadMyPosts();
       await loadSavedPosts();
-
-    } catch (e, stackTrace) {
-
+    } catch (e) {
       errorMessage.value = 'Failed to refresh profile.';
     }
   }
@@ -326,7 +316,6 @@ class ProfileController extends GetxController {
     savedPosts.clear();
 
     errorMessage.value = '';
-
   }
 
   // ============================================================
@@ -352,8 +341,7 @@ class ProfileController extends GetxController {
 
     if (cachedPosts.isNotEmpty) {
       photoPosts.assignAll(cachedPosts);
-
-          }
+    }
 
     // ----------------------------------------------------------
     // SERVER
@@ -369,8 +357,8 @@ class ProfileController extends GetxController {
       postCount.value = profile.value?.postCount ?? result.length;
 
       await CacheManager.cacheMyPosts(result);
-
-          } catch (e, stackTrace) {
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       isPostsLoading.value = false;
     }
@@ -395,11 +383,8 @@ class ProfileController extends GetxController {
           .toList();
 
       photoPosts.assignAll(posts);
-
-      for (final post in posts) {
-              }
-
-    } catch (e, stackTrace) {
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       isPostsLoading(false);
     }
@@ -423,8 +408,7 @@ class ProfileController extends GetxController {
 
     if (cachedPosts.isNotEmpty) {
       savedPosts.assignAll(cachedPosts);
-
-          }
+    }
 
     // ----------------------------------------------------------
     // SERVER
@@ -438,8 +422,8 @@ class ProfileController extends GetxController {
       savedPosts.assignAll(result);
 
       await CacheManager.cacheSavedPosts(result);
-
-          } catch (e, stackTrace) {
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       isSavedPostsLoading.value = false;
     }
@@ -458,10 +442,8 @@ class ProfileController extends GetxController {
       if (!alreadyExists) {
         savedPosts.insert(0, post);
       }
-
     } else {
       savedPosts.removeWhere((item) => item.id == post.id);
-
     }
 
     savedPosts.refresh();
@@ -531,7 +513,6 @@ class ProfileController extends GetxController {
     } else {
       await CacheManager.cacheProfileByUserId(updatedWithCounts);
     }
-
   }
 
   // ============================================================
@@ -546,7 +527,6 @@ class ProfileController extends GetxController {
     final uid = currentProfile.id;
     final tag = 'ff_$uid';
 
-    
     Get.to(
       () => FollowersFollowingPage(initialTab: initialTab, controllerTag: tag),
       binding: BindingsBuilder(() {
@@ -619,7 +599,8 @@ class ProfileController extends GetxController {
           await CacheManager.cacheProfileByUserId(updated);
         }
       }
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     }
   }
 }

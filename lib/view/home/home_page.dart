@@ -179,10 +179,16 @@ class HomePage extends StatelessWidget {
                               child: PostCard(
                                 key: ValueKey(post.id),
                                 profileImage: post.profileImage ?? '',
+                                profileThumbnailImage:
+                                    post.profileThumbnailImage ?? '',
                                 username: post.username,
                                 authorId: post.profileId,
                                 authorUserId: post.authorUserId,
+
                                 location: post.location ?? '',
+                                locationLatitude: post.locationLatitude,
+                                locationLongitude: post.locationLongitude,
+
                                 isCarousel: post.isCarousel,
                                 isOwner: post.isOwner,
                                 imageUrl: post.mediaUrls.isNotEmpty

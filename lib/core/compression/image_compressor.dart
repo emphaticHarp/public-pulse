@@ -17,6 +17,16 @@ class ImageCompressor {
   static const int _thumbnailStartDimension = 100;
   static const int _thumbnailMinDimension = 100;
 
+  // Profile avatar compression
+  static const int _avatarDimension = 800;
+  static const int _avatarQuality = 80;
+
+  // Small profile avatar used in map markers
+  static const int _avatarThumbnailDimension = 160;
+  static const int _avatarThumbnailStartQuality = 75;
+  static const int _avatarThumbnailMinQuality = 40;
+  static const int _avatarThumbnailTargetMaxBytes = 15 * 1024; // 15 KB
+
   Future<File?> compressImage(String inputPath) async {
     final originalFile = File(inputPath);
 
@@ -170,15 +180,96 @@ class ImageCompressor {
 
       await thumbnailFile.writeAsBytes(bestBytes, flush: true);
 
-      
       return thumbnailFile;
     } catch (e) {
-
       return null;
     }
   }
 
-  /// Re-encodes to webp at quality 100 (i.e. no real compression, just a
+  /// Compress a full-size avatar (800×800) at quality 80
+  Future<File?> compressAvatar(String inputPath) async {
+    try {
+      final originalFile = File(inputPath);
+      final originalBytes = await originalFile.readAsBytes();
+
+      if (originalBytes.isEmpty) {
+        return null;
+      }
+
+      final resultBytes = await _safeCompress(
+        originalBytes,
+        quality: _avatarQuality,
+        minWidth: _avatarDimension,
+        minHeight: _avatarDimension,
+      );
+
+      if (resultBytes == null) {
+        return null;
+      }
+
+      final dir = await getTemporaryDirectory();
+      final sessionId = DateTime.now().microsecondsSinceEpoch;
+      final outputPath = '${dir.path}/${sessionId}_avatar.webp';
+      final outputFile = File(outputPath);
+      await outputFile.writeAsBytes(resultBytes, flush: true);
+
+      return outputFile;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Create a small avatar thumbnail (160×160) for use in map markers
+  Future<File?> createAvatarThumbnail(String inputPath) async {
+    try {
+      final originalFile = File(inputPath);
+      final originalBytes = await originalFile.readAsBytes();
+
+      if (originalBytes.isEmpty) {
+        return null;
+      }
+
+      int quality = _avatarThumbnailStartQuality;
+      Uint8List? bestBytes;
+
+      while (quality >= _avatarThumbnailMinQuality) {
+        final resultBytes = await _safeCompress(
+          originalBytes,
+          quality: quality,
+          minWidth: _avatarThumbnailDimension,
+          minHeight: _avatarThumbnailDimension,
+        );
+
+        if (resultBytes == null) {
+          break;
+        }
+
+        bestBytes = resultBytes;
+
+        // Already small enough.
+        if (resultBytes.length <= _avatarThumbnailTargetMaxBytes) {
+          break;
+        }
+
+        quality -= 5;
+      }
+
+      if (bestBytes == null) {
+        return null;
+      }
+
+      final dir = await getTemporaryDirectory();
+      final sessionId = DateTime.now().microsecondsSinceEpoch;
+      final outputPath = '${dir.path}/${sessionId}_avatar_thumbnail.webp';
+      final outputFile = File(outputPath);
+      await outputFile.writeAsBytes(bestBytes, flush: true);
+
+      return outputFile;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// straight format conversion) with EXIF stripped. Used for small files
   /// and as a last-resort fallback. Always writes a webp file if the
   /// encoder succeeds — no longer compares against the original size.

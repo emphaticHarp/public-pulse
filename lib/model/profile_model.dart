@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Tabs shown on the Profile Screen.
 enum ProfileTab { photos, saved }
 
@@ -26,7 +24,7 @@ class FollowerModel {
 
     // Debug logging
     assert(() {
-            return true;
+      return true;
     }());
 
     return FollowerModel(
@@ -44,6 +42,7 @@ class ProfileModel {
   final String? displayName;
   final String? bio;
   final String? avatarPath;
+  final String? avatarThumbnailPath;
   final String? coverPath;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -60,6 +59,7 @@ class ProfileModel {
     this.displayName,
     this.bio,
     this.avatarPath,
+    this.avatarThumbnailPath,
     this.coverPath,
     this.createdAt,
     this.updatedAt,
@@ -76,14 +76,14 @@ class ProfileModel {
     displayName: json['display_name'] as String?,
     bio: json['bio'] as String?,
     avatarPath: json['avatar_path'] as String?,
+    avatarThumbnailPath: json['avatar_thumbnail_path'] as String?,
     coverPath: json['cover_path'] as String?,
     createdAt: _parseDate(json['created_at']),
     updatedAt: _parseDate(json['updated_at']),
     followerCount: (json['follower_count'] as num?)?.toInt(),
     followingCount: (json['following_count'] as num?)?.toInt(),
     postCount: (json['post_count'] as num?)?.toInt(),
-    accountStatus:
-        (json['status'] ?? json['account_status'])?.toString(),
+    accountStatus: (json['status'] ?? json['account_status'])?.toString(),
     referCode: json['refer_code']?.toString(),
   );
 
@@ -96,6 +96,7 @@ class ProfileModel {
     'display_name': displayName,
     'bio': bio,
     'avatar_path': avatarPath,
+    'avatar_thumbnail_path': avatarThumbnailPath,
     'cover_path': coverPath,
     'created_at': createdAt?.toIso8601String(),
     'updated_at': updatedAt?.toIso8601String(),
@@ -111,6 +112,7 @@ class ProfileModel {
     String? displayName,
     String? bio,
     String? avatarPath,
+    String? avatarThumbnailPath,
     String? coverPath,
     DateTime? updatedAt,
   }) => ProfileModel(
@@ -119,6 +121,7 @@ class ProfileModel {
     displayName: displayName ?? this.displayName,
     bio: bio ?? this.bio,
     avatarPath: avatarPath ?? this.avatarPath,
+    avatarThumbnailPath: avatarThumbnailPath ?? this.avatarThumbnailPath,
     coverPath: coverPath ?? this.coverPath,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -138,6 +141,7 @@ class ProfileModel {
           displayName == other.displayName &&
           bio == other.bio &&
           avatarPath == other.avatarPath &&
+          avatarThumbnailPath == other.avatarThumbnailPath &&
           coverPath == other.coverPath &&
           createdAt == other.createdAt &&
           updatedAt == other.updatedAt &&
@@ -155,6 +159,7 @@ class ProfileModel {
     displayName,
     bio,
     avatarPath,
+    avatarThumbnailPath,
     coverPath,
     createdAt,
     updatedAt,

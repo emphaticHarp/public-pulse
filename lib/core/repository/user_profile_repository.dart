@@ -45,7 +45,6 @@ class UserProfileRepository {
 
         final profileId = data['id'] as String;
 
-        
         return profileId;
       } catch (e) {
         // Do not permanently cache a failed request.
@@ -106,35 +105,28 @@ class UserProfileRepository {
         continue;
       }
 
-      final media = mediaRaw
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
+      final media = mediaRaw.map((e) => Map<String, dynamic>.from(e)).toList();
 
       // Always use first media according to media_order.
       media.sort((a, b) {
-        final aOrder =
-            (a['media_order'] as num?)?.toInt() ?? 0;
+        final aOrder = (a['media_order'] as num?)?.toInt() ?? 0;
 
-        final bOrder =
-            (b['media_order'] as num?)?.toInt() ?? 0;
+        final bOrder = (b['media_order'] as num?)?.toInt() ?? 0;
 
         return aOrder.compareTo(bOrder);
       });
 
       for (final item in media) {
-        final mediaType =
-            item['media_type']?.toString().toLowerCase();
+        final mediaType = item['media_type']?.toString().toLowerCase();
 
         // Profile photo grid only shows image posts.
         if (mediaType != null && !mediaType.contains('image')) {
           continue;
         }
 
-        final thumbnailUrl =
-            item['thumbnail_path']?.toString().trim();
+        final thumbnailUrl = item['thumbnail_path']?.toString().trim();
 
-        final originalUrl =
-            item['storage_path']?.toString().trim();
+        final originalUrl = item['storage_path']?.toString().trim();
 
         // ========================================================
         // BUNNY CDN
@@ -144,10 +136,9 @@ class UserProfileRepository {
         // Both values are already full Bunny URLs.
         // ========================================================
 
-        final imageUrl =
-            thumbnailUrl != null && thumbnailUrl.isNotEmpty
-                ? thumbnailUrl
-                : originalUrl;
+        final imageUrl = thumbnailUrl != null && thumbnailUrl.isNotEmpty
+            ? thumbnailUrl
+            : originalUrl;
 
         if (imageUrl == null || imageUrl.isEmpty) {
           continue;

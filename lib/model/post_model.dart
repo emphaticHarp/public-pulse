@@ -9,10 +9,13 @@ class PostModel {
   final String username;
   final String displayName;
   final String? profileImage;
+  final String? profileThumbnailImage;
 
   // Post
   final String? caption;
   final String? location;
+  final double? locationLatitude;
+  final double? locationLongitude;
 
   //visibility (private and public)
 
@@ -59,8 +62,11 @@ class PostModel {
 
     // Optional fields
     this.profileImage,
+    this.profileThumbnailImage,
     this.caption,
     this.location,
+    this.locationLatitude,
+    this.locationLongitude,
 
     //required for visibility constructor
     required this.visibility,
@@ -145,6 +151,7 @@ class PostModel {
       username: profile['username'] ?? '',
       displayName: profile['display_name'] ?? '',
       profileImage: profile['avatar_path'],
+      profileThumbnailImage: profile['avatar_thumbnail_path'],
 
       storagePaths: media
           .map((item) => item['storage_path']?.toString() ?? '')
@@ -188,6 +195,9 @@ class PostModel {
 
       caption: json['caption'],
       location: json['location_name'],
+      locationLatitude: (json['latitude'] as num?)?.toDouble(),
+
+      locationLongitude: (json['longitude'] as num?)?.toDouble(),
 
       visibility: json['visibility'],
       isPrivateAccount: profile['is_private'] as bool? ?? false,
@@ -217,8 +227,11 @@ class PostModel {
       'author_user_id': authorUserId,
       'display_name': displayName,
       'profile_image': profileImage,
+      'profileThumbnailImage': profileThumbnailImage,
       'caption': caption,
       'location': location,
+      'latitude': locationLatitude,
+      'longitude': locationLongitude,
       'visibility': visibility,
       'is_private_account': isPrivateAccount,
       'is_owner': isOwner,
@@ -249,8 +262,14 @@ class PostModel {
       username: json['username'],
       displayName: json['display_name'],
       profileImage: json['profile_image'],
+      profileThumbnailImage: json['profileThumbnailImage'],
       caption: json['caption'],
       location: json['location'],
+
+      locationLatitude: (json['latitude'] as num?)?.toDouble(),
+
+      locationLongitude: (json['longitude'] as num?)?.toDouble(),
+
       visibility: json['visibility'],
       isPrivateAccount: json['is_private_account'],
       isOwner: json['is_owner'] ?? false,

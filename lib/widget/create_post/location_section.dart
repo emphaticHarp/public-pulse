@@ -9,7 +9,6 @@ class CreatePostLocationSection extends StatelessWidget {
   final CreatePostController controller;
 
   void _showLocationPicker() {
-
     controller.resetLocationPicker();
 
     Get.bottomSheet(

@@ -173,7 +173,6 @@ class LoginCodePage extends StatelessWidget {
                         // ─────────────────────────────────────
                         // INLINE ERROR MESSAGE
                         // ─────────────────────────────────────
-
                         AnimatedSize(
                           duration: const Duration(milliseconds: 180),
                           curve: Curves.easeOut,
@@ -302,8 +301,7 @@ class _ShakeWidgetState extends State<_ShakeWidget>
       animation: _animation,
       builder: (context, child) {
         final sineValue =
-            math.sin(_animation.value * 3 * math.pi) *
-            (1 - _animation.value);
+            math.sin(_animation.value * 3 * math.pi) * (1 - _animation.value);
         return Transform.translate(
           offset: Offset(sineValue * 8, 0),
           child: child,

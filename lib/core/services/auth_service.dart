@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -16,7 +15,6 @@ class AuthService {
   StreamSubscription<AuthState>? _authSubscription;
 
   AuthService() {
-    
     if (webClientId == null) {
       throw Exception("GOOGLE_WEB_CLIENT_ID is missing");
     }
@@ -29,14 +27,12 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
-                return false;
+        return false;
       }
 
-      
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      
       if (googleAuth.idToken == null || googleAuth.accessToken == null) {
         throw Exception("Google tokens are null");
       }
@@ -48,8 +44,7 @@ class AuthService {
       );
 
       return true;
-    } catch (e, stackTrace) {
-      final errorMessage = "Google Sign-In Error: $e";
+    } catch (_) {
       return false;
     }
   }
@@ -61,9 +56,8 @@ class AuthService {
       final event = data.event;
       final session = data.session;
 
-      
       if (event == AuthChangeEvent.signedIn && session?.user != null) {
-                await onSignedIn(session!.user);
+        await onSignedIn(session!.user);
       }
     });
   }
@@ -76,7 +70,7 @@ class AuthService {
     try {
       await _googleSignIn.disconnect();
     } catch (e) {
-            await _googleSignIn
+      await _googleSignIn
           .signOut(); // fallback if disconnect fails (e.g. already signed out)
     }
     await _supabase.auth.signOut();
@@ -139,7 +133,8 @@ class AuthService {
           .from('profiles')
           .update({'status': 'active', 'login_code': code})
           .eq('user_id', user.id);
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     }
   }
 

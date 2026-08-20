@@ -104,7 +104,7 @@ class CustomAlert {
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
   }) async {
-   final context = Get.context;
+    final context = Get.context;
 
     if (context == null) {
       return false;
@@ -286,7 +286,7 @@ class _DynamicIslandAlertState extends State<_DynamicIslandAlert>
                           vertical: 13,
                         ),
                         decoration: BoxDecoration(
-                      color: AppColors.white,
+                          color: AppColors.white,
                           borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(

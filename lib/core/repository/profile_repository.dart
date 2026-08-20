@@ -2,7 +2,6 @@ import 'dart:io';
 import '../compression/image_compressor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/model/profile_model.dart';
-import 'package:flutter/foundation.dart';
 import 'package:public_pulse/core/services/bunny_upload_service.dart';
 
 /// Singleton repository for all profile-related Supabase operations.
@@ -41,6 +40,7 @@ class ProfileRepository {
       displayName: profile.displayName,
       bio: profile.bio,
       avatarPath: profile.avatarPath,
+      avatarThumbnailPath: profile.avatarThumbnailPath,
       coverPath: profile.coverPath,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
@@ -52,7 +52,6 @@ class ProfileRepository {
     );
   }
 
-  /// Returns `true` when [username] is not already taken by another account.
   Future<bool> isUsernameAvailable(String username) async {
     final data = await _db
         .select('user_id')
@@ -67,10 +66,15 @@ class ProfileRepository {
     String? username,
     String? bio,
     File? avatarFile,
+    File? avatarThumbnailFile,
     File? coverFile,
   }) async {
     final avatarPath = avatarFile != null
         ? await _uploadAvatarToBunny(avatarFile)
+        : null;
+
+    final avatarThumbnailPath = avatarThumbnailFile != null
+        ? await _uploadAvatarThumbnailToBunny(avatarThumbnailFile)
         : null;
 
     final coverPath = coverFile != null
@@ -93,6 +97,8 @@ class ProfileRepository {
 
     updates['bio'] = (bio?.trim().isEmpty ?? true) ? null : bio!.trim();
     if (avatarPath != null) updates['avatar_path'] = avatarPath;
+    if (avatarThumbnailPath != null)
+      updates['avatar_thumbnail_path'] = avatarThumbnailPath;
     if (coverPath != null) updates['cover_path'] = coverPath;
 
     final data = await _db
@@ -106,16 +112,8 @@ class ProfileRepository {
   //function to upload avatar to bunny CDN
 
   Future<String> _uploadAvatarToBunny(File file) async {
-
-    final compressed = await ImageCompressor().compressImage(
-      file.absolute.path,
-    );
-
-    final uploadFile = compressed ?? file;
-
-    
     final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
-      uploadFile,
+      file,
       'avatars',
     );
 
@@ -123,14 +121,37 @@ class ProfileRepository {
       throw Exception('Bunny avatar upload failed');
     }
 
-    // Delete only the temporary compressed file.
-    if (compressed != null) {
-      try {
-        if (await compressed.exists()) {
-          await compressed.delete();
-        }
-      } catch (e) {
+    // This is the temporary compressed avatar created by
+    // EditProfileController, so clean it after upload.
+    try {
+      if (await file.exists()) {
+        await file.delete();
       }
+    } catch (_) {
+      // Best-effort cleanup; failure can be ignored.
+    }
+
+    return bunnyUrl;
+  }
+
+  //function to upload avatar thumbnail to bunny CDN
+
+  Future<String> _uploadAvatarThumbnailToBunny(File file) async {
+    final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
+      file,
+      'avatars',
+    );
+
+    if (bunnyUrl == null || bunnyUrl.isEmpty) {
+      throw Exception('Bunny avatar thumbnail upload failed');
+    }
+
+    try {
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (_) {
+      // Best-effort cleanup; failure can be ignored.
     }
 
     return bunnyUrl;
@@ -139,14 +160,12 @@ class ProfileRepository {
   //function to upload cover to bunny CDN
 
   Future<String> _uploadCoverToBunny(File file) async {
-
     final compressed = await ImageCompressor().compressImage(
       file.absolute.path,
     );
 
     final uploadFile = compressed ?? file;
 
-    
     final bunnyUrl = await BunnyUploadService.instance.uploadMedia(
       uploadFile,
       'covers',
@@ -161,7 +180,8 @@ class ProfileRepository {
         if (await compressed.exists()) {
           await compressed.delete();
         }
-      } catch (e) {
+      } catch (_) {
+        // Best-effort cleanup; failure can be ignored.
       }
     }
 
@@ -204,11 +224,9 @@ class ProfileRepository {
     final Set<String> followerIds = {};
 
     for (final row in data) {
-
       final ids = row['follower_profile_ids'];
 
       if (ids is List) {
-
         for (final id in ids) {
           if (id != null) {
             followerIds.add(id.toString());
@@ -242,7 +260,6 @@ class ProfileRepository {
   }
 
   Future<ProfileModel> getProfileByProfileId(String profileId) async {
-    
     final data = await _db.select().eq('id', profileId).single();
 
     final profile = ProfileModel.fromJson(data);
@@ -255,6 +272,7 @@ class ProfileRepository {
       displayName: profile.displayName,
       bio: profile.bio,
       avatarPath: profile.avatarPath,
+      avatarThumbnailPath: profile.avatarThumbnailPath,
       coverPath: profile.coverPath,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
@@ -283,13 +301,14 @@ class ProfileRepository {
   Future<List<Map<String, dynamic>>> getUserPostsByProfileId(
     String profileId,
   ) async {
-
     // ----------------------------------------------------------
     // 1. Get profile information
     // ----------------------------------------------------------
 
     final profileData = await _db
-        .select('id, user_id, username, display_name, avatar_path, is_private')
+        .select(
+          'id, user_id, username, display_name, avatar_path, avatar_thumbnail_path, is_private',
+        )
         .eq('id', profileId)
         .single();
 
@@ -358,6 +377,7 @@ class ProfileRepository {
         'username': profileData['username'] ?? '',
         'display_name': profileData['display_name'] ?? '',
         'avatar_path': profileData['avatar_path'],
+        'avatar_thumbnail_path': profileData['avatar_thumbnail_path'],
         'is_private': profileData['is_private'] ?? false,
       };
 
@@ -368,7 +388,6 @@ class ProfileRepository {
       data['my_like'] = [];
       data['my_save'] = [];
 
-      
       result.add(data);
     }
 
@@ -389,11 +408,9 @@ class ProfileRepository {
     final Set<String> followingIds = {};
 
     for (final row in data) {
-
       final ids = row['following_profile_ids'];
 
       if (ids is List) {
-
         for (final id in ids) {
           if (id != null) {
             followingIds.add(id.toString());
@@ -443,7 +460,6 @@ class ProfileRepository {
   // ─────────────────────────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> getUserPosts(String userId) async {
-
     // ----------------------------------------------------------
     // 1. Get target profile
     // ----------------------------------------------------------
@@ -455,6 +471,7 @@ class ProfileRepository {
         username,
         display_name,
         avatar_path,
+        avatar_thumbnail_path,
         is_private
       ''')
         .eq('user_id', userId)
@@ -502,9 +519,6 @@ class ProfileRepository {
         .eq('profile_id', profileId)
         .order('created_at', ascending: false);
 
-    for (final post in posts) {
-          }
-
     // ----------------------------------------------------------
     // 3. Convert to PostModel format
     // ----------------------------------------------------------
@@ -519,6 +533,7 @@ class ProfileRepository {
         'username': profileData['username'] ?? '',
         'display_name': profileData['display_name'] ?? '',
         'avatar_path': profileData['avatar_path'],
+        'avatar_thumbnail_path': profileData['avatar_thumbnail_path'],
         'is_private': profileData['is_private'] ?? false,
       };
 
@@ -536,7 +551,6 @@ class ProfileRepository {
       data['my_like'] = [];
       data['my_save'] = [];
 
-      
       result.add(data);
     }
 

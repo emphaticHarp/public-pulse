@@ -57,7 +57,6 @@ class LoginCodeController extends GetxController {
       // FIRST-TIME APP PERMISSIONS
       // ============================================================
 
-      
       await PermissionService.requestInitialPermissions();
 
       // ============================================================

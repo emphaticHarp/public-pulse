@@ -45,6 +45,10 @@ class CreatePostController extends GetxController {
   // Short location name shown in UI
   final RxString locationDisplayName = ''.obs;
 
+  // Exact selected location coordinates
+  final RxnDouble locationLatitude = RxnDouble();
+  final RxnDouble locationLongitude = RxnDouble();
+
   final LocationService locationService = LocationService();
 
   final TextEditingController locationSearchController =
@@ -75,7 +79,6 @@ class CreatePostController extends GetxController {
 
   @override
   void onClose() {
-
     _locationSearchDebounce?.cancel();
 
     locationSearchController.dispose();
@@ -101,20 +104,17 @@ class CreatePostController extends GetxController {
 
   // Remove image at index
   void removeImageAt(int index) {
-        if (index >= 0 && index < pendingMedia.length) {
-      final removed = pendingMedia[index].originalPath;
+    if (index >= 0 && index < pendingMedia.length) {
       pendingMedia.removeAt(index);
       if (currentIndex.value >= pendingMedia.length &&
           pendingMedia.isNotEmpty) {
         currentIndex.value = pendingMedia.length - 1;
       }
-          } else {
-          }
+    } else {}
   }
 
   // Upload post
   void uploadPost() {
-
     if (pendingMedia.isEmpty) {
       return;
     }
@@ -138,6 +138,9 @@ class CreatePostController extends GetxController {
     final locationSnapshot = location.value.trim().isEmpty
         ? null
         : location.value.trim();
+
+    final locationLatitudeSnapshot = locationLatitude.value;
+    final locationLongitudeSnapshot = locationLongitude.value;
 
     final visibilitySnapshot = visibility.value;
 
@@ -174,13 +177,13 @@ class CreatePostController extends GetxController {
           mediaSnapshot: mediaSnapshot,
           caption: captionSnapshot,
           location: locationSnapshot,
+          locationLatitude: locationLatitudeSnapshot,
+          locationLongitude: locationLongitudeSnapshot,
           visibility: visibilitySnapshot,
           tempPostId: tempPostId,
           homeController: homeController,
         );
-
-      } catch (e, stackTrace) {
-
+      } catch (_) {
         // Keep the temporary post.
         // Change it into FAILED state.
         homeController.markUploadingPostFailed(tempPostId);
@@ -221,11 +224,12 @@ class CreatePostController extends GetxController {
     required List<PendingMedia> mediaSnapshot,
     required String? caption,
     required String? location,
+    required double? locationLatitude,
+    required double? locationLongitude,
     required String visibility,
     required String tempPostId,
     required HomeController homeController,
   }) async {
-
     final List<Map<String, dynamic>> mediaItems = [];
 
     final List<Map<String, dynamic>> mediaFileRefs = [];
@@ -245,16 +249,13 @@ class CreatePostController extends GetxController {
         throw Exception('File does not exist: $originalPath');
       }
 
-      
       File uploadFile = originalFile;
 
       final compressedFile = await imageCompressor.compressImage(originalPath);
 
       if (compressedFile != null) {
         uploadFile = compressedFile;
-
-              } else {
-              }
+      } else {}
 
       // ============================================================
       // GET ACTUAL UPLOADED IMAGE DIMENSIONS
@@ -262,12 +263,10 @@ class CreatePostController extends GetxController {
 
       final dimensions = await _getImageDimensions(uploadFile);
 
-      
       final originalName = uploadFile.path.split(RegExp(r'[/\\]')).last;
 
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_$originalName';
 
-      
       final storagePath = await repository.uploadImage(
         imageFile: uploadFile,
         fileName: fileName,
@@ -277,8 +276,7 @@ class CreatePostController extends GetxController {
 
           final percent = ((sent / total) * 100).toInt();
 
-          if (percent % 10 == 0) {
-                      }
+          if (percent % 10 == 0) {}
         },
       );
 
@@ -295,23 +293,20 @@ class CreatePostController extends GetxController {
       final thumbnailFile = await imageCompressor.createThumbnail(uploadFile);
 
       if (thumbnailFile != null) {
-        
         thumbnailPath = await repository.uploadThumbnail(
           imageFile: thumbnailFile,
         );
 
-        
         // Thumbnail is temporary.
         try {
           if (thumbnailFile.existsSync()) {
             await thumbnailFile.delete();
           }
-        } catch (e) {
+        } catch (_) {
+          // Intentionally ignored.
         }
-      } else {
-              }
-      
-      
+      } else {}
+
       mediaItems.add({
         'storage_path': storagePath,
         'thumbnail_path': thumbnailPath,
@@ -344,15 +339,14 @@ class CreatePostController extends GetxController {
       profileId: profileId,
       caption: caption,
       location: location,
+      locationLatitude: locationLatitude,
+      locationLongitude: locationLongitude,
       visibility: visibility,
       mediaItems: mediaItems,
     );
 
-    final postId = postResult['post_id'] as String;
-
     final mediaIds = postResult['media_ids'] as List<String>;
 
-    
     // ============================================================
     // 4. METADATA
     // ============================================================
@@ -374,11 +368,10 @@ class CreatePostController extends GetxController {
 
       if (metadataRows.isNotEmpty) {
         await repository.insertMediaMetadata(metadataRows);
-
       }
     } catch (e) {
       // Metadata failure should NOT delete the post.
-          }
+    }
 
     // ============================================================
     // 5. REFRESH HOME
@@ -398,8 +391,6 @@ class CreatePostController extends GetxController {
     // ============================================================
 
     homeController.removeUploadingPost(tempPostId);
-
-    
   }
 
   // ============================================================
@@ -432,7 +423,6 @@ class CreatePostController extends GetxController {
 
   Future<void> _searchLocations(String query) async {
     try {
-
       final results = await locationService.searchLocations(query);
 
       // Prevent old API responses from replacing
@@ -440,14 +430,11 @@ class CreatePostController extends GetxController {
       final currentQuery = locationSearchController.text.trim();
 
       if (currentQuery != query) {
-        
         return;
       }
 
       locationSuggestions.assignAll(results);
-
-          } catch (e) {
-      
+    } catch (e) {
       locationSuggestions.clear();
     } finally {
       if (locationSearchController.text.trim() == query) {
@@ -468,12 +455,10 @@ class CreatePostController extends GetxController {
     isGettingCurrentLocation.value = true;
 
     try {
-      
       final selected = await locationService.getCurrentLocation();
 
       selectLocation(selected);
     } catch (e) {
-      
       final message = e.toString().replaceFirst('Exception: ', '');
 
       CustomAlert.show(
@@ -492,18 +477,19 @@ class CreatePostController extends GetxController {
   // ============================================================
 
   void selectLocation(LocationSuggestion selected) {
-    
-    
     // Full address → database
     location.value = selected.formattedAddress;
 
-    // Short name → UI
+    // Short name → Create Post UI
     locationDisplayName.value = selected.name;
+
+    // Exact coordinates → database
+    locationLatitude.value = selected.latitude;
+    locationLongitude.value = selected.longitude;
 
     _locationSearchDebounce?.cancel();
 
     locationSuggestions.clear();
-
     locationSearchController.clear();
 
     if (Get.isBottomSheetOpen == true) {
@@ -516,9 +502,11 @@ class CreatePostController extends GetxController {
   // ============================================================
 
   void clearLocation() {
-
     location.value = '';
     locationDisplayName.value = '';
+
+    locationLatitude.value = null;
+    locationLongitude.value = null;
   }
 
   // ============================================================
@@ -526,7 +514,6 @@ class CreatePostController extends GetxController {
   // ============================================================
 
   void resetLocationPicker() {
-    
     _locationSearchDebounce?.cancel();
 
     locationSearchController.clear();
@@ -547,7 +534,7 @@ class CreatePostController extends GetxController {
   }
 
   void showMediaPicker() {
-        if (pendingMedia.length >= 10) {
+    if (pendingMedia.length >= 10) {
       CustomAlert.show(
         title: 'Limit reached',
         message: 'You can add up to 10 media items',
@@ -572,7 +559,6 @@ class CreatePostController extends GetxController {
                 leading: const Icon(Icons.camera_alt_rounded),
                 title: const Text("Take Photo"),
                 onTap: () async {
-
                   Get.back();
 
                   // ==========================================================
@@ -614,8 +600,7 @@ class CreatePostController extends GetxController {
 
                   // Show the newly captured photo
                   currentIndex.value = pendingMedia.length - 1;
-
-                                  },
+                },
               ),
 
               // ──────────────────────────────────────────────────────────
@@ -625,7 +610,6 @@ class CreatePostController extends GetxController {
                 leading: const Icon(Icons.photo_library_rounded),
                 title: const Text("Choose Photos from Gallery"),
                 onTap: () async {
-                  
                   Get.back();
 
                   // ==========================================================
@@ -667,7 +651,6 @@ class CreatePostController extends GetxController {
                     return;
                   }
 
-                  
                   // ==========================================================
                   // KEEP MAXIMUM 10 PHOTOS
                   // ==========================================================
@@ -683,8 +666,6 @@ class CreatePostController extends GetxController {
                   // Start carousel from first selected image.
                   currentIndex.value = 0;
 
-                  
-                  
                   // User selected more than available slots.
                   if (images.length > remainingSlots) {
                     CustomAlert.show(

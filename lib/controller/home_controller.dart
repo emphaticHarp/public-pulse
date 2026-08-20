@@ -106,24 +106,21 @@ class HomeController extends GetxController {
     scrollController.addListener(_onScroll);
 
     // Listen for login/logout.
-    _authSubscription =
-        Supabase.instance.client.auth.onAuthStateChange.listen(
-      (data) {
-        final session = data.session;
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
+      data,
+    ) {
+      final session = data.session;
 
-        if (session != null) {
-          
-          _initializeAfterLogin();
-        }
+      if (session != null) {
+        _initializeAfterLogin();
+      }
 
-        if (data.event == AuthChangeEvent.signedOut) {
+      if (data.event == AuthChangeEvent.signedOut) {
+        _initializedUserId = null;
 
-          _initializedUserId = null;
-
-          resetForLogout();
-        }
-      },
-    );
+        resetForLogout();
+      }
+    });
 
     // User may already be logged in.
     if (Supabase.instance.client.auth.currentUser != null) {
@@ -156,14 +153,14 @@ class HomeController extends GetxController {
       await initializeForUser();
 
       _initializedUserId = user.id;
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       _initializingAfterLogin = false;
     }
   }
 
   void resetForLogout() {
-
     _initializedUserId = null;
 
     currentIndex.value = 0;
@@ -185,7 +182,6 @@ class HomeController extends GetxController {
 
     isLoading.value = false;
     isLoadingMore.value = false;
-
   }
 
   // ============================================================
@@ -199,15 +195,11 @@ class HomeController extends GetxController {
       final profileId = await _repository.getCurrentProfileId();
 
       if (profileId != null && profileId.isNotEmpty) {
-        
         return profileId;
       }
 
-      
       if (attempt < maxAttempts) {
-        await Future.delayed(
-          const Duration(milliseconds: 400),
-        );
+        await Future.delayed(const Duration(milliseconds: 400));
       }
     }
 
@@ -215,7 +207,6 @@ class HomeController extends GetxController {
   }
 
   Future<void> initializeForUser() async {
-
     isLoading.value = true;
 
     try {
@@ -223,11 +214,9 @@ class HomeController extends GetxController {
       // CURRENT USER
       // ============================================================
 
-      final currentProfileId =
-          await _getCurrentProfileIdWithRetry();
+      final currentProfileId = await _getCurrentProfileIdWithRetry();
 
       if (currentProfileId == null) {
-        
         await loadPosts();
 
         return;
@@ -246,7 +235,6 @@ class HomeController extends GetxController {
       // ============================================================
 
       if (hasCachedFeed && cachedOwner != currentProfileId) {
-
         await CacheManager.clearPostCache();
 
         posts.clear();
@@ -274,19 +262,16 @@ class HomeController extends GetxController {
       // ============================================================
 
       if (posts.isEmpty) {
-
         await loadPosts();
-      } else {
-      }
+      } else {}
 
       // ============================================================
       // OTHER USER DATA
       // ============================================================
 
       await Future.wait([loadMyPosts(), loadFollowingIds()]);
-
-    } catch (e, stackTrace) {
-
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       isLoading.value = false;
     }
@@ -310,10 +295,7 @@ class HomeController extends GetxController {
   // DEBUG HELPERS
   // ============================================================
 
-  void _logPostSource(String source, List<PostModel> postList) {
-    final ids = postList.map((post) => post.id).toList();
-
-      }
+  void _logPostSource(String source, List<PostModel> postList) {}
 
   // ============================================================
   // CACHE
@@ -340,8 +322,7 @@ class HomeController extends GetxController {
 
     // Cached feed is immediately available.
     isLoading.value = false;
-
-      }
+  }
 
   // ============================================================
   // INITIAL POSTS
@@ -349,7 +330,6 @@ class HomeController extends GetxController {
 
   Future<void> loadPosts() async {
     try {
-
       final page = await _repository.getInitialPosts(limit: 10);
 
       nextCursor = page.nextCursor;
@@ -374,7 +354,8 @@ class HomeController extends GetxController {
         nextCursor: nextCursor,
         hasMore: hasMore.value,
       );
-    } catch (e, stackTrace) {
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       isLoading.value = false;
     }
@@ -413,8 +394,7 @@ class HomeController extends GetxController {
       );
 
       return true;
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return false;
     } finally {
       isLoading.value = false;
@@ -430,8 +410,8 @@ class HomeController extends GetxController {
       final fetchedPosts = await _repository.getMyPosts();
 
       myPosts.assignAll(fetchedPosts);
-
-          } catch (e, stackTrace) {
+    } catch (_) {
+      // Intentionally ignored.
     }
   }
 
@@ -449,7 +429,6 @@ class HomeController extends GetxController {
 
       if (cached.isNotEmpty) {
         followingIds.assignAll(cached);
-
       }
 
       // ----------------------------------------------------------
@@ -461,8 +440,8 @@ class HomeController extends GetxController {
       followingIds.assignAll(server);
 
       await CacheManager.cacheFollowingIds(server);
-
-          } catch (e, stackTrace) {
+    } catch (_) {
+      // Intentionally ignored.
     }
   }
 
@@ -655,7 +634,8 @@ class HomeController extends GetxController {
         nextCursor: nextCursor,
         hasMore: hasMore.value,
       );
-    } catch (e, stackTrace) {
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       isLoadingMore.value = false;
     }
@@ -690,7 +670,8 @@ class HomeController extends GetxController {
         nextCursor: nextCursor,
         hasMore: hasMore.value,
       );
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     }
   }
 
@@ -844,7 +825,6 @@ class HomeController extends GetxController {
     posts.removeWhere((post) => post.id == tempPostId);
 
     posts.refresh();
-
   }
 
   void markUploadingPostFailed(String tempPostId) {
@@ -856,7 +836,6 @@ class HomeController extends GetxController {
     posts[index].uploadFailed = true;
 
     posts.refresh();
-
   }
   // ============================================================
   // CLOSE
@@ -864,7 +843,6 @@ class HomeController extends GetxController {
 
   @override
   void onClose() {
-
     _authSubscription?.cancel();
 
     scrollController.removeListener(_onScroll);

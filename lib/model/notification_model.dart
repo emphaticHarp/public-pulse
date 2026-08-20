@@ -65,11 +65,9 @@ class NotificationModel {
 
       if (firstMedia is Map) {
         // Prefer Bunny thumbnail because notification image is very small.
-        final thumbnailPath =
-            firstMedia['thumbnail_path']?.toString().trim();
+        final thumbnailPath = firstMedia['thumbnail_path']?.toString().trim();
 
-        final storagePath =
-            firstMedia['storage_path']?.toString().trim();
+        final storagePath = firstMedia['storage_path']?.toString().trim();
 
         // ============================================================
         // 1. BUNNY THUMBNAIL
@@ -80,11 +78,9 @@ class NotificationModel {
             thumbnailPath.startsWith('http')) {
           postImageUrl = thumbnailPath;
         }
-
         // ============================================================
         // 2. FALLBACK TO BUNNY FULL POST IMAGE
         // ============================================================
-
         else if (storagePath != null &&
             storagePath.isNotEmpty &&
             storagePath.startsWith('http')) {
@@ -97,8 +93,7 @@ class NotificationModel {
     // AVATAR
     // ==========================================================
 
-    final avatarPath =
-        actor['avatar_path']?.toString().trim();
+    final avatarPath = actor['avatar_path']?.toString().trim();
 
     String avatarUrl = '';
 

@@ -10,13 +10,18 @@ import 'package:public_pulse/view/profile/user_profile_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:public_pulse/core/cache/image_cache_key.dart';
 import 'package:public_pulse/view/profile/profile_page.dart';
+import 'package:public_pulse/widget/post/post_location_map_dialog.dart';
 
 class PostHeader extends StatelessWidget {
   final String profileImage;
+  final String profileThumbnailImage;
   final String username;
   final String authorId;
   final String authorUserId;
   final String? location;
+  final double? locationLatitude;
+  final double? locationLongitude;
+
   final String postId;
   final bool isOwner;
   final VoidCallback? onDelete;
@@ -24,15 +29,18 @@ class PostHeader extends StatelessWidget {
   const PostHeader({
     super.key,
     required this.profileImage,
+    required this.profileThumbnailImage,
     required this.username,
     required this.authorId,
     required this.authorUserId,
     this.location,
+    this.locationLatitude,
+    this.locationLongitude,
+
     required this.postId,
     required this.isOwner,
     this.onDelete,
   });
-
   String _resolveAvatarUrl(String value) {
     final avatar = value.trim();
 
@@ -58,6 +66,7 @@ class PostHeader extends StatelessWidget {
     final isMyPost = currentUserId != null && authorUserId == currentUserId;
 
     final avatarUrl = _resolveAvatarUrl(profileImage);
+    final thumbnailAvatarUrl = _resolveAvatarUrl(profileThumbnailImage);
 
     final HomeController homeController = Get.find<HomeController>();
     return Padding(
@@ -83,7 +92,7 @@ class PostHeader extends StatelessWidget {
                           }
                           // Other user's post → open their public profile.
                           if (authorUserId.isEmpty) {
-                                                        return;
+                            return;
                           }
 
                           Get.to(() => UserProfilePage(userId: authorUserId));
@@ -138,7 +147,7 @@ class PostHeader extends StatelessWidget {
 
                                       // Other user's post → open their profile.
                                       if (authorUserId.isEmpty) {
-                                                                                return;
+                                        return;
                                       }
 
                                       Get.to(
@@ -162,28 +171,47 @@ class PostHeader extends StatelessWidget {
                                       location!.trim().isNotEmpty) ...[
                                     const SizedBox(height: 2),
 
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.location_on,
-                                          size: 12,
-                                          color: AppColors.gray500,
-                                        ),
-                                        const SizedBox(width: 2),
+                                    GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap:
+                                          locationLatitude != null &&
+                                              locationLongitude != null
+                                          ? () {
+                                              final mapAvatarUrl =
+                                                  thumbnailAvatarUrl.isNotEmpty
+                                                  ? thumbnailAvatarUrl
+                                                  : avatarUrl;
+                                              showPostLocationMap(
+                                                locationName: location!,
+                                                latitude: locationLatitude!,
+                                                longitude: locationLongitude!,
+                                                profileImage: mapAvatarUrl,
+                                              );
+                                            }
+                                          : null,
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.location_on_rounded,
+                                            size: 12,
+                                            color: AppColors.gray500,
+                                          ),
+                                          const SizedBox(width: 2),
 
-                                        Expanded(
-                                          child: Text(
-                                            location!,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: AppColors.gray500,
-                                              height: 1.1,
+                                          Expanded(
+                                            child: Text(
+                                              location!,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: AppColors.gray500,
+                                                height: 1.1,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ],
@@ -338,7 +366,10 @@ class PostHeader extends StatelessWidget {
                           value: 'report',
                           child: Row(
                             children: [
-                              Icon(Icons.flag_outlined, color: AppColors.semanticOrange),
+                              Icon(
+                                Icons.flag_outlined,
+                                color: AppColors.semanticOrange,
+                              ),
                               SizedBox(width: 10),
                               Text('Report'),
                             ],
@@ -349,7 +380,10 @@ class PostHeader extends StatelessWidget {
                           value: 'block',
                           child: Row(
                             children: [
-                              Icon(Icons.block_outlined, color: AppColors.loginAccentRed),
+                              Icon(
+                                Icons.block_outlined,
+                                color: AppColors.loginAccentRed,
+                              ),
                               SizedBox(width: 10),
                               Text('Block'),
                             ],

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:public_pulse/core/services/permission_service.dart';
 
@@ -31,7 +30,6 @@ class InitialPermissionService {
     }
 
     await prefs.setBool(_requiredKey(userId), true);
-
   }
 
   // ============================================================
@@ -47,7 +45,6 @@ class InitialPermissionService {
 
     // Existing user / already completed.
     if (!required || completed) {
-
       return;
     }
 
@@ -60,6 +57,5 @@ class InitialPermissionService {
     await prefs.setBool(_completedKey(userId), true);
 
     await prefs.setBool(_requiredKey(userId), false);
-
   }
 }

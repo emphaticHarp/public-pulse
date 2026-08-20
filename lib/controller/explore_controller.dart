@@ -55,7 +55,6 @@ class ExploreController extends GetxController {
       final currentAuthUserId = Supabase.instance.client.auth.currentUser?.id;
 
       if (currentAuthUserId == null) {
-
         return false;
       }
 
@@ -65,7 +64,6 @@ class ExploreController extends GetxController {
       // ============================================================
 
       if (selectedId == currentAuthUserId) {
-
         return true;
       }
 
@@ -80,15 +78,11 @@ class ExploreController extends GetxController {
           .maybeSingle();
 
       if (currentProfile == null) {
-
         return false;
       }
 
       final currentProfileId = currentProfile['id']?.toString();
 
-      
-      
-      
       // ============================================================
       // CASE 2:
       // selectedId is profiles.id
@@ -98,7 +92,6 @@ class ExploreController extends GetxController {
 
       return isMine;
     } catch (e) {
-      
       return false;
     }
   }
@@ -120,9 +113,7 @@ class ExploreController extends GetxController {
     // ============================================================
 
     if (isMine) {
-
       if (isMine) {
-
         Get.to(() => const ProfilePage(openedFromExplore: true));
 
         return;
@@ -143,7 +134,6 @@ class ExploreController extends GetxController {
   // ============================================================
 
   Future<void> openRecentProfile(RecentSearchModel profile) async {
-
     final isMine = await _isCurrentUserProfile(profile.userId);
 
     // ============================================================
@@ -151,9 +141,7 @@ class ExploreController extends GetxController {
     // ============================================================
 
     if (isMine) {
-
       if (isMine) {
-
         Get.to(() => const ProfilePage(openedFromExplore: true));
 
         return;

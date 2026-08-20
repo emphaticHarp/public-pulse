@@ -83,15 +83,9 @@ class AppBottomNavBar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                item.icon,
-                size: isCompact ? 24 : 26,
-                color: color,
-              ),
+              Icon(item.icon, size: isCompact ? 24 : 26, color: color),
 
-              SizedBox(
-                height: isCompact ? 2 : 4,
-              ),
+              SizedBox(height: isCompact ? 2 : 4),
 
               // Prevent "Notifications" from overflowing
               // on small phones.
@@ -102,9 +96,7 @@ class AppBottomNavBar extends StatelessWidget {
                   maxLines: 1,
                   style: TextStyle(
                     fontSize: isCompact ? 9 : 10,
-                    fontWeight: isActive
-                        ? FontWeight.bold
-                        : FontWeight.w500,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                     color: color,
                   ),
                 ),
@@ -152,9 +144,7 @@ class AppBottomNavBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(radius),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.loginAccentRed.withValues(
-                    alpha: 0.30,
-                  ),
+                  color: AppColors.loginAccentRed.withValues(alpha: 0.30),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

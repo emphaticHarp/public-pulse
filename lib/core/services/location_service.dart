@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -31,7 +30,6 @@ class LocationService {
     }
 
     try {
-
       final uri = Uri.https('api.geoapify.com', '/v1/geocode/autocomplete', {
         'text': searchText,
         'format': 'json',
@@ -42,7 +40,6 @@ class LocationService {
 
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
-      
       if (response.statusCode != 200) {
         throw Exception(
           'Location search failed '
@@ -72,10 +69,8 @@ class LocationService {
           .where((item) => item.formattedAddress.isNotEmpty)
           .toList();
 
-      
       return results;
     } catch (e) {
-      
       rethrow;
     }
   }
@@ -86,7 +81,6 @@ class LocationService {
 
   Future<LocationSuggestion> getCurrentLocation() async {
     try {
-      
       // ========================================================
       // 1. CHECK WHETHER GPS IS ENABLED
       // ========================================================
@@ -132,16 +126,14 @@ class LocationService {
         ),
       );
 
-      
-      
       // ========================================================
       // 4. CONVERT GPS TO READABLE ADDRESS
       // ========================================================
 
-   final placemarks = await placemarkFromCoordinates(
-  position.latitude,
-  position.longitude,
-);
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
 
       // If Android cannot resolve the address,
       // still return the coordinates.
@@ -204,7 +196,6 @@ class LocationService {
         name = place.subLocality!.trim();
       }
 
-      
       return LocationSuggestion(
         name: name,
         formattedAddress: formattedAddress.isEmpty
@@ -214,7 +205,6 @@ class LocationService {
         longitude: position.longitude,
       );
     } catch (e) {
-      
       rethrow;
     }
   }

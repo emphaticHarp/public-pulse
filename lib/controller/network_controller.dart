@@ -23,8 +23,7 @@ class NetworkController extends GetxController {
   }
 
   void _listenToConnectionChanges() {
-    _connectionSubscription =
-        _networkService.connectionStream.listen((status) {
+    _connectionSubscription = _networkService.connectionStream.listen((status) {
       isConnected.value = status;
     });
   }

@@ -23,7 +23,6 @@ class LoginController extends GetxController {
 
     _authService.listenToAuthChanges(
       onSignedIn: (user) async {
-        
         if (_isCheckingUser.value) return;
 
         _isCheckingUser.value = true;
@@ -94,11 +93,9 @@ class LoginController extends GetxController {
         }
       },
     );
-
   }
 
   Future<void> signInWithGoogle() async {
-
     try {
       isGoogleLoading.value = true;
 
@@ -128,18 +125,10 @@ class LoginController extends GetxController {
       // Do NOT navigate here.
       // onSignedIn() will handle navigation.
     } catch (e) {
-      CustomAlert.error(
-        title: 'Login Failed',
-        message: e.toString(),
-      );
+      CustomAlert.error(title: 'Login Failed', message: e.toString());
     } finally {
       isGoogleLoading.value = false;
     }
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
   }
 
   Future<void> signInWithApple() async {
@@ -151,11 +140,8 @@ class LoginController extends GetxController {
         icon: Icons.info_outline_rounded,
         color: AppColors.loginAccentRed,
       );
-    } catch (e, stackTrace) {
-      CustomAlert.error(
-        title: 'Login Failed',
-        message: 'Unable to sign in.',
-      );
+    } catch (_) {
+      CustomAlert.error(title: 'Login Failed', message: 'Unable to sign in.');
     } finally {
       isLoading.value = false;
     }

@@ -72,7 +72,10 @@ class CommentMenuController extends GetxController
       vsync: this,
       duration: const Duration(milliseconds: 170),
     );
-    final curved = CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
+    final curved = CurvedAnimation(
+      parent: controller,
+      curve: Curves.easeOutCubic,
+    );
     curved.addListener(() {
       liftProgress.value = curved.value;
     });
@@ -107,8 +110,10 @@ class CommentMenuController extends GetxController
       vsync: this,
       duration: const Duration(milliseconds: 280),
     );
-    final curved =
-        CurvedAnimation(parent: controller, curve: Curves.easeOutCubic);
+    final curved = CurvedAnimation(
+      parent: controller,
+      curve: Curves.easeOutCubic,
+    );
     curved.addListener(() {
       dragOffset.value = Offset.lerp(startOffset, Offset.zero, curved.value)!;
       liftProgress.value = lerpDouble(startLift, 0, curved.value)!;
@@ -296,21 +301,13 @@ class CommentLongPressMenu extends StatelessWidget {
           onDelete: onDelete,
         );
       },
-      transitionBuilder: (
-        context,
-        animation,
-        secondaryAnimation,
-        page,
-      ) {
+      transitionBuilder: (context, animation, secondaryAnimation, page) {
         final curved = CurvedAnimation(
           parent: animation,
           curve: Curves.easeOutCubic,
           reverseCurve: Curves.easeInCubic,
         );
-        return FadeTransition(
-          opacity: curved,
-          child: page,
-        );
+        return FadeTransition(opacity: curved, child: page);
       },
     ).then((_) {
       // Overlay is gone (saved, deleted, or dismissed) — tear down
@@ -433,8 +430,10 @@ class CommentContextMenuOverlay extends StatelessWidget {
 
     final menuTop = showMenuBelow
         ? commentRect.bottom + gap
-        : (commentRect.top - menuHeight - gap)
-            .clamp(topPadding + 8, screenSize.height);
+        : (commentRect.top - menuHeight - gap).clamp(
+            topPadding + 8,
+            screenSize.height,
+          );
 
     double menuLeft = commentRect.left + 16;
     if (menuLeft + menuWidth > screenSize.width - 12) {
@@ -445,8 +444,10 @@ class CommentContextMenuOverlay extends StatelessWidget {
     // Keep the editor's estimated bottom edge above the keyboard.
     double editTop = commentRect.top;
     if (editTop + _estimatedEditHeight > availableHeight) {
-      editTop = (availableHeight - _estimatedEditHeight)
-          .clamp(topPadding + 8, screenSize.height);
+      editTop = (availableHeight - _estimatedEditHeight).clamp(
+        topPadding + 8,
+        screenSize.height,
+      );
     }
 
     return SafeArea(
@@ -456,9 +457,7 @@ class CommentContextMenuOverlay extends StatelessWidget {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: Get.back,
-              child: Container(
-                color: AppColors.overlayBlack18,
-              ),
+              child: Container(color: AppColors.overlayBlack18),
             ),
           ),
           // Lifted, non-dimmed copy of the comment in its original spot.
@@ -467,8 +466,9 @@ class CommentContextMenuOverlay extends StatelessWidget {
             final rawOffset = controller.dragOffset.value;
             // Only follow the finger while the quick menu is showing;
             // once editing starts the finger has already lifted.
-            final followOffset =
-                mode == OverlayMode.menu ? rawOffset : Offset.zero;
+            final followOffset = mode == OverlayMode.menu
+                ? rawOffset
+                : Offset.zero;
             // A hair of tilt proportional to horizontal drag, like a
             // card being held between two fingers.
             final tilt = (followOffset.dx / 400).clamp(-0.035, 0.035);
@@ -500,8 +500,10 @@ class CommentContextMenuOverlay extends StatelessWidget {
                         return FadeTransition(
                           opacity: animation,
                           child: ScaleTransition(
-                            scale:
-                                Tween(begin: .98, end: 1.0).animate(animation),
+                            scale: Tween(
+                              begin: .98,
+                              end: 1.0,
+                            ).animate(animation),
                             child: child,
                           ),
                         );
@@ -627,7 +629,9 @@ class _LiftedCommentCard extends StatelessWidget {
                 boxShadow: [
                   // Long, soft "ambient" shadow — grows with lift.
                   BoxShadow(
-                    color: AppColors.overlayBlack50.withValues(alpha: mainOpacity),
+                    color: AppColors.overlayBlack50.withValues(
+                      alpha: mainOpacity,
+                    ),
                     blurRadius: blur,
                     spreadRadius: spread,
                     offset: Offset(0, dy),
@@ -702,7 +706,8 @@ class _CommentEditCard extends StatelessWidget {
           if (event is! KeyDownEvent) return;
           final isEnter = event.logicalKey == LogicalKeyboardKey.enter;
           final isEscape = event.logicalKey == LogicalKeyboardKey.escape;
-          final metaOrCtrl = HardwareKeyboard.instance.isMetaPressed ||
+          final metaOrCtrl =
+              HardwareKeyboard.instance.isMetaPressed ||
               HardwareKeyboard.instance.isControlPressed;
           if (isEnter &&
               metaOrCtrl &&
@@ -722,10 +727,7 @@ class _CommentEditCard extends StatelessWidget {
               if (authorName != null || avatar != null) ...[
                 Row(
                   children: [
-                    if (avatar != null) ...[
-                      avatar!,
-                      const SizedBox(width: 8),
-                    ],
+                    if (avatar != null) ...[avatar!, const SizedBox(width: 8)],
                     if (authorName != null)
                       Text(
                         authorName!,
@@ -779,7 +781,9 @@ class _CommentEditCard extends StatelessWidget {
                     TextButton(
                       onPressed: isSaving.value ? null : onCancel,
                       style: TextButton.styleFrom(
-                        foregroundColor: AppColors.gray900.withValues(alpha: .6),
+                        foregroundColor: AppColors.gray900.withValues(
+                          alpha: .6,
+                        ),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
@@ -821,8 +825,9 @@ class _CommentEditCard extends StatelessWidget {
                               height: 13,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation(AppColors.white),
+                                valueColor: AlwaysStoppedAnimation(
+                                  AppColors.white,
+                                ),
                               ),
                             )
                           : const Text(
@@ -864,18 +869,12 @@ class _CommentQuickMenu extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,
-      tween: Tween<double>(
-        begin: 0.0,
-        end: 1.0,
-      ),
+      tween: Tween<double>(begin: 0.0, end: 1.0),
       builder: (context, value, child) {
         return Opacity(
           opacity: value.clamp(0.0, 1.0),
           child: Transform.translate(
-            offset: Offset(
-              0,
-              8 * (1 - value),
-            ),
+            offset: Offset(0, 8 * (1 - value)),
             child: Transform.scale(
               scale: 0.96 + (0.04 * value),
               alignment: Alignment.topLeft,

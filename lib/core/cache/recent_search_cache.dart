@@ -47,9 +47,6 @@ class RecentSearchCache {
   }
 
   static Future<void> clearAll() async {
-    await _box.put(
-      CacheKeys.recentSearches,
-      <Map<String, dynamic>>[],
-    );
+    await _box.put(CacheKeys.recentSearches, <Map<String, dynamic>>[]);
   }
 }

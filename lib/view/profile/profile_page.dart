@@ -355,7 +355,6 @@ class _TabContent extends StatelessWidget {
             gridImageUrl,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-
               return Container(
                 color: AppColors.greyShade200,
                 child: const Center(child: Icon(Icons.broken_image_outlined)),

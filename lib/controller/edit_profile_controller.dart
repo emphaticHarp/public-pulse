@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:public_pulse/core/compression/image_compressor.dart';
 import '../core/theme/app_colors.dart';
 import '../model/profile_model.dart';
 import '../core/repository/profile_repository.dart';
@@ -15,6 +16,7 @@ class EditProfileController extends GetxController {
 
   final ProfileRepository _repo = ProfileRepository.instance;
   final ImagePicker _picker = ImagePicker();
+  final ImageCompressor imageCompressor = ImageCompressor();
 
   late final ProfileModel original = ProfileController.to.profile.value!;
 
@@ -33,8 +35,7 @@ class EditProfileController extends GetxController {
   final isDisplayNameLocked = true.obs;
   final isDisplayNameLockLoading = true.obs;
 
-  String get _displayNameLockKey =>
-      'display_name_changed_${original.id}';
+  String get _displayNameLockKey => 'display_name_changed_${original.id}';
 
   final pickedAvatar = Rxn<File>();
   final pickedCover = Rxn<File>();
@@ -65,8 +66,7 @@ class EditProfileController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      isDisplayNameLocked.value =
-          prefs.getBool(_displayNameLockKey) ?? false;
+      isDisplayNameLocked.value = prefs.getBool(_displayNameLockKey) ?? false;
     } catch (_) {
       isDisplayNameLocked.value = true;
     } finally {
@@ -122,34 +122,44 @@ class EditProfileController extends GetxController {
     final newDisplayName = displayNameCtrl.text.trim();
     final oldDisplayName = (original.displayName ?? '').trim();
 
-    final displayNameChanged =
-        newDisplayName != oldDisplayName;
+    final displayNameChanged = newDisplayName != oldDisplayName;
 
     // User has already used the one-time change.
     if (displayNameChanged && isDisplayNameLocked.value) {
-      errorMessage(
-        'Your display name has already been changed once.',
-      );
+      errorMessage('Your display name has already been changed once.');
       return;
     }
 
     isSaving(true);
 
     try {
-      final username =
-          usernameCtrl.text.trim().toLowerCase();
+      final username = usernameCtrl.text.trim().toLowerCase();
+
+      File? compressedAvatar;
+      File? avatarThumbnail;
+
+      if (pickedAvatar.value != null) {
+        final originalPath = pickedAvatar.value!.path;
+        compressedAvatar = await imageCompressor.compressAvatar(originalPath);
+        avatarThumbnail = await imageCompressor.createAvatarThumbnail(
+          originalPath,
+        );
+        if (compressedAvatar == null || avatarThumbnail == null) {
+          errorMessage('Failed to process profile image.');
+          return;
+        }
+      }
 
       final updated = await _repo.updateProfile(
         // Update display name only if it actually changed.
-        displayName:
-            displayNameChanged ? newDisplayName : null,
+        displayName: displayNameChanged ? newDisplayName : null,
 
-        username:
-            username == original.username ? null : username,
+        username: username == original.username ? null : username,
 
         bio: bioCtrl.text.trim(),
 
-        avatarFile: pickedAvatar.value,
+        avatarFile: compressedAvatar,
+        avatarThumbnailFile: avatarThumbnail,
         coverFile: pickedCover.value,
       );
 
@@ -160,10 +170,7 @@ class EditProfileController extends GetxController {
       if (displayNameChanged) {
         final prefs = await SharedPreferences.getInstance();
 
-        await prefs.setBool(
-          _displayNameLockKey,
-          true,
-        );
+        await prefs.setBool(_displayNameLockKey, true);
 
         isDisplayNameLocked.value = true;
       }

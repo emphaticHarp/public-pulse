@@ -99,7 +99,6 @@ class FollowersFollowingController extends GetxController
   // ============================================================
 
   void switchTab(int index) {
-
     selectedTab.value = index;
 
     if (index == 0 && !_followersLoaded) {
@@ -135,10 +134,10 @@ class FollowersFollowingController extends GetxController
             followers.assignAll(cachedFollowers);
 
             _followersLoaded = true;
-
           }
         }
-      } catch (e, stackTrace) {
+      } catch (_) {
+        // Intentionally ignored.
       }
     }
 
@@ -156,9 +155,7 @@ class FollowersFollowingController extends GetxController
       _followersLoaded = true;
 
       await _cache.updateFollowers(profileId: userId, followers: result);
-
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       // Do NOT clear existing cached users.
     } finally {
       isLoadingFollowers(false);
@@ -189,10 +186,10 @@ class FollowersFollowingController extends GetxController
             following.assignAll(cachedFollowing);
 
             _followingLoaded = true;
-
           }
         }
-      } catch (e, stackTrace) {
+      } catch (_) {
+        // Intentionally ignored.
       }
     }
 
@@ -210,9 +207,7 @@ class FollowersFollowingController extends GetxController
       _followingLoaded = true;
 
       await _cache.updateFollowing(profileId: userId, following: result);
-
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       // Keep cached/current users visible.
     } finally {
       isLoadingFollowing(false);
@@ -224,7 +219,6 @@ class FollowersFollowingController extends GetxController
   // ============================================================
 
   Future<void> refreshList() async {
-
     // IMPORTANT:
     // Do not clear followers/following first.
 

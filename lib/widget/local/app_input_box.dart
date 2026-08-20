@@ -42,7 +42,10 @@ class AppInputBox extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.loginAccentRed, width: 2),
+          borderSide: const BorderSide(
+            color: AppColors.loginAccentRed,
+            width: 2,
+          ),
         ),
       ),
     );

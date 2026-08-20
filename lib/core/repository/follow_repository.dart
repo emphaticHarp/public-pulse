@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/core/services/current_user_service.dart';
 
@@ -59,8 +58,7 @@ class FollowRepository {
       );
 
       return true;
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return false;
     }
   }
@@ -87,8 +85,7 @@ class FollowRepository {
       );
 
       return true;
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return false;
     }
   }

@@ -17,12 +17,7 @@ class MainPage extends StatelessWidget {
 
   /// Home is created immediately.
   /// Other pages are created only when opened for the first time.
-  final List<Widget?> pages = [
-    HomePage(),
-    null,
-    null,
-    null,
-  ];
+  final List<Widget?> pages = [HomePage(), null, null, null];
 
   Widget _getPage(int index) {
     if (pages[index] != null) {
@@ -48,7 +43,6 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Obx(() {
       final index = controller.currentIndex.value;
 
@@ -64,7 +58,6 @@ class MainPage extends StatelessWidget {
           }
 
           if (controller.currentIndex.value != 0) {
-            
             controller.currentIndex.value = 0;
           }
         },
@@ -73,9 +66,7 @@ class MainPage extends StatelessWidget {
           body: IndexedStack(
             index: index,
             children: pages
-                .map(
-                  (page) => page ?? const SizedBox.shrink(),
-                )
+                .map((page) => page ?? const SizedBox.shrink())
                 .toList(),
           ),
 
@@ -85,8 +76,7 @@ class MainPage extends StatelessWidget {
               if (newIndex == index) return;
 
               controller.currentIndex.value = newIndex;
-
-                          },
+            },
           ),
         ),
       );
