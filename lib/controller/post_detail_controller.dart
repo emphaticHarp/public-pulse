@@ -141,7 +141,8 @@ class PostDetailController extends GetxController {
         isLiked.value = oldLiked;
         likeCount.value = oldCount;
       }
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       isLikeProcessing.value = false;
     }
@@ -195,8 +196,6 @@ class PostDetailController extends GetxController {
       exitBottomSheetDuration: const Duration(milliseconds: 220),
     );
 
-    Future.microtask(
-      () => commentController.loadComments(post.id),
-    );
+    Future.microtask(() => commentController.loadComments(post.id));
   }
 }

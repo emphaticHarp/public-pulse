@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/model/notification_model.dart';
 
@@ -67,9 +66,7 @@ class NotificationRepository {
           .eq('recipient_profile_id', profileId)
           .order('created_at', ascending: false);
 
-      
-      for (final row in response) {
-              }
+      for (final _ in response) {}
 
       // ----------------------------------------------------------
       // TRANSFORM DATA FOR NotificationModel
@@ -107,14 +104,13 @@ class NotificationRepository {
           }
 
           notifications.add(NotificationModel.fromJson(json));
-        } catch (e, stackTrace) {
-          
+        } catch (_) {
+          // Intentionally ignored.
         }
       }
 
       return notifications;
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return [];
     }
   }
@@ -228,6 +224,5 @@ class NotificationRepository {
             .eq('id', chunkId);
       }
     }
-
   }
 }

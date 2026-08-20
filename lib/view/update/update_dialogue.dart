@@ -11,9 +11,7 @@ Future<void> showUpdateDialog(AppVersionModel update) async {
     PopScope(
       canPop: !update.forceUpdate,
       child: Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(

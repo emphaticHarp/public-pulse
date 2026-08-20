@@ -15,7 +15,10 @@ class UserListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatarUrl = user.avatarPath != null
-        ? ProfileRepository.instance.resolveUrl(user.avatarPath!, bucket: 'avatars')
+        ? ProfileRepository.instance.resolveUrl(
+            user.avatarPath!,
+            bucket: 'avatars',
+          )
         : null;
 
     return InkWell(

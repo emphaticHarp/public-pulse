@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CurrentUserService {
@@ -24,7 +23,6 @@ class CurrentUserService {
 
     _profileId = profileId;
     _cachedAuthUserId = currentAuthUserId;
-
   }
 
   // ============================================================
@@ -35,7 +33,6 @@ class CurrentUserService {
     final user = _supabase.auth.currentUser;
 
     if (user == null) {
-
       clear();
 
       return null;
@@ -46,7 +43,6 @@ class CurrentUserService {
     // ============================================================
 
     if (_profileId != null && _cachedAuthUserId == user.id) {
-
       return _profileId;
     }
 
@@ -55,7 +51,6 @@ class CurrentUserService {
     // ============================================================
 
     if (_cachedAuthUserId != null && _cachedAuthUserId != user.id) {
-      
       _profileId = null;
       _cachedAuthUserId = null;
     }
@@ -74,7 +69,6 @@ class CurrentUserService {
       final loadedProfileId = response?['id']?.toString();
 
       if (loadedProfileId == null) {
-        
         clear();
 
         return null;
@@ -84,8 +78,7 @@ class CurrentUserService {
       _cachedAuthUserId = user.id;
 
       return _profileId;
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return null;
     }
   }
@@ -95,7 +88,6 @@ class CurrentUserService {
   // ============================================================
 
   void clear() {
-
     _profileId = null;
     _cachedAuthUserId = null;
   }

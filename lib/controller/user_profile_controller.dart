@@ -129,7 +129,8 @@ class UserProfileController extends GetxController {
 
       // Fetch full PostModel list for the grid (enables tap-to-detail).
       await _loadUserPosts();
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       isLoading(false);
     }
@@ -158,7 +159,8 @@ class UserProfileController extends GetxController {
             .map((data) => PostModel.fromJson(data, currentProfileId))
             .toList(),
       );
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     }
   }
 
@@ -223,8 +225,7 @@ class UserProfileController extends GetxController {
       } else {
         await _repo.followUser(userId);
       }
-    } catch (e) {
-
+    } catch (_) {
       // Rollback profile UI
       isFollowing.value = wasFollowing;
       followerCount.value = oldFollowerCount;
@@ -244,7 +245,9 @@ class UserProfileController extends GetxController {
 
           homeController.followingIds.refresh();
         }
-      } catch (_) {}
+      } catch (_) {
+        // Intentionally ignored.
+      }
     } finally {
       isFollowLoading.value = false;
     }

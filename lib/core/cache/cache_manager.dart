@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:public_pulse/model/post_model.dart';
 import 'package:public_pulse/model/comment_model.dart';
@@ -23,7 +22,6 @@ class CacheManager {
 
   static Future<void> setPostCacheOwnerProfileId(String profileId) async {
     await _postBox.put(_postCacheOwnerKey, profileId);
-
   }
 
   static bool hasPostCache() {
@@ -45,30 +43,28 @@ class CacheManager {
     );
     await _postBox.put(CacheKeys.nextCursor, nextCursor);
     await _postBox.put(CacheKeys.hasMore, hasMore);
-
-      }
+  }
 
   // Load cached posts if available.
   static List<PostModel> getCachedPosts() {
-
     final cached = _postBox.get(CacheKeys.posts);
 
     if (cached == null) {
-            return [];
+      return [];
     }
 
-    
     final List<PostModel> posts = [];
     for (int i = 0; i < cached.length; i++) {
       try {
         final postData = Map<String, dynamic>.from(cached[i]);
         final post = PostModel.fromCache(postData);
         posts.add(post);
-      } catch (e) {
+      } catch (_) {
+        // Intentionally ignored.
       }
     }
 
-        return posts;
+    return posts;
   }
 
   static bool getHasMore() {
@@ -153,7 +149,6 @@ class CacheManager {
       CacheKeys.userProfileTimestamp,
       DateTime.now().millisecondsSinceEpoch,
     );
-
   }
 
   static ProfileModel? getCachedUserProfile() {
@@ -173,15 +168,13 @@ class CacheManager {
       final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
 
       if (age > _profileCacheDuration.inMilliseconds) {
-
         clearUserProfileCache();
 
         return null;
       }
 
       return ProfileModel.fromJson(Map<String, dynamic>.from(data));
-    } catch (e) {
-
+    } catch (_) {
       return null;
     }
   }
@@ -211,7 +204,6 @@ class CacheManager {
       CacheKeys.myPostsTimestamp,
       DateTime.now().millisecondsSinceEpoch,
     );
-
   }
 
   static List<PostModel> getCachedMyPosts() {
@@ -230,7 +222,6 @@ class CacheManager {
     final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
 
     if (age > _profilePostsCacheDuration.inMilliseconds) {
-
       clearMyPostsCache();
 
       return [];
@@ -246,20 +237,19 @@ class CacheManager {
           final postData = Map<String, dynamic>.from(item);
 
           posts.add(PostModel.fromCache(postData));
-        } catch (e) {
+        } catch (_) {
+          // Intentionally ignored.
         }
       }
 
       return posts;
-    } catch (e) {
-
+    } catch (_) {
       return [];
     }
   }
 
   static Future<void> clearMyPostsCache() async {
     await _myPostsBox.clear();
-
   }
 
   // ------------------------------------------------------------
@@ -277,28 +267,24 @@ class CacheManager {
       CacheKeys.savedPostsTimestamp,
       DateTime.now().millisecondsSinceEpoch,
     );
-
   }
 
   static List<PostModel> getCachedSavedPosts() {
     final data = _savedPostsBox.get(CacheKeys.savedPosts);
 
     if (data == null) {
-
       return [];
     }
 
     final timestamp = _savedPostsBox.get(CacheKeys.savedPostsTimestamp);
 
     if (timestamp == null) {
-
       return [];
     }
 
     final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
 
     if (age > _profilePostsCacheDuration.inMilliseconds) {
-
       clearSavedPostsCache();
 
       return [];
@@ -314,20 +300,19 @@ class CacheManager {
           final postData = Map<String, dynamic>.from(item);
 
           posts.add(PostModel.fromCache(postData));
-        } catch (e) {
+        } catch (_) {
+          // Intentionally ignored.
         }
       }
 
       return posts;
-    } catch (e) {
-
+    } catch (_) {
       return [];
     }
   }
 
   static Future<void> clearSavedPostsCache() async {
     await _savedPostsBox.clear();
-
   }
 
   // ------------------------------------------------------------
@@ -337,11 +322,9 @@ class CacheManager {
   static Future<void> clearProfilePostsCache() async {
     await _myPostsBox.clear();
     await _savedPostsBox.clear();
-
   }
 
   static Future<void> clearUserData() async {
-
     // Home feed
     await clearPostCache();
 
@@ -354,22 +337,23 @@ class CacheManager {
     // My posts
     try {
       await Hive.box(HiveBoxes.cachedMyPosts).clear();
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     }
 
     // Saved posts
     try {
       await Hive.box(HiveBoxes.cachedSavedPosts).clear();
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     }
 
     // Followers / Following
     try {
       await Hive.box(HiveBoxes.cachedFollowersFollowing).clear();
-
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     }
-
   }
 
   // ============================================================
@@ -390,14 +374,12 @@ class CacheManager {
     final data = _profileBox.get(key);
 
     if (data == null) {
-
       return null;
     }
 
     final timestamp = _profileBox.get(_profileTimestampKey(userId));
 
     if (timestamp == null) {
-
       _profileBox.delete(key);
 
       return null;
@@ -406,7 +388,6 @@ class CacheManager {
     final age = DateTime.now().millisecondsSinceEpoch - (timestamp as int);
 
     if (age > _profileCacheDuration.inMilliseconds) {
-
       clearCachedProfileByUserId(userId);
 
       return null;
@@ -414,8 +395,7 @@ class CacheManager {
 
     try {
       return ProfileModel.fromJson(Map<String, dynamic>.from(data));
-    } catch (e) {
-
+    } catch (_) {
       return null;
     }
   }
@@ -429,18 +409,15 @@ class CacheManager {
       _profileTimestampKey(userId),
       DateTime.now().millisecondsSinceEpoch,
     );
-
   }
 
   static Future<void> clearCachedProfileByUserId(String userId) async {
     await _profileBox.delete(_profileCacheKey(userId));
 
     await _profileBox.delete(_profileTimestampKey(userId));
-
   }
 
   static Future<void> clearAllCachedProfiles() async {
     await _profileBox.clear();
-
   }
 }

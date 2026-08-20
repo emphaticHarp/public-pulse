@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:public_pulse/core/services/current_user_service.dart';
 import 'package:public_pulse/model/post_model.dart';
@@ -32,9 +31,8 @@ class PostRepository {
   }
 
   /// Call this when the authenticated user changes.
-void clearCurrentProfileIdCache() {
-  CurrentUserService.instance.clear();
-
+  void clearCurrentProfileIdCache() {
+    CurrentUserService.instance.clear();
   }
 
   // ============================================================
@@ -42,7 +40,6 @@ void clearCurrentProfileIdCache() {
   // ============================================================
 
   Future<PostPage> getInitialPosts({int limit = 10}) async {
-
     try {
       final currentProfileId = await getCurrentProfileId();
 
@@ -57,6 +54,8 @@ void clearCurrentProfileIdCache() {
           profile_id,
           caption,
           location_name,
+          latitude,
+          longitude,
           visibility,
           like_count,
           comment_count,
@@ -70,6 +69,7 @@ void clearCurrentProfileIdCache() {
             username,
             display_name,
             avatar_path,
+            avatar_thumbnail_path,
             is_private
           ),
 
@@ -115,8 +115,7 @@ void clearCurrentProfileIdCache() {
         nextCursor: nextCursor,
         hasMore: posts.length == limit,
       );
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return PostPage(posts: [], nextCursor: null, hasMore: false);
     }
   }
@@ -129,7 +128,6 @@ void clearCurrentProfileIdCache() {
     required String cursor,
     int limit = 10,
   }) async {
-
     try {
       final currentProfileId = await getCurrentProfileId();
 
@@ -144,6 +142,8 @@ void clearCurrentProfileIdCache() {
           profile_id,
           caption,
           location_name,
+          latitude,
+          longitude,
           visibility,
           like_count,
           comment_count,
@@ -157,6 +157,7 @@ void clearCurrentProfileIdCache() {
             username,
             display_name,
             avatar_path,
+            avatar_thumbnail_path,
             is_private
           ),
 
@@ -202,8 +203,7 @@ void clearCurrentProfileIdCache() {
         nextCursor: nextCursor,
         hasMore: posts.length == limit,
       );
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return PostPage(posts: [], nextCursor: null, hasMore: false);
     }
   }
@@ -213,7 +213,6 @@ void clearCurrentProfileIdCache() {
   // ============================================================
 
   Future<List<PostModel>> getMyPosts() async {
-
     try {
       final currentProfileId = await getCurrentProfileId();
 
@@ -228,6 +227,8 @@ void clearCurrentProfileIdCache() {
           profile_id,
           caption,
           location_name,
+          latitude,
+          longitude,
           visibility,
           like_count,
           comment_count,
@@ -241,6 +242,7 @@ void clearCurrentProfileIdCache() {
             username,
             display_name,
             avatar_path,
+            avatar_thumbnail_path,
             is_private
           ),
 
@@ -275,8 +277,7 @@ void clearCurrentProfileIdCache() {
       return response
           .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
           .toList();
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return [];
     }
   }
@@ -290,7 +291,6 @@ void clearCurrentProfileIdCache() {
   // ============================================================
 
   Future<List<PostModel>> getSavedPosts() async {
-
     try {
       final currentProfileId = await getCurrentProfileId();
 
@@ -326,6 +326,7 @@ void clearCurrentProfileIdCache() {
               username,
               display_name,
               avatar_path,
+              avatar_thumbnail_path,
               is_private
             ),
 
@@ -372,13 +373,13 @@ void clearCurrentProfileIdCache() {
           );
 
           posts.add(postModel);
-        } catch (e, stackTrace) {
+        } catch (_) {
+          // Intentionally ignored.
         }
       }
 
       return posts;
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return [];
     }
   }
@@ -387,7 +388,6 @@ void clearCurrentProfileIdCache() {
   // ============================================================
 
   Future<List<PostModel>> getNewPosts({required String latestCreatedAt}) async {
-
     try {
       final currentProfileId = await getCurrentProfileId();
 
@@ -402,6 +402,8 @@ void clearCurrentProfileIdCache() {
           profile_id,
           caption,
           location_name,
+          latitude,
+          longitude,
           visibility,
           like_count,
           comment_count,
@@ -415,6 +417,7 @@ void clearCurrentProfileIdCache() {
             username,
             display_name,
             avatar_path,
+            avatar_thumbnail_path,
             is_private
           ),
 
@@ -449,8 +452,7 @@ void clearCurrentProfileIdCache() {
       return response
           .map<PostModel>((data) => PostModel.fromJson(data, currentProfileId))
           .toList();
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return [];
     }
   }
@@ -484,8 +486,7 @@ void clearCurrentProfileIdCache() {
       }
 
       return true;
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return false;
     }
   }
@@ -519,8 +520,7 @@ void clearCurrentProfileIdCache() {
       }
 
       return true;
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return false;
     }
   }
@@ -538,11 +538,9 @@ void clearCurrentProfileIdCache() {
           .select();
 
       return response.isNotEmpty;
-    } on PostgrestException catch (e) {
-
+    } on PostgrestException catch (_) {
       return false;
-    } catch (e, stackTrace) {
-
+    } catch (_) {
       return false;
     }
   }

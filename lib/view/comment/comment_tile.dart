@@ -23,7 +23,10 @@ class CommentTile extends StatelessWidget {
     return "${date.day}/${date.month}/${date.year}";
   }
 
-  void _confirmDelete(BuildContext context, CommentController controller) async {
+  void _confirmDelete(
+    BuildContext context,
+    CommentController controller,
+  ) async {
     final confirmed = await CustomAlert.showConfirm(
       title: 'Delete Comment?',
       message: 'This action cannot be undone.',
@@ -41,83 +44,84 @@ class CommentTile extends StatelessWidget {
     final controller = Get.find<CommentController>();
     final isOwner = controller.currentProfileId == comment.profileId;
 
-   final tileContent = Padding(
-  padding: const EdgeInsets.symmetric(
-    vertical: 10,
-  ),
-  child: Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-        CircleAvatar(
-          radius: 18,
-          backgroundImage:
-              comment.profileImage != null && comment.profileImage!.isNotEmpty
-              ? NetworkImage(comment.profileImage!)
-              : null,
-          child: (comment.profileImage == null || comment.profileImage!.isEmpty)
-              ? const Icon(Icons.person, size: 18)
-              : null,
-        ),
+    final tileContent = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundImage:
+                comment.profileImage != null && comment.profileImage!.isNotEmpty
+                ? NetworkImage(comment.profileImage!)
+                : null,
+            child:
+                (comment.profileImage == null || comment.profileImage!.isEmpty)
+                ? const Icon(Icons.person, size: 18)
+                : null,
+          ),
 
-        const SizedBox(width: 12),
+          const SizedBox(width: 12),
 
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              RichText(
-                text: TextSpan(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: comment.username,
+                        style: const TextStyle(
+                          color: AppColors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const TextSpan(text: "  "),
+                      TextSpan(
+                        text: comment.content,
+                        style: const TextStyle(
+                          color: AppColors.black87,
+                          fontWeight: FontWeight.normal,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 4),
+
+                Row(
                   children: [
-                    TextSpan(
-                      text: comment.username,
-                      style: const TextStyle(
-                        color: AppColors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                    Text(
+                      _timeAgo(comment.createdAt),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.greyShade600,
                       ),
                     ),
-                    const TextSpan(text: "  "),
-                    TextSpan(
-                      text: comment.content,
-                      style: const TextStyle(
-                        color: AppColors.black87,
-                        fontWeight: FontWeight.normal,
-                        fontSize: 14,
+
+                    if (comment.isPending) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        "Sending...",
+                        style: TextStyle(
+                          color: AppColors.greyShade500,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
-              ),
-
-              const SizedBox(height: 4),
-
-              Row(
-                children: [
-                  Text(
-                    _timeAgo(comment.createdAt),
-                    style: TextStyle(fontSize: 12, color: AppColors.greyShade600),
-                  ),
-
-                  if (comment.isPending) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      "Sending...",
-                      style: TextStyle(
-                        color: AppColors.greyShade500,
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-
-      ],
-    ),
-  );
+        ],
+      ),
+    );
 
     if (comment.isPending) {
       return tileContent;

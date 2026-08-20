@@ -104,9 +104,7 @@ class NotificationController extends GetxController {
 
       case 3: // Follows
         filtered = filtered
-            .where(
-              (n) => n.notificationType.trim().toUpperCase() == 'FOLLOW',
-            )
+            .where((n) => n.notificationType.trim().toUpperCase() == 'FOLLOW')
             .toList();
         break;
 
@@ -144,7 +142,7 @@ class NotificationController extends GetxController {
       await _repository.followBack(actorProfileId);
 
       await fetchNotifications();
-    } catch (e, stackTrace) {
+    } catch (_) {
       CustomAlert.error(
         title: 'Follow failed',
         message: 'Unable to follow this user. Please try again.',

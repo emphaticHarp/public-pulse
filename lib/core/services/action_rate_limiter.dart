@@ -32,7 +32,7 @@ class ActionRateLimiter {
 
     final last = _lastAction[actionKey];
     if (last != null && now.difference(last) < cd) return false;
-    
+
     _lastAction[actionKey] = now;
     return true;
   }

@@ -302,9 +302,7 @@ class _TabContent extends StatelessWidget {
 
         // Tap → open Post Detail using the full PostModel.
         return GestureDetector(
-          onTap: () => Get.to(
-            () => PostDetailPage(post: post),
-          ),
+          onTap: () => Get.to(() => PostDetailPage(post: post)),
           child: CachedNetworkImage(
             imageUrl: gridImageUrl,
             cacheKey: supabaseStorageCacheKey(gridImageUrl),

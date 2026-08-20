@@ -10,10 +10,13 @@ import 'package:tiktok_double_tap_like/tiktok_double_tap_like.dart';
 
 class PostCard extends StatelessWidget {
   final String profileImage;
+  final String profileThumbnailImage;
   final String username;
   final String authorId;
   final String authorUserId;
   final String? location;
+  final double? locationLatitude;
+  final double? locationLongitude;
 
   final bool isCarousel;
   final bool isOwner;
@@ -49,10 +52,13 @@ class PostCard extends StatelessWidget {
   const PostCard({
     super.key,
     required this.profileImage,
+    required this.profileThumbnailImage,
     required this.username,
     required this.authorUserId,
     required this.authorId,
     this.location,
+    this.locationLatitude,
+    this.locationLongitude,
 
     required this.isCarousel,
     required this.isOwner,
@@ -141,10 +147,15 @@ class PostCard extends StatelessWidget {
         children: [
           PostHeader(
             profileImage: profileImage,
+            profileThumbnailImage: profileThumbnailImage,
             username: username,
             authorId: authorId,
             authorUserId: authorUserId,
+
             location: displayLocation,
+            locationLatitude: locationLatitude,
+            locationLongitude: locationLongitude,
+
             postId: postId,
             isOwner: isOwner,
           ),

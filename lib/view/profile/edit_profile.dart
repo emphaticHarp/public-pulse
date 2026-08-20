@@ -44,9 +44,7 @@ class EditProfilePage extends StatelessWidget {
                   file: controller.pickedAvatar.value,
                   url: controller.avatarUrl,
                 ),
-                coverAction: ChangePhotoButton(
-                  onTap: controller.pickCover,
-                ),
+                coverAction: ChangePhotoButton(onTap: controller.pickCover),
                 avatarAction: ChangePhotoButton(
                   onTap: controller.pickAvatar,
                   circular: true,
@@ -76,9 +74,7 @@ class EditProfilePage extends StatelessWidget {
                             : AppColors.editProfileTextDark,
                       ),
 
-                      decoration: _fieldDecoration(
-                        'Display Name',
-                      ).copyWith(
+                      decoration: _fieldDecoration('Display Name').copyWith(
                         suffixIcon: controller.isDisplayNameLocked.value
                             ? const Icon(
                                 Icons.lock_outline_rounded,
@@ -94,7 +90,6 @@ class EditProfilePage extends StatelessWidget {
                     // ============================================================
                     // DISPLAY NAME WARNING
                     // ============================================================
-
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -240,4 +235,3 @@ class _FieldLabel extends StatelessWidget {
     ),
   );
 }
-

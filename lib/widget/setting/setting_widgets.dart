@@ -19,7 +19,9 @@ class SettingSectionHeader extends StatelessWidget {
       ),
       child: Text(
         title.toUpperCase(),
-        style: AppTextStyles.settingsSectionTitle.copyWith(color: AppColors.secondaryText),
+        style: AppTextStyles.settingsSectionTitle.copyWith(
+          color: AppColors.secondaryText,
+        ),
       ),
     );
   }
@@ -71,17 +73,18 @@ class SettingItemBase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = isDestructive ? AppColors.loginAccentRed : AppColors.primaryText;
-    final iconColor = isDestructive ? AppColors.loginAccentRed : AppColors.iconColor;
+    final titleColor = isDestructive
+        ? AppColors.loginAccentRed
+        : AppColors.primaryText;
+    final iconColor = isDestructive
+        ? AppColors.loginAccentRed
+        : AppColors.iconColor;
     final iconBgColor = isDestructive
         ? AppColors.loginAccentRed.withValues(alpha: 0.1)
         : AppColors.iconBackground;
 
     Widget content = Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 18,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Row(
         children: [
           Container(
@@ -106,7 +109,12 @@ class SettingItemBase extends StatelessWidget {
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
-                  Text(subtitle!, style: AppTextStyles.settingsBodySmall.copyWith(color: AppColors.secondaryText)),
+                  Text(
+                    subtitle!,
+                    style: AppTextStyles.settingsBodySmall.copyWith(
+                      color: AppColors.secondaryText,
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -134,11 +142,7 @@ class SettingItemBase extends StatelessWidget {
           content,
           const Padding(
             padding: EdgeInsets.only(left: 76), // Align with text
-            child: Divider(
-              height: 1,
-              thickness: 1,
-              color: AppColors.gray100,
-            ),
+            child: Divider(height: 1, thickness: 1, color: AppColors.gray100),
           ),
         ],
       );
@@ -240,12 +244,17 @@ class SettingCopyItem extends StatelessWidget {
         children: [
           Text(
             valueText,
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryText),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.primaryText,
+            ),
           ),
           const SizedBox(width: AppSpacing.xs),
           IconButton(
-            icon: const Icon(Icons.copy_rounded,
-                size: 18, color: AppColors.iconColor),
+            icon: const Icon(
+              Icons.copy_rounded,
+              size: 18,
+              color: AppColors.iconColor,
+            ),
             onPressed: onCopy,
             splashRadius: 20,
             padding: EdgeInsets.zero,
@@ -329,13 +338,19 @@ class SettingNavItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (valueText != null) ...[
-            Text(valueText!, style: AppTextStyles.settingsBodySmall.copyWith(color: AppColors.secondaryText)),
+            Text(
+              valueText!,
+              style: AppTextStyles.settingsBodySmall.copyWith(
+                color: AppColors.secondaryText,
+              ),
+            ),
             const SizedBox(width: AppSpacing.xs),
           ],
           Icon(
             Icons.chevron_right_rounded,
-            color:
-                isDestructive ? AppColors.loginAccentRed : AppColors.secondaryText,
+            color: isDestructive
+                ? AppColors.loginAccentRed
+                : AppColors.secondaryText,
             size: 20,
           ),
         ],

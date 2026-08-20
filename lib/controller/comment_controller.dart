@@ -42,8 +42,7 @@ class CommentController extends GetxController {
     }
 
     // Google avatar / already complete URL.
-    if (avatar.startsWith('http://') ||
-        avatar.startsWith('https://')) {
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
       return avatar;
     }
 
@@ -110,7 +109,8 @@ class CommentController extends GetxController {
       comments.assignAll(serverComments);
 
       await CacheManager.cacheComments(postId, serverComments);
-    } catch (e) {
+    } catch (_) {
+      // Intentionally ignored.
     } finally {
       isLoading.value = false;
     }

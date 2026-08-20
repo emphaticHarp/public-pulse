@@ -320,7 +320,9 @@ class SettingController extends GetxController {
       try {
         final authService = Get.find<AuthService>();
         await authService.signOut();
-      } catch (e) {}
+      } catch (_) {
+        // Intentionally ignored.
+      }
 
       // ==========================================================
       // CLEAR CURRENT USER
@@ -367,7 +369,7 @@ class SettingController extends GetxController {
       // ==========================================================
 
       Get.offAll(() => LoginPage());
-    } catch (e, stackTrace) {
+    } catch (_) {
       CustomAlert.error(
         title: 'Delete Failed',
         message: 'Unable to delete your account. Please try again.',
@@ -444,7 +446,7 @@ class SettingController extends GetxController {
       // ----------------------------------------------------------
 
       Get.offAll(() => LoginPage());
-    } catch (e, stackTrace) {
+    } catch (_) {
       CustomAlert.error(
         title: 'Logout Failed',
         message: 'Something went wrong. Please try again.',

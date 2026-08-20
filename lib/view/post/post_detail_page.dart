@@ -19,10 +19,7 @@ class PostDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Put controller scoped to this post; auto-deleted when page is popped.
-    final ctrl = Get.put(
-      PostDetailController(post),
-      tag: post.id,
-    );
+    final ctrl = Get.put(PostDetailController(post), tag: post.id);
 
     return Scaffold(
       backgroundColor: AppColors.surfaceDefault,
@@ -34,10 +31,16 @@ class PostDetailPage extends StatelessWidget {
             // Post header: avatar, username, location, options menu
             PostHeader(
               profileImage: post.profileImage ?? '',
+              profileThumbnailImage: post.profileThumbnailImage ?? '',
+
               username: post.username,
               authorId: post.profileId,
               authorUserId: post.authorUserId,
+
               location: post.location,
+              locationLatitude: post.locationLatitude,
+              locationLongitude: post.locationLongitude,
+
               postId: post.id,
               isOwner: post.isOwner,
             ),
@@ -45,10 +48,7 @@ class PostDetailPage extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Post media: single image or carousel
-            _PostMedia(
-              post: post,
-              controller: ctrl,
-            ),
+            _PostMedia(post: post, controller: ctrl),
 
             // Reactive action bar (like, comment, share, save)
             Obx(
@@ -71,10 +71,7 @@ class PostDetailPage extends StatelessWidget {
 
             // Caption and timestamp
             if ((post.caption ?? '').isNotEmpty) ...[
-            PostCaption(
-              username: post.username,
-              caption: post.caption!,
-            ),
+              PostCaption(username: post.username, caption: post.caption!),
               const SizedBox(height: 6),
             ],
 
@@ -88,29 +85,29 @@ class PostDetailPage extends StatelessWidget {
   }
 
   AppBar _buildAppBar() => AppBar(
-        backgroundColor: AppColors.surfaceDefault,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.textPrimary,
-          onPressed: () {
-            // Delete the scoped controller before popping.
-            Get.delete<PostDetailController>(tag: post.id, force: true);
-            Get.back();
-          },
-        ),
-        title: const Text(
-          'Post',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        centerTitle: true,
-      );
+    backgroundColor: AppColors.surfaceDefault,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+    scrolledUnderElevation: 0,
+    leading: IconButton(
+      icon: const Icon(Icons.arrow_back),
+      color: AppColors.textPrimary,
+      onPressed: () {
+        // Delete the scoped controller before popping.
+        Get.delete<PostDetailController>(tag: post.id, force: true);
+        Get.back();
+      },
+    ),
+    title: const Text(
+      'Post',
+      style: TextStyle(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w600,
+        fontSize: 16,
+      ),
+    ),
+    centerTitle: true,
+  );
 }
 
 // ─────────────────────────────────────────────
@@ -121,10 +118,7 @@ class _PostMedia extends StatelessWidget {
   final PostModel post;
   final PostDetailController controller;
 
-  const _PostMedia({
-    required this.post,
-    required this.controller,
-  });
+  const _PostMedia({required this.post, required this.controller});
 
   double get _aspectRatio {
     if (post.mediaAspectRatios.isEmpty) {
@@ -193,8 +187,18 @@ class _Timestamp extends StatelessWidget {
 
   String _format(DateTime d) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[d.month - 1]} ${d.day}, ${d.year}';
   }
@@ -205,10 +209,7 @@ class _Timestamp extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Text(
         _format(date),
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppColors.gray500,
-        ),
+        style: const TextStyle(fontSize: 12, color: AppColors.gray500),
       ),
     );
   }
