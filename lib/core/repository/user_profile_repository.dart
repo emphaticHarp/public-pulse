@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:public_pulse/model/profile_model.dart';
@@ -95,6 +94,9 @@ class UserProfileRepository {
         .filter('deleted_at', 'is', null)
         .order('created_at', ascending: false);
 
+    // BUILD GRID THUMBNAIL LIST
+    // ============================================================
+
     final urls = <String>[];
 
     for (final row in rows) {
@@ -104,34 +106,56 @@ class UserProfileRepository {
         continue;
       }
 
-      final media = mediaRaw.map((e) => Map<String, dynamic>.from(e)).toList();
+      final media = mediaRaw
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
 
+      // Always use first media according to media_order.
       media.sort((a, b) {
-        final aOrder = (a['media_order'] as num?)?.toInt() ?? 0;
-        final bOrder = (b['media_order'] as num?)?.toInt() ?? 0;
+        final aOrder =
+            (a['media_order'] as num?)?.toInt() ?? 0;
+
+        final bOrder =
+            (b['media_order'] as num?)?.toInt() ?? 0;
 
         return aOrder.compareTo(bOrder);
       });
 
-      // One thumbnail/image per post.
       for (final item in media) {
-        final path = item['storage_path']?.toString();
-        final type = item['media_type']?.toString().toLowerCase();
+        final mediaType =
+            item['media_type']?.toString().toLowerCase();
 
-        if (path == null || path.isEmpty) {
+        // Profile photo grid only shows image posts.
+        if (mediaType != null && !mediaType.contains('image')) {
           continue;
         }
 
-        if (type != null && !type.contains('image')) {
+        final thumbnailUrl =
+            item['thumbnail_path']?.toString().trim();
+
+        final originalUrl =
+            item['storage_path']?.toString().trim();
+
+        // ========================================================
+        // BUNNY CDN
+        //
+        // Prefer thumbnail.
+        // Fallback to original image for older posts.
+        // Both values are already full Bunny URLs.
+        // ========================================================
+
+        final imageUrl =
+            thumbnailUrl != null && thumbnailUrl.isNotEmpty
+                ? thumbnailUrl
+                : originalUrl;
+
+        if (imageUrl == null || imageUrl.isEmpty) {
           continue;
         }
 
-        final url = Supabase.instance.client.storage
-            .from('posts-images')
-            .getPublicUrl(path);
+        urls.add(imageUrl);
 
-        urls.add(url);
-
+        // Only one grid image per post.
         break;
       }
     }

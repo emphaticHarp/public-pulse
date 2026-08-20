@@ -73,7 +73,6 @@ Future<double> _getMediaAspectRatio(String path) {
         codec.dispose();
       }
     } catch (e) {
-
       return 4 / 5;
     }
   });
@@ -267,6 +266,10 @@ class _MediaCarousel extends StatelessWidget {
 
           int current = controller.currentIndex.value;
 
+          if (current < 0) {
+            current = 0;
+          }
+
           if (current >= media.length) {
             current = media.length - 1;
           }
@@ -291,7 +294,7 @@ class _MediaCarousel extends StatelessWidget {
         const SizedBox(height: 12),
 
         // =====================================================
-        // THUMBNAILS
+        // THUMBNAILS + ADD MORE BUTTON
         // =====================================================
         Obx(() {
           final media = controller.pendingMedia;
@@ -300,7 +303,15 @@ class _MediaCarousel extends StatelessWidget {
             return const SizedBox.shrink();
           }
 
-          final current = controller.currentIndex.value;
+          int current = controller.currentIndex.value;
+
+          if (current < 0) {
+            current = 0;
+          }
+
+          if (current >= media.length) {
+            current = media.length - 1;
+          }
 
           return SizedBox(
             height: 76,
@@ -308,11 +319,42 @@ class _MediaCarousel extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
 
-              // Only selected images.
-              // No "+" item anymore.
-              itemCount: media.length,
+              // Show "+" only when fewer than 10 photos exist.
+              itemCount: media.length < 10 ? media.length + 1 : media.length,
 
               itemBuilder: (context, index) {
+                // =================================================
+                // + ADD MORE PHOTOS
+                // =================================================
+
+                if (index == media.length) {
+                  return GestureDetector(
+                    onTap: controller.showMediaPicker,
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.gray50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: AppColors.createPostGray300,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.add_rounded,
+                        color: AppColors.loginAccentRed,
+                        size: 30,
+                      ),
+                    ),
+                  );
+                }
+
+                // =================================================
+                // SELECTED PHOTO THUMBNAIL
+                // =================================================
+
                 return GestureDetector(
                   onTap: () {
                     controller.animateToPage(index);
@@ -662,7 +704,7 @@ class _UploadFooter extends StatelessWidget {
                 controller.pendingMedia.isEmpty || controller.isUploading.value
                 ? null
                 : () {
-                                                                                controller.uploadPost();
+                    controller.uploadPost();
                   },
             style:
                 ElevatedButton.styleFrom(

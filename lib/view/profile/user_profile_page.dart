@@ -280,7 +280,8 @@ class _TabContent extends StatelessWidget {
       itemBuilder: (context, index) {
         final post = photoPosts[index];
 
-        if (post.mediaUrls.isEmpty) {
+        // No thumbnail and no original image.
+        if (post.thumbnailUrls.isEmpty && post.mediaUrls.isEmpty) {
           return Container(
             color: AppColors.surfaceDefault,
             child: const Center(
@@ -289,12 +290,24 @@ class _TabContent extends StatelessWidget {
           );
         }
 
-        // Tap → open Post Detail with the full PostModel, zero re-fetch.
+        // ============================================================
+        // PROFILE GRID IMAGE
+        // Prefer Bunny thumbnail.
+        // Fallback to full image only for older posts without thumbnail.
+        // ============================================================
+
+        final gridImageUrl = post.thumbnailUrls.isNotEmpty
+            ? post.thumbnailUrls.first
+            : post.mediaUrls.first;
+
+        // Tap → open Post Detail using the full PostModel.
         return GestureDetector(
-          onTap: () => Get.to(() => PostDetailPage(post: post)),
+          onTap: () => Get.to(
+            () => PostDetailPage(post: post),
+          ),
           child: CachedNetworkImage(
-            imageUrl: post.mediaUrls.first,
-            cacheKey: supabaseStorageCacheKey(post.mediaUrls.first),
+            imageUrl: gridImageUrl,
+            cacheKey: supabaseStorageCacheKey(gridImageUrl),
             fit: BoxFit.cover,
             fadeInDuration: Duration.zero,
             fadeOutDuration: Duration.zero,

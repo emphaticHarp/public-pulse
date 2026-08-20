@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme/app_colors.dart';
 import '../model/profile_model.dart';
 import '../core/repository/profile_repository.dart';
@@ -25,6 +26,16 @@ class EditProfileController extends GetxController {
   final errorMessage = ''.obs;
   final isSaving = false.obs;
 
+  // ============================================================
+  // DISPLAY NAME - ONE TIME CHANGE
+  // ============================================================
+
+  final isDisplayNameLocked = true.obs;
+  final isDisplayNameLockLoading = true.obs;
+
+  String get _displayNameLockKey =>
+      'display_name_changed_${original.id}';
+
   final pickedAvatar = Rxn<File>();
   final pickedCover = Rxn<File>();
 
@@ -43,7 +54,24 @@ class EditProfileController extends GetxController {
 
     displayNameCtrl.text = original.displayName ?? '';
     usernameCtrl.text = original.username;
+
+    // Show existing bio so user can edit it.
     bioCtrl.text = original.bio ?? '';
+
+    _loadDisplayNameLock();
+  }
+
+  Future<void> _loadDisplayNameLock() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      isDisplayNameLocked.value =
+          prefs.getBool(_displayNameLockKey) ?? false;
+    } catch (_) {
+      isDisplayNameLocked.value = true;
+    } finally {
+      isDisplayNameLockLoading.value = false;
+    }
   }
 
   @override
@@ -90,19 +118,58 @@ class EditProfileController extends GetxController {
 
   Future<void> save() async {
     if (!_isFormValid()) return;
+
+    final newDisplayName = displayNameCtrl.text.trim();
+    final oldDisplayName = (original.displayName ?? '').trim();
+
+    final displayNameChanged =
+        newDisplayName != oldDisplayName;
+
+    // User has already used the one-time change.
+    if (displayNameChanged && isDisplayNameLocked.value) {
+      errorMessage(
+        'Your display name has already been changed once.',
+      );
+      return;
+    }
+
     isSaving(true);
+
     try {
-      final username = usernameCtrl.text.trim().toLowerCase();
+      final username =
+          usernameCtrl.text.trim().toLowerCase();
 
       final updated = await _repo.updateProfile(
-        displayName: displayNameCtrl.text.trim(),
-        username: username == original.username ? null : username,
+        // Update display name only if it actually changed.
+        displayName:
+            displayNameChanged ? newDisplayName : null,
+
+        username:
+            username == original.username ? null : username,
+
         bio: bioCtrl.text.trim(),
+
         avatarFile: pickedAvatar.value,
         coverFile: pickedCover.value,
       );
 
+      // ==========================================================
+      // LOCK DISPLAY NAME ONLY AFTER SUCCESSFUL UPDATE
+      // ==========================================================
+
+      if (displayNameChanged) {
+        final prefs = await SharedPreferences.getInstance();
+
+        await prefs.setBool(
+          _displayNameLockKey,
+          true,
+        );
+
+        isDisplayNameLocked.value = true;
+      }
+
       ProfileController.to.applyUpdatedProfile(updated);
+
       Get.back();
     } catch (_) {
       errorMessage(

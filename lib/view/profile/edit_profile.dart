@@ -59,13 +59,85 @@ class EditProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const _FieldLabel('Display Name'),
+
                     TextField(
                       controller: controller.displayNameCtrl,
+
+                      // Lock after the one allowed change.
+                      readOnly:
+                          controller.isDisplayNameLockLoading.value ||
+                          controller.isDisplayNameLocked.value,
+
                       textCapitalization: TextCapitalization.words,
+
                       style: AppTextStyles.inputText.copyWith(
-                        color: AppColors.editProfileTextDark,
+                        color: controller.isDisplayNameLocked.value
+                            ? AppColors.gray500
+                            : AppColors.editProfileTextDark,
                       ),
-                      decoration: _fieldDecoration('Display Name'),
+
+                      decoration: _fieldDecoration(
+                        'Display Name',
+                      ).copyWith(
+                        suffixIcon: controller.isDisplayNameLocked.value
+                            ? const Icon(
+                                Icons.lock_outline_rounded,
+                                color: AppColors.gray400,
+                                size: 20,
+                              )
+                            : null,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // ============================================================
+                    // DISPLAY NAME WARNING
+                    // ============================================================
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: controller.isDisplayNameLocked.value
+                            ? AppColors.gray100
+                            : AppColors.semanticOrange.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            controller.isDisplayNameLocked.value
+                                ? Icons.lock_outline_rounded
+                                : Icons.info_outline_rounded,
+                            size: 17,
+                            color: controller.isDisplayNameLocked.value
+                                ? AppColors.gray500
+                                : AppColors.semanticOrange,
+                          ),
+
+                          const SizedBox(width: 8),
+
+                          Expanded(
+                            child: Text(
+                              controller.isDisplayNameLocked.value
+                                  ? 'You have already changed your display name once. It can no longer be edited.'
+                                  : 'You can change your display name only once. After saving the new name, it cannot be changed again.',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontSize: 12,
+                                height: 1.4,
+                                color: controller.isDisplayNameLocked.value
+                                    ? AppColors.gray500
+                                    : AppColors.semanticOrange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     const SizedBox(height: 16),
